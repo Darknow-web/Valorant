@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Scroll, 
@@ -10,7 +10,12 @@ import {
   Trash2, 
   Sparkles,
   Trophy,
-  Zap
+  Zap,
+  ListFilter,
+  ArrowUpDown,
+  X,
+  FileText,
+  Layers
 } from 'lucide-react';
 import { Stat, Quest, Reward, EpicProject, UserProfile, StatType, QuestType, QuestLevel } from './types';
 import { INITIAL_STATS, INITIAL_PROJECTS, INITIAL_QUESTS, INITIAL_REWARDS } from './constants';
@@ -29,6 +34,7 @@ const STAT_COLORS: Record<StatType, string> = {
 };
 
 type View = 'dashboard' | 'quests' | 'store' | 'projects';
+type SortOption = 'NEWEST' | 'OLDEST' | 'XP' | 'COINS';
 
 const App: React.FC = () => {
   // -- State --
@@ -54,16 +60,32 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : INITIAL_PROJECTS;
   });
 
+  // Filter & Sort State
+  const [filterType, setFilterType] = useState<'ALL' | QuestType>('ALL');
+  const [filterStat, setFilterStat] = useState<'ALL' | StatType>('ALL');
+  const [sortBy, setSortBy] = useState<SortOption>('NEWEST');
+
   const [isGenerating, setIsGenerating] = useState(false);
-  const [newQuestFormOpen, setNewQuestFormOpen] = useState(false);
   
-  // New Quest Form State
+  // -- Quest Form State --
+  const [newQuestFormOpen, setNewQuestFormOpen] = useState(false);
+  const [isQuestBatchMode, setIsQuestBatchMode] = useState(false);
+  
   const [newQuestName, setNewQuestName] = useState('');
+  const [bulkQuestNames, setBulkQuestNames] = useState(''); // For Textarea
+  
   const [newQuestType, setNewQuestType] = useState<QuestType>(QuestType.DAILY);
   const [newQuestLevel, setNewQuestLevel] = useState<QuestLevel>(QuestLevel.L1);
   const [newQuestStat, setNewQuestStat] = useState<StatType>(StatType.SKILL);
   const [newQuestXP, setNewQuestXP] = useState(10);
   const [newQuestCoins, setNewQuestCoins] = useState(5);
+
+  // -- Reward Form State --
+  const [newRewardFormOpen, setNewRewardFormOpen] = useState(false);
+  const [isRewardBatchMode, setIsRewardBatchMode] = useState(false);
+  const [newRewardName, setNewRewardName] = useState('');
+  const [newRewardCost, setNewRewardCost] = useState(50);
+  const [bulkRewardText, setBulkRewardText] = useState('');
 
   // -- Persistence --
   useEffect(() => { localStorage.setItem('lq_profile', JSON.stringify(userProfile)); }, [userProfile]);
@@ -72,7 +94,7 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('lq_rewards', JSON.stringify(rewards)); }, [rewards]);
   useEffect(() => { localStorage.setItem('lq_projects', JSON.stringify(projects)); }, [projects]);
 
-  // -- Handlers --
+  // -- Quest Handlers --
 
   const handleCompleteQuest = (questId: string) => {
     const quest = quests.find(q => q.id === questId);
@@ -120,20 +142,101 @@ const App: React.FC = () => {
 
   const handleAddQuest = (e: React.FormEvent) => {
     e.preventDefault();
-    const newQuest: Quest = {
-      id: Date.now().toString(),
-      name: newQuestName,
-      type: newQuestType,
-      levelAssoc: newQuestLevel,
-      xpReward: newQuestXP,
-      coinReward: newQuestCoins,
-      statAssoc: newQuestStat,
-      completed: false
-    };
-    setQuests(prev => [...prev, newQuest]);
+
+    if (isQuestBatchMode) {
+      // Batch Mode
+      const lines = bulkQuestNames.split('\n').filter(line => line.trim() !== '');
+      if (lines.length === 0) return;
+
+      const newQuests: Quest[] = lines.map((line, index) => ({
+        id: (Date.now() + index).toString(),
+        name: line.trim(),
+        type: newQuestType,
+        levelAssoc: newQuestLevel,
+        xpReward: newQuestXP,
+        coinReward: newQuestCoins,
+        statAssoc: newQuestStat,
+        completed: false
+      }));
+      
+      setQuests(prev => [...prev, ...newQuests]);
+      setBulkQuestNames('');
+    } else {
+      // Single Mode
+      const newQuest: Quest = {
+        id: Date.now().toString(),
+        name: newQuestName,
+        type: newQuestType,
+        levelAssoc: newQuestLevel,
+        xpReward: newQuestXP,
+        coinReward: newQuestCoins,
+        statAssoc: newQuestStat,
+        completed: false
+      };
+      setQuests(prev => [...prev, newQuest]);
+      setNewQuestName('');
+    }
     setNewQuestFormOpen(false);
-    setNewQuestName('');
   };
+
+  // -- Reward Handlers --
+
+  const handleBuyReward = (reward: Reward) => {
+    if (userProfile.totalCoins >= reward.cost) {
+      if (window.confirm(`¿Comprar "${reward.name}" por ${reward.cost} monedas?`)) {
+        setUserProfile(prev => ({
+          ...prev,
+          totalCoins: prev.totalCoins - reward.cost
+        }));
+        alert("¡Objeto adquirido! ¡Disfruta tu recompensa!");
+      }
+    } else {
+      alert("No tienes suficientes monedas.");
+    }
+  };
+
+  const handleDeleteReward = (id: string) => {
+    if(window.confirm("¿Eliminar esta recompensa de la tienda?")) {
+      setRewards(prev => prev.filter(r => r.id !== id));
+    }
+  };
+
+  const handleAddReward = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (isRewardBatchMode) {
+       // Bulk Format: Name | Cost
+       const lines = bulkRewardText.split('\n').filter(line => line.trim() !== '');
+       if (lines.length === 0) return;
+       
+       const newBatchRewards: Reward[] = lines.map((line, index) => {
+         const [name, costStr] = line.split('|');
+         // If no cost provided after pipe, default to 50
+         const parsedCost = costStr ? parseInt(costStr.trim()) : 50; 
+         return {
+           id: (Date.now() + index).toString(),
+           name: name.trim(),
+           cost: isNaN(parsedCost) ? 50 : parsedCost
+         };
+       });
+
+       setRewards(prev => [...prev, ...newBatchRewards]);
+       setBulkRewardText('');
+
+    } else {
+      const newReward: Reward = {
+        id: Date.now().toString(),
+        name: newRewardName,
+        cost: newRewardCost
+      };
+      setRewards(prev => [...prev, newReward]);
+      setNewRewardName('');
+      setNewRewardCost(50);
+    }
+    setNewRewardFormOpen(false);
+  };
+
+  // -- AI Handler --
 
   const handleGenerateAIQuest = async () => {
     if (!process.env.API_KEY) {
@@ -154,20 +257,6 @@ const App: React.FC = () => {
       setQuests(prev => [...prev, newQuest]);
     } else {
       alert("La IA está descansando (Error de conexión o API Limit). Intenta de nuevo.");
-    }
-  };
-
-  const handleBuyReward = (reward: Reward) => {
-    if (userProfile.totalCoins >= reward.cost) {
-      if (window.confirm(`¿Comprar "${reward.name}" por ${reward.cost} monedas?`)) {
-        setUserProfile(prev => ({
-          ...prev,
-          totalCoins: prev.totalCoins - reward.cost
-        }));
-        alert("¡Objeto adquirido! ¡Disfruta tu recompensa!");
-      }
-    } else {
-      alert("No tienes suficientes monedas.");
     }
   };
 
@@ -233,159 +322,357 @@ const App: React.FC = () => {
     </div>
   );
 
-  const renderQuestLog = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold rpg-font text-white">Diario de Misiones</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={handleGenerateAIQuest}
-            disabled={isGenerating}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(147,51,234,0.3)]"
+  const renderQuestLog = () => {
+    // 1. Filter Active Quests
+    let activeQuests = quests.filter(q => !q.completed);
+
+    // 2. Apply Type & Stat Filters
+    if (filterType !== 'ALL') {
+      activeQuests = activeQuests.filter(q => q.type === filterType);
+    }
+    if (filterStat !== 'ALL') {
+      activeQuests = activeQuests.filter(q => q.statAssoc === filterStat);
+    }
+
+    // 3. Apply Sorting
+    const displayedQuests = [...activeQuests].sort((a, b) => {
+      if (sortBy === 'XP') return b.xpReward - a.xpReward;
+      if (sortBy === 'COINS') return b.coinReward - a.coinReward;
+      if (sortBy === 'NEWEST') {
+         return Number(b.id) - Number(a.id); 
+      }
+      return Number(a.id) - Number(b.id);
+    });
+
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <h2 className="text-2xl font-bold rpg-font text-white">Diario de Misiones</h2>
+          <div className="flex gap-2 w-full md:w-auto">
+            <button
+              onClick={handleGenerateAIQuest}
+              disabled={isGenerating}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(147,51,234,0.3)]"
+            >
+              <Sparkles className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
+              {isGenerating ? 'Invocando...' : 'Misión IA'}
+            </button>
+            <button 
+              onClick={() => setNewQuestFormOpen(!newQuestFormOpen)}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition shadow-[0_0_15px_rgba(37,99,235,0.3)]"
+            >
+              {newQuestFormOpen ? <X className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />} 
+              {newQuestFormOpen ? 'Cancelar' : 'Crear Misión'}
+            </button>
+          </div>
+        </div>
+
+        {/* Filters & Sorting Toolbar */}
+        <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 flex flex-col md:flex-row gap-4 items-start md:items-center">
+          <div className="flex items-center gap-2 text-gray-400 text-sm min-w-[80px]">
+            <ListFilter size={16} />
+            <span className="font-semibold">Filtrar:</span>
+          </div>
+          
+          <div className="flex flex-wrap gap-2 w-full md:w-auto">
+            <select 
+              value={filterType} 
+              onChange={(e) => setFilterType(e.target.value as any)}
+              className="bg-gray-900 border border-gray-600 text-sm rounded px-3 py-1.5 text-white focus:border-blue-500 outline-none flex-grow md:flex-grow-0"
+            >
+              <option value="ALL">Todos los Tipos</option>
+              {Object.values(QuestType).map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+
+            <select 
+              value={filterStat} 
+              onChange={(e) => setFilterStat(e.target.value as any)}
+              className="bg-gray-900 border border-gray-600 text-sm rounded px-3 py-1.5 text-white focus:border-blue-500 outline-none flex-grow md:flex-grow-0"
+            >
+              <option value="ALL">Todas las Stats</option>
+              {Object.values(StatType).map(s => <option key={s} value={s}>{s.split(' ')[0]}</option>)}
+            </select>
+          </div>
+
+          <div className="hidden md:block w-px h-6 bg-gray-700 mx-2"></div>
+
+          <div className="flex items-center gap-2 text-gray-400 text-sm min-w-[80px]">
+            <ArrowUpDown size={16} />
+            <span className="font-semibold">Ordenar:</span>
+          </div>
+
+          <select 
+            value={sortBy} 
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="bg-gray-900 border border-gray-600 text-sm rounded px-3 py-1.5 text-white focus:border-blue-500 outline-none w-full md:w-auto"
           >
-            <Sparkles className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
-            {isGenerating ? 'Invocando...' : 'Misión IA'}
-          </button>
-          <button 
-            onClick={() => setNewQuestFormOpen(!newQuestFormOpen)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition shadow-[0_0_15px_rgba(37,99,235,0.3)]"
-          >
-            <PlusCircle className="w-4 h-4" /> Nueva Misión
-          </button>
+            <option value="NEWEST">Más Recientes</option>
+            <option value="OLDEST">Más Antiguas</option>
+            <option value="XP">Mayor XP</option>
+            <option value="COINS">Mayor Oro</option>
+          </select>
+
+          {(filterType !== 'ALL' || filterStat !== 'ALL') && (
+            <button 
+              onClick={() => { setFilterType('ALL'); setFilterStat('ALL'); }}
+              className="text-xs text-red-400 hover:text-red-300 underline ml-auto md:ml-2"
+            >
+              Limpiar
+            </button>
+          )}
+        </div>
+
+        {/* Add Quest Form */}
+        {newQuestFormOpen && (
+          <form onSubmit={handleAddQuest} className="bg-gray-800 p-4 rounded-lg border border-gray-700 mb-6 space-y-4 animate-in slide-in-from-top-4 shadow-2xl ring-1 ring-blue-900">
+            
+            {/* Mode Toggles */}
+            <div className="flex space-x-2 border-b border-gray-700 pb-2 mb-2">
+              <button
+                type="button"
+                onClick={() => setIsQuestBatchMode(false)}
+                className={`flex items-center gap-2 px-3 py-1 rounded text-sm transition ${!isQuestBatchMode ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+              >
+                <FileText size={14} /> Individual
+              </button>
+              <button
+                 type="button"
+                 onClick={() => setIsQuestBatchMode(true)}
+                 className={`flex items-center gap-2 px-3 py-1 rounded text-sm transition ${isQuestBatchMode ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+              >
+                <Layers size={14} /> Masivo (Batch)
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo</label>
+                <select 
+                  value={newQuestType} onChange={(e) => setNewQuestType(e.target.value as QuestType)}
+                  className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm focus:border-blue-500 outline-none"
+                >
+                  {Object.values(QuestType).map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nivel</label>
+                <select 
+                  value={newQuestLevel} onChange={(e) => setNewQuestLevel(e.target.value as QuestLevel)}
+                  className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm focus:border-blue-500 outline-none"
+                >
+                  {Object.values(QuestLevel).map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Stat Asociada</label>
+                <select 
+                  value={newQuestStat} onChange={(e) => setNewQuestStat(e.target.value as StatType)}
+                  className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm focus:border-blue-500 outline-none"
+                >
+                  {Object.values(StatType).map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">XP</label>
+                    <input 
+                      type="number" min="1"
+                      value={newQuestXP} onChange={(e) => setNewQuestXP(Number(e.target.value))}
+                      className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm focus:border-blue-500 outline-none"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Coins</label>
+                    <input 
+                      type="number" min="0"
+                      value={newQuestCoins} onChange={(e) => setNewQuestCoins(Number(e.target.value))}
+                      className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm focus:border-blue-500 outline-none"
+                    />
+                  </div>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-700 pt-4">
+               <label className="block text-sm text-gray-300 mb-2">
+                 {isQuestBatchMode ? 'Lista de Misiones (Una por línea)' : 'Nombre de la Misión'}
+               </label>
+               
+               {isQuestBatchMode ? (
+                 <textarea
+                    required
+                    value={bulkQuestNames}
+                    onChange={(e) => setBulkQuestNames(e.target.value)}
+                    placeholder={"Leer libro 30 min\nHacer 20 flexiones\nLimpiar escritorio"}
+                    className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white h-32 focus:outline-none focus:border-blue-500 font-mono text-sm"
+                 />
+               ) : (
+                 <input 
+                  type="text" required
+                  value={newQuestName} onChange={(e) => setNewQuestName(e.target.value)}
+                  className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:outline-none focus:border-blue-500"
+                  placeholder="Ej: Stream de 2 horas"
+                />
+               )}
+               {isQuestBatchMode && <p className="text-xs text-gray-500 mt-1">Se crearán múltiples misiones con la configuración de arriba.</p>}
+            </div>
+
+            <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded font-bold transition">
+              {isQuestBatchMode ? 'Crear Múltiples Misiones' : 'Añadir Misión'}
+            </button>
+          </form>
+        )}
+
+        {/* Quest List */}
+        <div className="grid gap-4">
+          {displayedQuests.length === 0 && (
+            <div className="text-center py-16 border-2 border-dashed border-gray-800 rounded-lg">
+               <p className="text-gray-500 italic mb-2">
+                 {(filterType !== 'ALL' || filterStat !== 'ALL') 
+                   ? 'No se encontraron misiones con estos filtros.' 
+                   : 'No hay misiones activas.'}
+               </p>
+               <p className="text-sm text-gray-600">¡Crea una nueva o invoca a la IA!</p>
+            </div>
+          )}
+          
+          {displayedQuests.map(quest => (
+            <div key={quest.id} className={`bg-gray-800 rounded-lg p-4 border-l-4 shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition hover:bg-gray-750 ${quest.isAiGenerated ? 'border-purple-500' : 'border-blue-500'}`}>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded ${quest.type === QuestType.DAILY ? 'bg-green-900 text-green-300' : quest.type === QuestType.WEEKLY ? 'bg-blue-900 text-blue-300' : 'bg-orange-900 text-orange-300'}`}>
+                    {quest.type}
+                  </span>
+                  {quest.isAiGenerated && (
+                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-purple-900 text-purple-300 flex items-center gap-1">
+                      <Sparkles size={10} /> AI
+                    </span>
+                  )}
+                  <span className="text-xs text-gray-500">{quest.levelAssoc}</span>
+                </div>
+                <h3 className="text-lg font-bold text-white">{quest.name}</h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  +{quest.xpReward} XP ({quest.statAssoc.split(' ')[0]}) | +{quest.coinReward} Coins
+                </p>
+              </div>
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <button 
+                  onClick={() => handleCompleteQuest(quest.id)}
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium transition shadow-[0_0_10px_rgba(22,163,74,0.3)]"
+                >
+                  <CheckCircle2 size={18} /> Completar
+                </button>
+                <button 
+                  onClick={() => handleDeleteQuest(quest.id)}
+                  className="p-2 text-gray-500 hover:text-red-500 transition"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-
-      {/* Add Quest Form */}
-      {newQuestFormOpen && (
-        <form onSubmit={handleAddQuest} className="bg-gray-800 p-4 rounded-lg border border-gray-700 mb-6 space-y-4">
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Nombre de la Misión</label>
-            <input 
-              type="text" required
-              value={newQuestName} onChange={(e) => setNewQuestName(e.target.value)}
-              className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:outline-none focus:border-blue-500"
-              placeholder="Ej: Stream de 2 horas"
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Tipo</label>
-              <select 
-                value={newQuestType} onChange={(e) => setNewQuestType(e.target.value as QuestType)}
-                className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"
-              >
-                {Object.values(QuestType).map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Nivel Asociado</label>
-              <select 
-                value={newQuestLevel} onChange={(e) => setNewQuestLevel(e.target.value as QuestLevel)}
-                className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"
-              >
-                {Object.values(QuestLevel).map(l => <option key={l} value={l}>{l}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Stat Asociada</label>
-              <select 
-                value={newQuestStat} onChange={(e) => setNewQuestStat(e.target.value as StatType)}
-                className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"
-              >
-                {Object.values(StatType).map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-             <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className="block text-sm text-gray-400 mb-1">XP</label>
-                  <input 
-                    type="number" min="1"
-                    value={newQuestXP} onChange={(e) => setNewQuestXP(Number(e.target.value))}
-                    className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-sm text-gray-400 mb-1">Coins</label>
-                  <input 
-                    type="number" min="0"
-                    value={newQuestCoins} onChange={(e) => setNewQuestCoins(Number(e.target.value))}
-                    className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white"
-                  />
-                </div>
-             </div>
-          </div>
-          <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded font-bold transition">
-            Añadir al Libro
-          </button>
-        </form>
-      )}
-
-      {/* Quest List */}
-      <div className="grid gap-4">
-        {quests.filter(q => !q.completed).length === 0 && (
-          <div className="text-center py-10 text-gray-500 italic">No hay misiones activas. ¡Crea una o descansa, guerrero!</div>
-        )}
-        {quests.filter(q => !q.completed).map(quest => (
-          <div key={quest.id} className={`bg-gray-800 rounded-lg p-4 border-l-4 shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition hover:bg-gray-750 ${quest.isAiGenerated ? 'border-purple-500' : 'border-blue-500'}`}>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className={`text-xs font-bold px-2 py-0.5 rounded ${quest.type === QuestType.DAILY ? 'bg-green-900 text-green-300' : quest.type === QuestType.WEEKLY ? 'bg-blue-900 text-blue-300' : 'bg-orange-900 text-orange-300'}`}>
-                  {quest.type}
-                </span>
-                 {quest.isAiGenerated && (
-                  <span className="text-xs font-bold px-2 py-0.5 rounded bg-purple-900 text-purple-300 flex items-center gap-1">
-                    <Sparkles size={10} /> AI
-                  </span>
-                )}
-                <span className="text-xs text-gray-500">{quest.levelAssoc}</span>
-              </div>
-              <h3 className="text-lg font-bold text-white">{quest.name}</h3>
-              <p className="text-sm text-gray-400 mt-1">
-                +{quest.xpReward} XP ({quest.statAssoc.split(' ')[0]}) | +{quest.coinReward} Coins
-              </p>
-            </div>
-            <div className="flex items-center gap-2 w-full md:w-auto">
-              <button 
-                onClick={() => handleCompleteQuest(quest.id)}
-                className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium transition shadow-[0_0_10px_rgba(22,163,74,0.3)]"
-              >
-                <CheckCircle2 size={18} /> Completar
-              </button>
-              <button 
-                onClick={() => handleDeleteQuest(quest.id)}
-                className="p-2 text-gray-500 hover:text-red-500 transition"
-              >
-                <Trash2 size={18} />
-              </button>
-            </div>
-          </div>
-        ))}
-
-        {/* Completed Section Accordion could go here, but let's keep it simple for now */}
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderStore = () => (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
         <h2 className="text-2xl font-bold rpg-font text-white">Tienda del Héroe</h2>
-        <div className="bg-gray-800 px-4 py-2 rounded-lg border border-yellow-600/50 flex items-center gap-2">
-          <Coins className="text-yellow-500" />
-          <span className="text-yellow-400 font-bold text-xl">{userProfile.totalCoins}</span>
+        <div className="flex gap-4 items-center w-full md:w-auto justify-between md:justify-end">
+          <div className="bg-gray-800 px-4 py-2 rounded-lg border border-yellow-600/50 flex items-center gap-2">
+            <Coins className="text-yellow-500" />
+            <span className="text-yellow-400 font-bold text-xl">{userProfile.totalCoins}</span>
+          </div>
+          <button 
+            onClick={() => setNewRewardFormOpen(!newRewardFormOpen)}
+            className="flex items-center gap-2 px-4 py-2 bg-yellow-700 hover:bg-yellow-600 text-white rounded-lg text-sm font-bold transition"
+          >
+            {newRewardFormOpen ? <X size={16} /> : <PlusCircle size={16} />}
+            {newRewardFormOpen ? 'Cancelar' : 'Crear Recompensa'}
+          </button>
         </div>
       </div>
+
+      {/* New Reward Form */}
+      {newRewardFormOpen && (
+        <form onSubmit={handleAddReward} className="bg-gray-800 p-4 rounded-lg border border-yellow-600/30 mb-6 space-y-4 animate-in slide-in-from-top-4 shadow-xl">
+          <div className="flex space-x-2 border-b border-gray-700 pb-2 mb-2">
+              <button
+                type="button"
+                onClick={() => setIsRewardBatchMode(false)}
+                className={`flex items-center gap-2 px-3 py-1 rounded text-sm transition ${!isRewardBatchMode ? 'bg-yellow-600 text-black font-bold' : 'text-gray-400 hover:text-white'}`}
+              >
+                <FileText size={14} /> Individual
+              </button>
+              <button
+                 type="button"
+                 onClick={() => setIsRewardBatchMode(true)}
+                 className={`flex items-center gap-2 px-3 py-1 rounded text-sm transition ${isRewardBatchMode ? 'bg-yellow-600 text-black font-bold' : 'text-gray-400 hover:text-white'}`}
+              >
+                <Layers size={14} /> Masivo (Batch)
+              </button>
+            </div>
+
+            {isRewardBatchMode ? (
+              <div>
+                <label className="block text-sm text-gray-300 mb-2">Lista de Recompensas (Formato: Nombre | Costo)</label>
+                <textarea
+                    required
+                    value={bulkRewardText}
+                    onChange={(e) => setBulkRewardText(e.target.value)}
+                    placeholder={"Pizza Familiar | 80\nCine VIP | 60\nSkin LoL | 120"}
+                    className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white h-32 focus:outline-none focus:border-yellow-500 font-mono text-sm"
+                 />
+                 <p className="text-xs text-gray-500 mt-1">Un ítem por línea. Si no pones costo, será 50 por defecto.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-400 mb-1">Nombre del Item</label>
+                  <input 
+                    type="text" required
+                    value={newRewardName} onChange={(e) => setNewRewardName(e.target.value)}
+                    className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:outline-none focus:border-yellow-500"
+                    placeholder="Ej: Cena de Sushi"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Costo (Monedas)</label>
+                  <input 
+                    type="number" min="1"
+                    value={newRewardCost} onChange={(e) => setNewRewardCost(Number(e.target.value))}
+                    className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:outline-none focus:border-yellow-500"
+                  />
+                </div>
+              </div>
+            )}
+
+            <button type="submit" className="w-full bg-yellow-600 hover:bg-yellow-500 text-black py-2 rounded font-bold transition shadow-lg">
+              {isRewardBatchMode ? 'Añadir Items a la Tienda' : 'Crear Item'}
+            </button>
+        </form>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {rewards.map(reward => {
           const canAfford = userProfile.totalCoins >= reward.cost;
           return (
             <div key={reward.id} className="bg-gray-800 rounded-xl p-6 border border-gray-700 flex flex-col justify-between hover:border-gray-500 transition group relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+              
+              <button 
+                onClick={(e) => { e.stopPropagation(); handleDeleteReward(reward.id); }}
+                className="absolute top-2 right-2 text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition z-10"
+                title="Eliminar recompensa"
+              >
+                <Trash2 size={16} />
+              </button>
+
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition pointer-events-none">
                 <ShoppingBag size={64} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white mb-2">{reward.name}</h3>
+                <h3 className="text-xl font-bold text-white mb-2 pr-6">{reward.name}</h3>
                 <div className="text-3xl font-bold text-yellow-500 mb-4 rpg-font flex items-center gap-1">
                   {reward.cost} <span className="text-sm text-yellow-700">GP</span>
                 </div>
@@ -404,11 +691,6 @@ const App: React.FC = () => {
           );
         })}
       </div>
-      
-      {/* Add Reward UI could be added here */}
-       <div className="p-4 rounded-lg border border-dashed border-gray-700 text-center text-gray-500 hover:border-gray-500 hover:text-gray-400 cursor-pointer transition">
-         + Definir nueva recompensa personalizada (Próximamente)
-       </div>
     </div>
   );
 
