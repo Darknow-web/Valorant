@@ -37,6 +37,7 @@ export const generateQuestWithAI = async (stats: Stat[]): Promise<Omit<Quest, 'i
           type: Type.OBJECT,
           properties: {
             name: { type: Type.STRING, description: "A cool RPG-style name for the task" },
+            objective: { type: Type.STRING, description: "The specific, actionable condition to complete the quest (e.g., 'Run 5km', 'Stream for 2 hours')" },
             type: { type: Type.STRING, enum: [QuestType.DAILY, QuestType.WEEKLY, QuestType.MONTHLY] },
             levelAssoc: { type: Type.STRING, enum: [QuestLevel.L1, QuestLevel.L2, QuestLevel.L3] },
             xpReward: { type: Type.INTEGER },
@@ -53,7 +54,7 @@ export const generateQuestWithAI = async (stats: Stat[]): Promise<Omit<Quest, 'i
               ] 
             },
           },
-          required: ["name", "type", "levelAssoc", "xpReward", "coinReward", "statAssoc"]
+          required: ["name", "objective", "type", "levelAssoc", "xpReward", "coinReward", "statAssoc"]
         }
       }
     });

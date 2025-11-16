@@ -38,6 +38,7 @@ export const INITIAL_QUESTS: Quest[] = [
   {
     id: 'q_1',
     name: 'Ritual de Puntería (Aim Trainer)',
+    objective: 'Completar 30 minutos en Gridshot Ultimate con >90% de precisión.',
     type: QuestType.DAILY,
     levelAssoc: QuestLevel.L1,
     xpReward: 15,
@@ -48,6 +49,7 @@ export const INITIAL_QUESTS: Quest[] = [
   {
     id: 'q_2',
     name: 'Ahorro Semanal para la GPU',
+    objective: 'Guardar $20 en la alcancía física sin gastarlos en snacks.',
     type: QuestType.WEEKLY,
     levelAssoc: QuestLevel.L1,
     xpReward: 50,

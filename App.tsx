@@ -15,7 +15,9 @@ import {
   ArrowUpDown,
   X,
   FileText,
-  Layers
+  Layers,
+  Upload,
+  FileSpreadsheet
 } from 'lucide-react';
 import { Stat, Quest, Reward, EpicProject, UserProfile, StatType, QuestType, QuestLevel } from './types';
 import { INITIAL_STATS, INITIAL_PROJECTS, INITIAL_QUESTS, INITIAL_REWARDS } from './constants';
@@ -35,6 +37,27 @@ const STAT_COLORS: Record<StatType, string> = {
 
 type View = 'dashboard' | 'quests' | 'store' | 'projects';
 type SortOption = 'NEWEST' | 'OLDEST' | 'XP' | 'COINS';
+
+// Simple CSV Parser helper to handle quoted values
+const parseCSVLine = (text: string): string[] => {
+  const result: string[] = [];
+  let current = '';
+  let inQuote = false;
+  
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (char === '"') {
+      inQuote = !inQuote;
+    } else if (char === ',' && !inQuote) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result;
+};
 
 const App: React.FC = () => {
   // -- State --
@@ -72,6 +95,7 @@ const App: React.FC = () => {
   const [isQuestBatchMode, setIsQuestBatchMode] = useState(false);
   
   const [newQuestName, setNewQuestName] = useState('');
+  const [newQuestObjective, setNewQuestObjective] = useState(''); // New State for Objective
   const [bulkQuestNames, setBulkQuestNames] = useState(''); // For Textarea
   
   const [newQuestType, setNewQuestType] = useState<QuestType>(QuestType.DAILY);
@@ -140,17 +164,77 @@ const App: React.FC = () => {
     setQuests(prev => prev.filter(q => q.id !== id));
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (!text) return;
+
+      const lines = text.split('\n');
+      const newQuests: Quest[] = [];
+
+      // Skip header if present (simple check)
+      const startIndex = lines[0].toLowerCase().includes('name') ? 1 : 0;
+
+      for (let i = startIndex; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        // Expected CSV format: Name, Objective, Type, Level, Stat, XP, Coins
+        const parts = parseCSVLine(line);
+        if (parts.length < 2) continue;
+
+        const name = parts[0];
+        const objective = parts[1] || 'Objetivo genérico';
+        // Fallbacks or parsing for other fields if present, otherwise use default form state
+        // Advanced usage: Attempt to match enum values
+        const type = Object.values(QuestType).find(t => t === parts[2]) || newQuestType;
+        const level = Object.values(QuestLevel).find(l => l === parts[3]) || newQuestLevel;
+        const stat = Object.values(StatType).find(s => s === parts[4]) || newQuestStat;
+        const xp = parts[5] ? parseInt(parts[5]) : newQuestXP;
+        const coins = parts[6] ? parseInt(parts[6]) : newQuestCoins;
+
+        newQuests.push({
+          id: (Date.now() + i).toString(),
+          name,
+          objective,
+          type: type as QuestType,
+          levelAssoc: level as QuestLevel,
+          statAssoc: stat as StatType,
+          xpReward: isNaN(xp) ? newQuestXP : xp,
+          coinReward: isNaN(coins) ? newQuestCoins : coins,
+          completed: false
+        });
+      }
+
+      if (newQuests.length > 0) {
+        setQuests(prev => [...prev, ...newQuests]);
+        alert(`Se importaron ${newQuests.length} misiones exitosamente.`);
+        setNewQuestFormOpen(false);
+      } else {
+        alert("No se pudieron leer misiones. Verifica el formato CSV.");
+      }
+    };
+    reader.readAsText(file);
+    // Reset input
+    e.target.value = '';
+  };
+
   const handleAddQuest = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (isQuestBatchMode) {
-      // Batch Mode
+      // Batch Mode Text Area (Legacy/Simple)
       const lines = bulkQuestNames.split('\n').filter(line => line.trim() !== '');
       if (lines.length === 0) return;
 
       const newQuests: Quest[] = lines.map((line, index) => ({
         id: (Date.now() + index).toString(),
         name: line.trim(),
+        objective: "Objetivo importado en lote", // Fallback for simple text area batch
         type: newQuestType,
         levelAssoc: newQuestLevel,
         xpReward: newQuestXP,
@@ -166,6 +250,7 @@ const App: React.FC = () => {
       const newQuest: Quest = {
         id: Date.now().toString(),
         name: newQuestName,
+        objective: newQuestObjective || "Completar la tarea designada.",
         type: newQuestType,
         levelAssoc: newQuestLevel,
         xpReward: newQuestXP,
@@ -175,6 +260,7 @@ const App: React.FC = () => {
       };
       setQuests(prev => [...prev, newQuest]);
       setNewQuestName('');
+      setNewQuestObjective('');
     }
     setNewQuestFormOpen(false);
   };
@@ -440,7 +526,7 @@ const App: React.FC = () => {
                  onClick={() => setIsQuestBatchMode(true)}
                  className={`flex items-center gap-2 px-3 py-1 rounded text-sm transition ${isQuestBatchMode ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
               >
-                <Layers size={14} /> Masivo (Batch)
+                <Layers size={14} /> Masivo / Excel
               </button>
             </div>
 
@@ -493,31 +579,59 @@ const App: React.FC = () => {
             </div>
 
             <div className="border-t border-gray-700 pt-4">
-               <label className="block text-sm text-gray-300 mb-2">
-                 {isQuestBatchMode ? 'Lista de Misiones (Una por línea)' : 'Nombre de la Misión'}
-               </label>
-               
                {isQuestBatchMode ? (
-                 <textarea
-                    required
-                    value={bulkQuestNames}
-                    onChange={(e) => setBulkQuestNames(e.target.value)}
-                    placeholder={"Leer libro 30 min\nHacer 20 flexiones\nLimpiar escritorio"}
-                    className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white h-32 focus:outline-none focus:border-blue-500 font-mono text-sm"
-                 />
+                 <div className="space-y-4">
+                   <div className="bg-gray-900/50 p-4 rounded border border-dashed border-gray-600 text-center">
+                     <label className="cursor-pointer flex flex-col items-center gap-2">
+                       <FileSpreadsheet className="text-green-500 w-10 h-10" />
+                       <span className="font-bold text-white">Cargar archivo CSV (Excel)</span>
+                       <span className="text-xs text-gray-400">Formato: Nombre, Objetivo, Tipo, Nivel, Stat, XP, Coins</span>
+                       <input 
+                        type="file" 
+                        accept=".csv"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                       />
+                     </label>
+                   </div>
+                   
+                   <div>
+                     <label className="block text-sm text-gray-300 mb-2">O pegar nombres (Formato Simple)</label>
+                     <textarea
+                        value={bulkQuestNames}
+                        onChange={(e) => setBulkQuestNames(e.target.value)}
+                        placeholder={"Leer libro 30 min\nHacer 20 flexiones"}
+                        className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white h-20 focus:outline-none focus:border-blue-500 font-mono text-sm"
+                     />
+                     <p className="text-xs text-gray-500 mt-1">Usará la configuración de arriba para todos los items pegados aquí.</p>
+                   </div>
+                 </div>
                ) : (
-                 <input 
-                  type="text" required
-                  value={newQuestName} onChange={(e) => setNewQuestName(e.target.value)}
-                  className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:outline-none focus:border-blue-500"
-                  placeholder="Ej: Stream de 2 horas"
-                />
+                 <>
+                   <div className="mb-3">
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre de la Misión</label>
+                      <input 
+                        type="text" required
+                        value={newQuestName} onChange={(e) => setNewQuestName(e.target.value)}
+                        className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:outline-none focus:border-blue-500"
+                        placeholder="Ej: Stream de 2 horas"
+                      />
+                   </div>
+                   <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Objetivo (Descripción)</label>
+                      <textarea 
+                        required
+                        value={newQuestObjective} onChange={(e) => setNewQuestObjective(e.target.value)}
+                        className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:outline-none focus:border-blue-500 h-20 resize-none"
+                        placeholder="Ej: Mantener una media de 15 viewers sin tiltearse."
+                      />
+                   </div>
+                 </>
                )}
-               {isQuestBatchMode && <p className="text-xs text-gray-500 mt-1">Se crearán múltiples misiones con la configuración de arriba.</p>}
             </div>
 
             <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded font-bold transition">
-              {isQuestBatchMode ? 'Crear Múltiples Misiones' : 'Añadir Misión'}
+              {isQuestBatchMode ? 'Procesar Lote' : 'Añadir Misión'}
             </button>
           </form>
         )}
@@ -550,7 +664,10 @@ const App: React.FC = () => {
                   <span className="text-xs text-gray-500">{quest.levelAssoc}</span>
                 </div>
                 <h3 className="text-lg font-bold text-white">{quest.name}</h3>
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="text-sm text-gray-300 mt-1 italic border-l-2 border-gray-600 pl-2 mb-2">
+                  "{quest.objective}"
+                </p>
+                <p className="text-xs text-gray-400">
                   +{quest.xpReward} XP ({quest.statAssoc.split(' ')[0]}) | +{quest.coinReward} Coins
                 </p>
               </div>
@@ -771,7 +888,7 @@ const App: React.FC = () => {
              <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight rpg-font">
                LIFE QUEST <span className="text-blue-500">RPG</span>
              </h1>
-             <p className="text-gray-500 text-sm">Streamer Divino Edition v1.0</p>
+             <p className="text-gray-500 text-sm">Streamer Divino Edition v1.1</p>
            </div>
            <div className="hidden md:block text-right">
              <p className="font-bold text-white">{userProfile.name}</p>

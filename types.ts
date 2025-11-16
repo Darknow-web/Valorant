@@ -31,6 +31,7 @@ export interface Stat {
 export interface Quest {
   id: string;
   name: string;
+  objective: string; // New field
   type: QuestType;
   levelAssoc: QuestLevel;
   xpReward: number;
