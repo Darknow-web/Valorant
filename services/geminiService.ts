@@ -2,7 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Quest, QuestLevel, QuestType, Stat, StatType } from "../types";
 
 const getClient = () => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = import.meta.env.VITE_API_KEY;
   if (!apiKey) {
     console.warn("API_KEY not found in environment variables. AI features will be disabled.");
     return null;
