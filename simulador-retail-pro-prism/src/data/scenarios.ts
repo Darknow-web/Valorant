@@ -1,5 +1,6 @@
 import { ModuleData, Scenario } from '../types';
 import { readFieldValue } from '../lib/stepData';
+import { Catalog, defaultCatalog } from './catalog';
 
 /**
  * Guías de situación.
@@ -170,11 +171,12 @@ export const scenarios: Scenario[] = [
     datos: {
       razon: 'm10-s7|targetValue',
       comprobante: 'm10-s10|targetValue',
+      documento: 'catalog|returnDocument.id',
     },
     pistas: [
+      'La boleta que te entrega tiene el número {{documento}}.',
       'Ella no quiere otro producto: la razón que corresponde en el sistema es {{razon}}.',
       'Toda devolución de dinero se documenta con el comprobante {{comprobante}}.',
-      'El número de documento a buscar está impreso en la boleta que te entregó.',
       'Como el dinero se le devuelve a su cuenta, la forma de pago es la de transferencia.',
     ],
     objetivo: 'Deja registrada la devolución del dinero con el comprobante correcto.',
@@ -187,12 +189,16 @@ export const scenarios: Scenario[] = [
     datos: {
       razon: 'm11-s7|targetValue',
       comprobante: 'm11-s10|targetValue',
+      documento: 'catalog|returnDocument.id',
+      productoNuevo: 'm11-s15|data.sku',
+      clienteNc: 'm11-s15|data.doc',
     },
     pistas: [
+      'La boleta que trae tiene el número {{documento}}.',
       'No pide su dinero de vuelta: la razón que corresponde es {{razon}}.',
       'La operación se documenta con el comprobante {{comprobante}}.',
       'El saldo a su favor queda como crédito de tienda; ese crédito se usa primero al pagar el producto nuevo.',
-      'El producto nuevo y el cliente de la nota de crédito deben quedar asociados a la nueva transacción antes de cobrar.',
+      'El producto que se lleva a cambio tiene el código {{productoNuevo}}, y va a nombre del cliente con documento {{clienteNc}}.',
     ],
     objetivo: 'Deja el cambio cerrado: nota de crédito emitida y producto nuevo pagado.',
   },
@@ -245,17 +251,29 @@ export interface ResolvedScenario {
   objetivo: string;
 }
 
+/** Lee un valor del catálogo por ruta, p. ej. 'returnDocument.id'. */
+function readCatalogValue(catalog: Catalog, path: string): string {
+  const value = path.split('.').reduce<any>((acc, key) => (acc == null ? acc : acc[key]), catalog);
+  return value === undefined || value === null ? '' : String(value);
+}
+
 /**
  * Devuelve la situación con los datos ya reemplazados. Si un dato no está
  * configurado, la pista que lo menciona se omite en vez de mostrar un hueco.
  */
-export function resolveScenario(moduleId: string, modules: ModuleData[]): ResolvedScenario | null {
+export function resolveScenario(
+  moduleId: string,
+  modules: ModuleData[],
+  catalog: Catalog = defaultCatalog
+): ResolvedScenario | null {
   const scenario = scenarios.find((s) => s.moduleId === moduleId);
   if (!scenario) return null;
 
   const values: Record<string, string> = {};
   for (const [key, reference] of Object.entries(scenario.datos)) {
-    values[key] = readFieldValue(modules, reference);
+    values[key] = reference.startsWith('catalog|')
+      ? readCatalogValue(catalog, reference.slice('catalog|'.length))
+      : readFieldValue(modules, reference);
   }
 
   const pistas: string[] = [];

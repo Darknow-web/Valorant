@@ -1,4 +1,5 @@
 import { ConfigurableField, ModuleData, Step, StepDataMap } from '../types';
+import { Catalog, findCustomer, findProduct } from '../data/catalog';
 
 /**
  * Etiquetas legibles para cada dato validado. La clave es el nombre técnico que
@@ -51,9 +52,14 @@ export function fieldLabel(key: string): string {
 
 /** ¿Este valor es un dato que el entrenador debería configurar? */
 function isConfigurableValue(value: unknown): boolean {
+  // Los booleanos son interruptores internos del simulador (por ejemplo
+  // "el modal de nivel de precio quedó marcado"), no datos de la situación:
+  // se siguen validando, pero no se muestran ni se dejan editar.
+  if (typeof value === 'boolean') return false;
   // Los valores vacíos son aserciones internas ("este campo debe quedar en
-  // blanco"), no datos de la situación: se validan pero no se muestran.
-  return typeof value === 'string' ? value.trim() !== '' : value !== undefined && value !== null && value !== '';
+  // blanco"), tampoco se muestran.
+  if (typeof value === 'string') return value.trim() !== '';
+  return value !== undefined && value !== null && value !== '';
 }
 
 /** Lista plana de todos los datos configurables, ya con el override aplicado. */
@@ -91,6 +97,20 @@ export function collectConfigurableFields(modules: ModuleData[], overrides: Step
           });
         }
       }
+
+      if (step.data) {
+        for (const [key, value] of Object.entries(step.data)) {
+          fields.push({
+            stepId: step.id,
+            moduleId: mod.id,
+            moduleTitle: mod.title,
+            path: `data.${key}`,
+            label: step.dataLabels?.[key] || fieldLabel(key),
+            help: 'Se comprueba al cerrar el paso.',
+            value: override.data?.[key] ?? String(value),
+          });
+        }
+      }
     }
   }
 
@@ -121,12 +141,54 @@ export function applyStepData(modules: ModuleData[], overrides: StepDataMap): Mo
       if (override.expectedState && step.expectedState) {
         next.expectedState = { ...step.expectedState };
         for (const [key, value] of Object.entries(override.expectedState)) {
-          if (key in step.expectedState) next.expectedState[key] = value;
+          // Solo se sustituyen claves que ya existen, y nunca las booleanas:
+          // esas son interruptores internos, no datos de la situación.
+          if (key in step.expectedState && typeof step.expectedState[key] !== 'boolean') {
+            next.expectedState[key] = value;
+          }
+        }
+      }
+      if (override.data && step.data) {
+        next.data = { ...step.data };
+        for (const [key, value] of Object.entries(override.data)) {
+          if (key in step.data) next.data[key] = value;
         }
       }
       return next;
     }),
   }));
+}
+
+/**
+ * Qué tipo de dato es un campo: los códigos tienen que existir en el catálogo
+ * simulado, porque si no la pantalla del POS no encuentra nada al buscarlos y
+ * el módulo se queda bloqueado.
+ */
+export type FieldKind = 'producto' | 'cliente' | 'otro';
+
+export function fieldKind(field: ConfigurableField): FieldKind {
+  const label = field.label.toLowerCase();
+  if (label.includes('producto')) return 'producto';
+  if (label.includes('documento') || label.includes('ruc') || label.includes('cliente')) return 'cliente';
+  return 'otro';
+}
+
+/**
+ * Devuelve un aviso si el valor configurado no existe en el catálogo.
+ * `null` significa que está bien.
+ */
+export function checkAgainstCatalog(field: ConfigurableField, catalog: Catalog): string | null {
+  const value = field.value.trim();
+  if (!value) return 'Este dato está vacío: el paso no se podrá completar.';
+
+  const kind = fieldKind(field);
+  if (kind === 'producto' && !findProduct(catalog, value)) {
+    return `No hay ningún producto con el código ${value} en el catálogo. El colaborador no podrá agregarlo a la venta.`;
+  }
+  if (kind === 'cliente' && !findCustomer(catalog, value)) {
+    return `No hay ningún cliente con el documento ${value} en el catálogo. El colaborador no podrá asociarlo a la venta.`;
+  }
+  return null;
 }
 
 /** Lee un dato ya configurado, por referencia 'stepId|ruta'. */
@@ -136,6 +198,7 @@ export function readFieldValue(modules: ModuleData[], reference: string): string
     const step = mod.steps.find((s) => s.id === stepId);
     if (!step) continue;
     if (path === 'targetValue') return step.targetValue ?? '';
+    if (path?.startsWith('data.')) return step.data?.[path.slice('data.'.length)] ?? '';
     if (path?.startsWith('expectedState.')) {
       const key = path.slice('expectedState.'.length);
       const value = step.expectedState?.[key];

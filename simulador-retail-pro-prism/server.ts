@@ -167,8 +167,11 @@ const defaultConfig = {
   penaltyPerHint: 0.5,
   gradingScale: 'vigesimal' as 'vigesimal' | 'percentage',
   passingScore: 14,
-  // Overrides de DATOS por paso: { [stepId]: { targetValue?, expectedState? } }
+  // Overrides de DATOS por paso: { [stepId]: { targetValue?, expectedState?, data? } }
   stepData: {} as Record<string, any>,
+  // Catálogo simulado de la tienda (productos, clientes, tarjetas, etc.).
+  // `null` significa "usa el catálogo por defecto de la app".
+  catalog: null as any,
 };
 
 async function readConfig(username: string) {
@@ -369,15 +372,21 @@ app.post('/api/admin/disconnect', requireAuth, async (req: any, res) => {
 // --- Datos de validación por paso (overrides). El alumno los lee en modo público:
 // son datos del simulador (SKU, DNI de prueba, montos), no información sensible. ---
 app.get('/api/step-data', async (req, res) => {
-  const teacher = String(req.query.teacher || '');
-  if (!teacher) return res.json({ stepData: {} });
+  const teacher = String(req.query.teacher || '').trim();
+  if (!teacher) return res.json({ stepData: {}, catalog: null, teacherExists: false });
+  const users = await readUsers();
+  if (!users.find((u: any) => u.username === teacher)) {
+    // El enlace apunta a un entrenador que no existe. Antes esto pasaba en
+    // silencio y el colaborador entrenaba con datos que nadie iba a recibir.
+    return res.json({ stepData: {}, catalog: null, teacherExists: false });
+  }
   const config = await readConfig(teacher);
-  res.json({ stepData: config.stepData || {} });
+  res.json({ stepData: config.stepData || {}, catalog: config.catalog || null, teacherExists: true });
 });
 
 app.get('/api/admin/step-data', requireAuth, async (req: any, res) => {
   const config = await readConfig(req.user.username);
-  res.json({ stepData: config.stepData || {} });
+  res.json({ stepData: config.stepData || {}, catalog: config.catalog || null });
 });
 
 app.post('/api/admin/step-data', requireAuth, async (req: any, res) => {
@@ -399,13 +408,66 @@ app.post('/api/admin/step-data', requireAuth, async (req: any, res) => {
       }
       if (Object.keys(st).length) entry.expectedState = st;
     }
+    if (raw.data && typeof raw.data === 'object' && !Array.isArray(raw.data)) {
+      const extra: Record<string, string> = {};
+      for (const [k, v] of Object.entries<any>(raw.data)) {
+        if (typeof v === 'string' || typeof v === 'number') extra[k] = String(v);
+      }
+      if (Object.keys(extra).length) entry.data = extra;
+    }
     if (Object.keys(entry).length) clean[stepId] = entry;
   }
+
   const config = await readConfig(req.user.username);
   config.stepData = clean;
+  if (req.body?.catalog !== undefined) {
+    config.catalog = sanitizeCatalog(req.body.catalog);
+  }
   await writeConfig(req.user.username, config);
-  res.json({ success: true, stepData: clean });
+  res.json({ success: true, stepData: clean, catalog: config.catalog || null });
 });
+
+/**
+ * Acepta únicamente la forma esperada del catálogo, con textos y números.
+ * `null` restaura el catálogo por defecto de la app.
+ */
+function sanitizeCatalog(raw: any) {
+  if (raw === null) return null;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+
+  const text = (v: any) => (typeof v === 'string' || typeof v === 'number' ? String(v) : '');
+  const num = (v: any) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+
+  return {
+    products: Array.isArray(raw.products)
+      ? raw.products.slice(0, 50).map((p: any) => ({
+          sku: text(p?.sku),
+          ean: text(p?.ean) || text(p?.sku),
+          desc: text(p?.desc),
+          price: num(p?.price),
+          stock: num(p?.stock),
+        }))
+      : [],
+    customers: Array.isArray(raw.customers)
+      ? raw.customers.slice(0, 50).map((c: any, i: number) => ({
+          id: text(c?.id) || String(i + 1),
+          doc: text(c?.doc),
+          name: text(c?.name),
+          email: text(c?.email),
+          esAgregador: !!c?.esAgregador,
+        }))
+      : [],
+    cardTypes: Array.isArray(raw.cardTypes) ? raw.cardTypes.slice(0, 20).map(text).filter(Boolean) : [],
+    returnDocument: {
+      id: text(raw.returnDocument?.id),
+      date: text(raw.returnDocument?.date),
+      customerDoc: text(raw.returnDocument?.customerDoc),
+      total: text(raw.returnDocument?.total),
+      docType: text(raw.returnDocument?.docType),
+    },
+    fondoCajaInicial: text(raw.fondoCajaInicial),
+  };
+}
 
 // --- Resultados de colaboradores ---
 app.get('/api/admin/students', requireAuth, async (req: any, res) => {

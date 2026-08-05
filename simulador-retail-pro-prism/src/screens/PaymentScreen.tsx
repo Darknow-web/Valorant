@@ -4,7 +4,7 @@ import { Interactive } from '../components/ui/Interactive';
 import { useSimulator } from '../store/SimulatorContext';
 
 export const PaymentScreen = () => {
-  const { appState, setAppState, handleInteract } = useSimulator();
+  const { appState, setAppState, handleInteract, catalog } = useSimulator();
   const [openDropdown, setOpenDropdown] = React.useState<string | null>(null);
 
   const totalDoc = appState.cart.reduce((sum, item) => sum + item.price, 0);
@@ -12,7 +12,9 @@ export const PaymentScreen = () => {
   const pending = (totalDoc - totalPaid).toFixed(2);
   const vuelto = (totalPaid - totalDoc > 0.01 && totalDoc > 0) ? (totalPaid - totalDoc).toFixed(2) : (totalDoc < 0 ? Math.abs(totalDoc).toFixed(2) : '0.00');
   const paymentMethods = ['Efectivo', 'Tarjeta de Crédito', 'Tarjeta de Débito', 'Crédito de Tienda'];
-  const cardTypes = ['Visa'];
+  // Las marcas de tarjeta salen del catálogo del entrenador: antes estaba fija
+  // en 'Visa', así que si él cambiaba la marca esperada era imposible elegirla.
+  const cardTypes = catalog.cardTypes;
   
   const showVuelto = (totalPaid - totalDoc > 0.01 && totalDoc > 0);
   const isComplete = totalDoc < 0 
@@ -20,7 +22,7 @@ export const PaymentScreen = () => {
     : (totalPaid >= totalDoc && (!showVuelto || appState.vueltoGiven));
 
   return (
-    <div className="w-full h-full flex flex-col bg-white">
+    <div className="w-full min-h-full flex flex-col bg-white">
       {/* Top Black Logo Bar */}
       <div className="h-[32px] px-2 flex items-center bg-[#222222] shrink-0 border-b border-[#111]">
         <img src="https://firebasestorage.googleapis.com/v0/b/simulador-retail-pro.firebasestorage.app/o/Modulo%203%20ventana%20de%20venta%2FLogo%20con%20p%20blanca.png?alt=media" alt="Retail Pro Logo" className="h-[22px] object-contain ml-1" />
@@ -356,7 +358,7 @@ export const PaymentScreen = () => {
                      </div>
                      <div className="flex items-center mt-2">
                         <label className="w-[150px] text-[12px] font-bold text-right pr-4 text-[#333]">Número ID del Cliente</label>
-                        <input type="text" value={appState.currentCustomer ? appState.currentCustomer.doc : '116002997'} className="flex-1 border border-gray-300 bg-[#eeeeee] px-2 text-[13px] text-[#333] h-[26px] focus:outline-none" readOnly />
+                        <input type="text" value={appState.currentCustomer ? appState.currentCustomer.doc : catalog.returnDocument.customerDoc} className="flex-1 border border-gray-300 bg-[#eeeeee] px-2 text-[13px] text-[#333] h-[26px] focus:outline-none" readOnly />
                      </div>
                      <div className="flex items-center mt-2">
                         <label className="w-[150px] text-[12px] font-bold text-right pr-4 text-[#333]">Crédito Tienda Disponible</label>

@@ -3,19 +3,49 @@ import { PrismHeader, PrismTab, PrismFooter as PrismFooterOld, PrismButtonPrimar
 import { Interactive } from '../components/ui/Interactive';
 import { useSimulator } from '../store/SimulatorContext';
 import { Icons } from '../config/icons';
-import { mockProducts, mockCustomers } from '../data/modules';
+import { findCustomer, findProduct } from '../data/catalog';
 
 export const PosMainScreen = () => {
   const [activeTab, setActiveTab] = React.useState('Venta');
-  const { appState, setAppState, handleInteract, currentModuleId } = useSimulator();
+  const { appState, setAppState, handleInteract, currentModuleId, catalog, triggerCustomError } = useSimulator();
   const [itemSearchStr, setItemSearchStr] = useState('');
   const [custSearchStr, setCustSearchStr] = useState('');
+
+  // El producto y el cliente se buscan en el catálogo que configuró el
+  // entrenador. Antes se buscaban en listas fijas del código, así que al
+  // cambiar un SKU o un documento la búsqueda no encontraba nada y el módulo
+  // quedaba bloqueado aunque el colaborador escribiera el valor correcto.
+  const buscarProducto = (code: string) => {
+    const prod = findProduct(catalog, code);
+    if (!prod) {
+      triggerCustomError(`No se encontró ningún artículo con el código ${code.trim()}.`);
+      return false;
+    }
+    const newProd = { ...prod };
+    if (appState.priceLevelActive) newProd.price = newProd.price * 1.05;
+    setAppState({ cart: [...appState.cart, newProd] });
+    return true;
+  };
+
+  const buscarCliente = (doc: string) => {
+    const customer = findCustomer(catalog, doc);
+    if (!customer) {
+      triggerCustomError(`No se encontró ningún cliente con el documento ${doc.trim()}.`);
+      return false;
+    }
+    if (customer.esAgregador) {
+      setAppState({ pendingCustomer: customer, showPriceLevelModal: true, applyPriceLevelToExisting: false });
+    } else {
+      setAppState({ currentCustomer: customer });
+    }
+    return true;
+  };
 
   const numericTotal = appState.cart.reduce((sum, item) => sum + item.price, 0);
   const formattedTotal = numericTotal < 0 ? `-S/.${Math.abs(numericTotal).toFixed(2)}` : `S/.${numericTotal.toFixed(2)}`;
 
   return (
-    <div className="absolute inset-0 flex flex-col bg-[#222222]">
+    <div className="relative w-full min-h-full flex flex-col bg-[#222222]">
       {/* Top Black Logo Bar */}
       <div className="h-[32px] px-2 flex items-center bg-[#222222] shrink-0 border-b border-[#111]">
         <img src="https://firebasestorage.googleapis.com/v0/b/simulador-retail-pro.firebasestorage.app/o/Modulo%203%20ventana%20de%20venta%2FLogo%20con%20p%20blanca.png?alt=media" alt="Retail Pro Logo" className="h-[22px] object-contain ml-1" />
@@ -184,14 +214,7 @@ export const PosMainScreen = () => {
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                    const val = e.currentTarget.value;
-                                   const prod = mockProducts.find(p => p.sku === val || p.ean === val);
-                                   if (prod) {
-                                      const newProd = { ...prod };
-                                      if (appState.priceLevelActive) {
-                                         newProd.price = newProd.price * 1.05;
-                                      }
-                                      setAppState({ cart: [...appState.cart, newProd] });
-                                   }
+                                   if (!buscarProducto(val)) return;
                                    handleInteract('pos-search-item', val, true);
                                    setItemSearchStr('');
                                 }
@@ -202,14 +225,7 @@ export const PosMainScreen = () => {
                          <button className="bg-gradient-to-b from-[#1c4e8a] to-[#0d3460] w-[40px] h-full flex items-center justify-center text-white border border-[#031326] shadow-sm ml-1"
                            onClick={() => {
                              const val = itemSearchStr;
-                             const prod = mockProducts.find(p => p.sku === val || p.ean === val);
-                             if (prod) {
-                                const newProd = { ...prod };
-                                if (appState.priceLevelActive) {
-                                   newProd.price = newProd.price * 1.05;
-                                }
-                                setAppState({ cart: [...appState.cart, newProd] });
-                             }
+                             if (!buscarProducto(val)) return;
                              handleInteract('pos-search-item', val, true);
                              setItemSearchStr('');
                            }}
@@ -318,14 +334,7 @@ export const PosMainScreen = () => {
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                                const val = e.currentTarget.value;
-                               const customer = mockCustomers.find(c => c.doc === val.trim());
-                               if (customer) {
-                                  if (val.trim() === '22222222' || val.trim() === '33333333') {
-                                     setAppState({ pendingCustomer: customer, showPriceLevelModal: true, applyPriceLevelToExisting: false });
-                                  } else {
-                                     setAppState({ currentCustomer: customer });
-                                  }
-                               }
+                               if (!buscarCliente(val)) return;
                                handleInteract('pos-search-customer', val, true);
                                setCustSearchStr('');
                             }
@@ -336,14 +345,7 @@ export const PosMainScreen = () => {
                          <button className="bg-gradient-to-b from-[#1c4e8a] to-[#2a4d78] w-[40px] h-full flex items-center justify-center text-white border border-[#0a203a] ml-1 shadow-sm"
                            onClick={() => {
                              const val = custSearchStr;
-                             const customer = mockCustomers.find(c => c.doc === val.trim());
-                             if (customer) {
-                                if (val.trim() === '22222222' || val.trim() === '33333333') {
-                                   setAppState({ pendingCustomer: customer, showPriceLevelModal: true, applyPriceLevelToExisting: false });
-                                } else {
-                                   setAppState({ currentCustomer: customer });
-                                }
-                             }
+                             if (!buscarCliente(val)) return;
                              handleInteract('pos-search-customer', val, true);
                              setCustSearchStr('');
                            }}
@@ -413,7 +415,7 @@ export const PosMainScreen = () => {
                   <div className="bg-white border border-[#222] text-[12px] flex flex-col shadow-inner">
                      <div className="flex justify-between border-b border-[#e0e0e0] p-1.5 px-2"><span className="font-bold text-[#444]">Subsidiaria</span><span className="text-[#666]">Mascotas Peru</span></div>
                      <div className="flex justify-between border-b border-[#e0e0e0] p-1.5 px-2"><span className="font-bold text-[#444]">Tienda</span><span className="text-[#666]">MAIN</span></div>
-                     <div className="flex justify-between border-b border-[#e0e0e0] p-1.5 px-2"><span className="font-bold text-[#444]">Cajero</span><span className="text-[#666]">sysadmin</span></div>
+                     <div className="flex justify-between border-b border-[#e0e0e0] p-1.5 px-2"><span className="font-bold text-[#444]">Cajero</span><span className="text-[#666]">{appState.user || 'sysadmin'}</span></div>
                      <div className="flex justify-between border-b border-[#e0e0e0] p-1.5 px-2"><span className="font-bold text-[#444]">Subtotal Venta</span><span className="text-[#666]">{formattedTotal}</span></div>
                      <div className="flex justify-between border-b border-[#e0e0e0] p-1.5 px-2"><span className="font-bold text-[#444]">Impuesto sobre las Ventas</span><span className="text-[#666]">S/.0.00</span></div>
                      <div className="flex justify-between border-b border-[#e0e0e0] p-1.5 px-2"><span className="font-bold text-[#444]">Cantidad de Linea</span><span className="text-[#666]">{appState.cart.length}</span></div>

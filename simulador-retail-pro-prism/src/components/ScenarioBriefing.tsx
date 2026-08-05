@@ -1,5 +1,6 @@
 import React from 'react';
 import { ModuleData } from '../types';
+import { Catalog } from '../data/catalog';
 import { resolveScenario } from '../data/scenarios';
 import { Badge, Button, Card } from './ui/Kit';
 
@@ -12,15 +13,17 @@ import { Badge, Button, Card } from './ui/Kit';
 export const ScenarioBriefing = ({
   module: mod,
   modules,
+  catalog,
   onStart,
   onBack,
 }: {
   module: ModuleData;
   modules: ModuleData[];
+  catalog: Catalog;
   onStart: () => void;
   onBack: () => void;
 }) => {
-  const scenario = resolveScenario(mod.id, modules);
+  const scenario = resolveScenario(mod.id, modules, catalog);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -87,13 +90,15 @@ export const ScenarioBriefing = ({
 export const ScenarioDrawer = ({
   moduleId,
   modules,
+  catalog,
   onClose,
 }: {
   moduleId: string;
   modules: ModuleData[];
+  catalog: Catalog;
   onClose: () => void;
 }) => {
-  const scenario = resolveScenario(moduleId, modules);
+  const scenario = resolveScenario(moduleId, modules, catalog);
   if (!scenario) return null;
 
   return (

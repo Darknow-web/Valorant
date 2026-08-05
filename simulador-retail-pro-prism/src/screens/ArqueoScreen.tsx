@@ -7,7 +7,7 @@ export const ArqueoScreen: React.FC = () => {
   const { handleInteract } = useSimulator();
 
   return (
-    <div className="absolute inset-0 bg-[#222222] flex flex-col text-[#333] text-[12px] font-sans">
+    <div className="relative w-full min-h-full bg-[#222222] flex flex-col text-[#333] text-[12px] font-sans">
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel: Filtros de Reportes */}
         <div className="w-[450px] h-fit bg-white flex flex-col border border-white m-[2px]">

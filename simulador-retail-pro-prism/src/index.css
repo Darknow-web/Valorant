@@ -48,3 +48,25 @@ body {
   outline: 2px solid var(--color-brand);
   outline-offset: 2px;
 }
+
+/*
+  En pantallas táctiles se agranda el área sensible de los controles pequeños
+  del POS simulado (botones de 24-40 px) hasta los 44 px recomendados, sin
+  cambiar su tamaño visual: así se sigue pareciendo al sistema real pero se
+  puede pulsar con el dedo.
+*/
+@media (hover: none) and (pointer: coarse) {
+  .prism-screen :where(button, [role="button"], select, input) {
+    position: relative;
+  }
+
+  .prism-screen :where(button, [role="button"]):not(.no-touch-target)::after {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+}
+

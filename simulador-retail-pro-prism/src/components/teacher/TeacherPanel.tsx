@@ -4,15 +4,17 @@ import { clearToken, studentLinkFor } from '../../lib/session';
 import { Badge, Page } from '../ui/Kit';
 import { ShareLinkPanel } from './ShareLinkPanel';
 import { StepDataEditor } from './StepDataEditor';
+import { CatalogEditor } from './CatalogEditor';
 import { SyncConfigPanel } from './SyncConfigPanel';
 import { ResultsPanel } from './ResultsPanel';
 import { UsersPanel } from './UsersPanel';
 
-type TabId = 'compartir' | 'datos' | 'sheets' | 'resultados' | 'usuarios';
+type TabId = 'compartir' | 'datos' | 'catalogo' | 'sheets' | 'resultados' | 'usuarios';
 
 const TABS: { id: TabId; label: string; adminOnly?: boolean }[] = [
   { id: 'compartir', label: 'Compartir' },
   { id: 'datos', label: 'Datos de los módulos' },
+  { id: 'catalogo', label: 'Productos y clientes' },
   { id: 'sheets', label: 'Google Sheets y nota' },
   { id: 'resultados', label: 'Resultados' },
   { id: 'usuarios', label: 'Entrenadores', adminOnly: true },
@@ -20,6 +22,9 @@ const TABS: { id: TabId; label: string; adminOnly?: boolean }[] = [
 
 export const TeacherPanel = ({ user, onLogout }: { user: AuthUser; onLogout: () => void }) => {
   const [tab, setTab] = useState<TabId>('compartir');
+  // Al guardar el catálogo se refresca el editor de datos, para que sus avisos
+  // reflejen los productos y clientes que acaban de cambiar.
+  const [catalogVersion, setCatalogVersion] = useState(0);
   const isAdmin = user.role === 'admin';
   const visibleTabs = TABS.filter((t) => !t.adminOnly || isAdmin);
 
@@ -73,7 +78,8 @@ export const TeacherPanel = ({ user, onLogout }: { user: AuthUser; onLogout: () 
 
       <main className="mx-auto max-w-6xl px-4 py-6">
         {tab === 'compartir' && <ShareLinkPanel username={user.username} name={user.name} />}
-        {tab === 'datos' && <StepDataEditor />}
+        {tab === 'datos' && <StepDataEditor key={`datos-${catalogVersion}`} />}
+        {tab === 'catalogo' && <CatalogEditor onSaved={() => setCatalogVersion((v) => v + 1)} />}
         {tab === 'sheets' && <SyncConfigPanel />}
         {tab === 'resultados' && <ResultsPanel />}
         {tab === 'usuarios' && isAdmin && <UsersPanel currentUsername={user.username} />}

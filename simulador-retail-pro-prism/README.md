@@ -69,6 +69,36 @@ se editan: viven en `src/data/modules.ts`.
 Debajo de cada módulo se muestra **cómo le va a llegar la situación al colaborador** con los
 valores actuales, así que se ve el efecto del cambio antes de guardarlo.
 
+## Productos y clientes
+
+En **Panel ▸ Productos y clientes** está el catálogo de la tienda simulada: es lo que la caja
+encuentra cuando el colaborador escribe un código. Ahí se editan el código, la descripción y el
+precio de cada producto; el documento, el nombre y el correo de cada cliente; las marcas de
+tarjeta que ofrece el POS; el fondo de caja inicial, y el número del documento que se busca en
+los módulos de devolución.
+
+**Los dos editores tienen que ser coherentes.** Si en «Datos de los módulos» pones un código que
+no está en el catálogo, la caja no lo encuentra al buscarlo y el módulo se queda bloqueado, por
+más que el colaborador escriba exactamente lo que dice la situación. El panel lo avisa en rojo y
+ofrece «Agregarlo al catálogo» para arreglarlo de una vez.
+
+Un cliente marcado como **agregador** (Rappi, Pedidos Ya) hace que, al asociarlo, la caja pida
+aplicar el nivel de precio del canal digital. Así funcionan los módulos 7 y 8.
+
+## En celular
+
+El sistema de caja está diseñado para pantallas anchas (unos 1280 px) y con tipografías de 10 a
+13 px, así que encogerlo al ancho de un teléfono en vertical lo dejaría ilegible. En su lugar:
+
+- **En horizontal** (y en tablet) el simulador se escala para caber completo en el ancho.
+- **En vertical** se sugiere girar el teléfono. Quien prefiera seguir así navega a tamaño real,
+  con desplazamiento en ambos ejes y zoom con los dedos.
+- La barra del módulo se compacta en pantallas angostas y los controles más pequeños del POS
+  tienen un área táctil de 44 px sin cambiar de aspecto.
+
+El resto del marco de entrenamiento (bienvenida, módulos, guía de situación, panel) es
+responsive y se usa con normalidad en el teléfono.
+
 ## Firebase (opcional)
 
 El backend puede guardar usuarios, configuración y resultados en **Firestore**. Todo el acceso
@@ -88,6 +118,8 @@ Nunca versiones `firebase-applet-config.json`; usa `FIREBASE_CONFIG` en el despl
 - `src/components/teacher/` — panel del entrenador (compartir/QR, datos, Sheets, resultados, usuarios).
 - `src/components/ui/Kit.tsx` — primitivas del tema claro corporativo.
 - `src/data/modules.ts` — los módulos y sus pasos (fuente de verdad del proceso).
+- `src/data/catalog.ts` — catálogo de la tienda simulada (productos, clientes, tarjetas).
+- `src/components/SimulatorViewport.tsx` — escalado, desplazamiento y aviso de rotar en móvil.
 - `src/data/scenarios.ts` — las 14 situaciones de tienda.
 - `src/lib/stepData.ts` — datos configurables y cómo se aplican sobre los módulos.
 - `src/lib/session.ts` — sesión, enlaces de colaborador e identificadores de intento.

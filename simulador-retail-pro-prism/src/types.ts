@@ -15,6 +15,17 @@ export type ScreenId =
   | 'cerrar-caja'
   | 'conciliacion';
 
+/**
+ * Contexto que reciben los validadores, para que puedan comparar contra los
+ * datos que configuró el entrenador en vez de contra valores fijos en el código.
+ */
+export interface ValidatorContext {
+  /** El paso que se está validando, ya con los datos del entrenador aplicados. */
+  step: Step;
+  /** Todos los pasos del módulo en curso, por si un paso depende de otro. */
+  steps: Step[];
+}
+
 export interface Step {
   id: string;
   instruction: string;
@@ -25,7 +36,11 @@ export interface Step {
   hintMessage?: string;
   targetValue?: string; // Add targetValue for text input steps
   expectedState?: Record<string, any>; // Used to validate specific AppState values before advancing
-  validator?: (state: AppState) => boolean | string; // Optional state validation before advancing
+  /** Datos extra que usa el validador del paso (clave → valor configurable). */
+  data?: Record<string, string>;
+  /** Nombres legibles de `data` para el panel del entrenador. */
+  dataLabels?: Record<string, string>;
+  validator?: (state: AppState, ctx: ValidatorContext) => boolean | string; // Optional state validation before advancing
 }
 
 export interface ModuleData {
@@ -85,6 +100,7 @@ export interface MistakeDetail {
 export interface StepDataOverride {
   targetValue?: string;
   expectedState?: Record<string, string>;
+  data?: Record<string, string>;
 }
 
 export type StepDataMap = Record<string, StepDataOverride>;

@@ -3,6 +3,7 @@ import { useSimulator } from '../store/SimulatorContext';
 import { StudentInfoModal } from './StudentInfoModal';
 import { ScenarioBriefing, ScenarioDrawer } from './ScenarioBriefing';
 import { SimulatorHeader } from './SimulatorHeader';
+import { SimulatorViewport } from './SimulatorViewport';
 import { ScreenManager } from './ScreenManager';
 import { PrismShell } from './ui/PrismUI';
 import { Badge, Button, Card, Notice, Page } from './ui/Kit';
@@ -159,12 +160,38 @@ const ModuleMenu = ({ onPick }: { onPick: (moduleId: string) => void }) => {
 };
 
 export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => {
-  const { status, startModule, modulesData, showErrorModal, handleInteract, currentModuleId, operatorName } =
-    useSimulator();
+  const {
+    status, startModule, modulesData, showErrorModal, handleInteract, currentModuleId,
+    operatorName, catalog, configLoading, teacherMissing, reloadConfig,
+  } = useSimulator();
   const [briefingModuleId, setBriefingModuleId] = useState<string | null>(null);
   const [showScenario, setShowScenario] = useState(false);
 
+  if (teacherMissing) {
+    return (
+      <Page className="flex items-center justify-center p-4">
+        <Card className="w-full max-w-md p-8 text-center">
+          <h2 className="text-lg font-bold text-ink">Este enlace no es válido</h2>
+          <p className="mt-2 text-sm text-ink-muted">
+            No existe ningún entrenador llamado <span className="font-semibold text-ink">{teacherUsername}</span>. Pídele
+            a tu entrenador que te comparta su enlace o su código QR otra vez.
+          </p>
+        </Card>
+      </Page>
+    );
+  }
+
   if (!operatorName) return <StudentInfoModal teacherUsername={teacherUsername} />;
+
+  // Sin la configuración del entrenador no se puede empezar: hacerlo llevaba a
+  // entrenar con unos datos y validar contra otros.
+  if (configLoading) {
+    return (
+      <Page className="flex items-center justify-center p-4">
+        <p className="text-sm text-ink-muted">Cargando tus módulos…</p>
+      </Page>
+    );
+  }
 
   if (status === 'menu') {
     const briefing = briefingModuleId ? modulesData.find((m) => m.id === briefingModuleId) : null;
@@ -174,6 +201,7 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
           <ScenarioBriefing
             module={briefing}
             modules={modulesData}
+            catalog={catalog}
             onBack={() => setBriefingModuleId(null)}
             onStart={() => {
               setBriefingModuleId(null);
@@ -183,24 +211,44 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
         </Page>
       );
     }
-    return <ModuleMenu onPick={setBriefingModuleId} />;
+    return (
+      <ModuleMenu
+        onPick={(moduleId) => {
+          // Se recarga la configuración al abrir cada módulo, para que un cambio
+          // del entrenador se note sin tener que recargar la página.
+          reloadConfig();
+          setBriefingModuleId(moduleId);
+        }}
+      />
+    );
   }
 
   return (
-    <div className="frame flex h-screen flex-col overflow-hidden bg-surface">
+    // Altura fija de pantalla (`dvh` para que la barra de URL del móvil no la
+    // falsee) y sin scroll de página: el desplazamiento y el zoom ocurren dentro
+    // del simulador. Con `min-h` el contenedor crecía a la vez que se medía y se
+    // realimentaba, empujando la barra fuera de la vista.
+    <div className="frame flex h-[100dvh] flex-col overflow-hidden bg-surface">
       {status === 'completed' && <CompletedScreen />}
       {showErrorModal && <ErrorModal />}
       {showScenario && currentModuleId && (
-        <ScenarioDrawer moduleId={currentModuleId} modules={modulesData} onClose={() => setShowScenario(false)} />
+        <ScenarioDrawer
+          moduleId={currentModuleId}
+          modules={modulesData}
+          catalog={catalog}
+          onClose={() => setShowScenario(false)}
+        />
       )}
       <SimulatorHeader onShowScenario={() => setShowScenario(true)} />
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
-        <div onClick={() => handleInteract('background')} className="h-full min-h-0 w-full">
+      <SimulatorViewport>
+        {/* El clic de fondo va aquí dentro, no sobre toda el área: así
+            desplazarse o hacer zoom en móvil no cuenta como paso fallido. */}
+        <div onClick={() => handleInteract('background')} className="flex min-h-full flex-1 flex-col">
           <PrismShell url="sp4mj0jy4j1:8080/prism.shtml">
             <ScreenManager />
           </PrismShell>
         </div>
-      </div>
+      </SimulatorViewport>
     </div>
   );
 };

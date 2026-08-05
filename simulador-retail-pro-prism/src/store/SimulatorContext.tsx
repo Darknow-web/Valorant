@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useRef, useCallback } from 'react';
 import { AppState, SimulationState, Step, ModuleData, StepDataMap } from '../types';
 import { modulesData as defaultModulesData } from '../data/modules';
+import { Catalog, cloneDefaultCatalog, normalizeCatalog } from '../data/catalog';
 import { applyStepData } from '../lib/stepData';
 import { newAttemptId } from '../lib/session';
 
@@ -18,6 +19,13 @@ interface SimulatorContextType extends SimulationState {
   moduleTitle: string;
   modulesData: ModuleData[];
   teacherUsername: string;
+  /** Catálogo simulado ya con la configuración del entrenador aplicada. */
+  catalog: Catalog;
+  /** Mientras es true no se debe empezar ningún módulo: faltan datos del entrenador. */
+  configLoading: boolean;
+  /** El enlace apunta a un entrenador que no existe. */
+  teacherMissing: boolean;
+  reloadConfig: () => void;
   dismissErrorModal: () => void;
   customErrorMessage?: string;
 }
@@ -55,29 +63,50 @@ export const SimulatorProvider = ({
   teacherUsername?: string;
 }) => {
   const [modulesData, setModules] = useState<ModuleData[]>(defaultModulesData);
+  const [catalog, setCatalog] = useState<Catalog>(cloneDefaultCatalog);
+  const [configLoading, setConfigLoading] = useState(!!teacherUsername);
+  const [teacherMissing, setTeacherMissing] = useState(false);
+  const [configVersion, setConfigVersion] = useState(0);
+
+  const reloadConfig = useCallback(() => setConfigVersion((v) => v + 1), []);
 
   // Los módulos (pasos, acciones y validadores) viven en el código; del servidor
-  // solo llegan los DATOS que el entrenador configuró para cada paso.
+  // solo llegan los DATOS que el entrenador configuró y su catálogo de tienda.
+  //
+  // Hasta que esto termine, `configLoading` impide empezar un módulo: antes se
+  // podía arrancar con los valores por defecto y recibir los del entrenador a
+  // media simulación, dejando la situación diciendo una cosa y la validación
+  // esperando otra.
   useEffect(() => {
     if (!teacherUsername) {
       setModules(defaultModulesData);
+      setCatalog(cloneDefaultCatalog());
+      setConfigLoading(false);
       return;
     }
     let cancelled = false;
+    setConfigLoading(true);
     fetch(`/api/step-data?teacher=${encodeURIComponent(teacherUsername)}`)
-      .then((res) => (res.ok ? res.json() : { stepData: {} }))
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (cancelled) return;
         const overrides: StepDataMap = data?.stepData || {};
         setModules(applyStepData(defaultModulesData, overrides));
+        setCatalog(normalizeCatalog(data?.catalog));
+        setTeacherMissing(data ? data.teacherExists === false : false);
       })
       .catch(() => {
-        if (!cancelled) setModules(defaultModulesData);
+        if (cancelled) return;
+        setModules(defaultModulesData);
+        setCatalog(cloneDefaultCatalog());
+      })
+      .finally(() => {
+        if (!cancelled) setConfigLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [teacherUsername]);
+  }, [teacherUsername, configVersion]);
 
   const [state, setState] = useState<SimulationState>({
     status: 'menu',
@@ -108,6 +137,9 @@ export const SimulatorProvider = ({
 
   const modulesRef = useRef(modulesData);
   modulesRef.current = modulesData;
+
+  const catalogRef = useRef(catalog);
+  catalogRef.current = catalog;
 
   const currentModule = modulesData.find((m) => m.id === state.currentModuleId);
   const currentStep = currentModule ? currentModule.steps[state.currentStepIndex] : null;
@@ -140,8 +172,11 @@ export const SimulatorProvider = ({
     // ya abierta; solo el 1 (ingreso) y el 2 (apertura) empiezan con ella cerrada.
     if (moduleId !== 'm1' && moduleId !== 'm2') {
       initialAppState.registerOpen = true;
-      initialAppState.fondoCaja = '150.00';
+      initialAppState.fondoCaja = catalogRef.current.fondoCajaInicial;
     }
+
+    currentStepIndexRef.current = 0;
+    advancingRef.current = false;
 
     setState((prev) => ({
       ...prev,
@@ -179,15 +214,25 @@ export const SimulatorProvider = ({
   const currentStepIndexRef = useRef<number>(0);
   const lastStepChangeTimeRef = useRef<number>(Date.now());
   const hintedStepsRef = useRef<Set<string>>(new Set());
+  /** Hay un avance de paso en curso: ignora clics repetidos mientras dura. */
+  const advancingRef = useRef(false);
 
   const handleInteractRef = useRef<(targetId: string, value?: string, isFinalSubmit?: boolean) => boolean | void>();
 
   // Avance automático de los pasos "auto". El timer se cancela al desmontar o al
   // cambiar de paso: sin ese cleanup se acumulaban avances y un módulo podía
   // darse por terminado sin recorrido real (puntaje 0 en la hoja).
+  //
+  // Este efecto NO depende de `modulesData`: cuando dependía, la llegada de la
+  // configuración del entrenador lo re-ejecutaba y revertía
+  // `currentStepIndexRef` al índice anterior en plena animación de avance. El
+  // paso se volvía a evaluar con el `appState` ya modificado por su `action`
+  // —que en el Módulo 1 borra usuario y clave—, y salía "incorrecto" aunque el
+  // colaborador hubiera escrito exactamente lo que decía la situación.
   useEffect(() => {
-    currentStepIndexRef.current = state.currentStepIndex;
     if (state.status !== 'running') return;
+    if (advancingRef.current) return;
+    currentStepIndexRef.current = state.currentStepIndex;
 
     const mod = modulesRef.current.find((m) => m.id === state.currentModuleId);
     const step = mod?.steps[state.currentStepIndex];
@@ -195,14 +240,14 @@ export const SimulatorProvider = ({
 
     const timer = setTimeout(() => handleInteractRef.current?.('auto'), 800);
     return () => clearTimeout(timer);
-  }, [state.currentStepIndex, state.status, state.currentModuleId, modulesData]);
-
-  const registerMistake = (step: string, pointsDeducted: number) =>
-    setState((prev) => ({ ...prev, mistakeLog: [...prev.mistakeLog, { step, pointsDeducted }] }));
+  }, [state.currentStepIndex, state.status, state.currentModuleId]);
 
   const handleInteract = (targetId: string, value?: string, _isFinalSubmit?: boolean): boolean | void => {
     const snapshot = stateRef.current;
     if (snapshot.status !== 'running') return;
+    // Un avance ya está en curso: cualquier clic extra se ignora en vez de
+    // encolar un segundo avance sobre el mismo paso.
+    if (advancingRef.current) return;
     const mod = modulesRef.current.find((m) => m.id === snapshot.currentModuleId);
     if (!mod) return;
     const stepToProcess = mod.steps[currentStepIndexRef.current];
@@ -256,7 +301,10 @@ export const SimulatorProvider = ({
           return false;
         }
       } else if (stepToProcess.validator) {
-        const validationResult = stepToProcess.validator(snapshot.appState);
+        const validationResult = stepToProcess.validator(snapshot.appState, {
+          step: stepToProcess,
+          steps: mod.steps,
+        });
         if (validationResult !== true) {
           setState((prev) => ({
             ...prev,
@@ -272,9 +320,11 @@ export const SimulatorProvider = ({
 
       setState((prev) => ({ ...prev, feedback: { status: 'success', id: targetId } }));
 
+      advancingRef.current = true;
       setTimeout(() => {
         currentStepIndexRef.current += 1;
         lastStepChangeTimeRef.current = Date.now();
+        advancingRef.current = false;
         setState((prev) => {
           const nextIndex = prev.currentStepIndex + 1;
           const processSteps = [
@@ -470,6 +520,10 @@ export const SimulatorProvider = ({
         moduleTitle: currentModule?.title || '',
         modulesData,
         teacherUsername,
+        catalog,
+        configLoading,
+        teacherMissing,
+        reloadConfig,
         dismissErrorModal,
       }}
     >

@@ -3,7 +3,10 @@ import { useSimulator } from '../store/SimulatorContext';
 import { Interactive } from '../components/ui/Interactive';
 
 export const ReturnsMainScreen: React.FC = () => {
-  const { appState, handleInteract, setAppState, triggerCustomError } = useSimulator();
+  const { appState, handleInteract, setAppState, triggerCustomError, catalog } = useSimulator();
+  // El documento a buscar sale del catálogo del entrenador, no de un valor fijo.
+  const doc = catalog.returnDocument;
+  const clienteDoc = catalog.customers.find((c) => c.doc === doc.customerDoc);
   const [docNumber, setDocNumber] = useState<string>('');
   const [showResults, setShowResults] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
@@ -13,7 +16,7 @@ export const ReturnsMainScreen: React.FC = () => {
   const [itemsToReturn, setItemsToReturn] = useState<any[]>([]);
 
   const transactions = showResults ? [
-    { id: 'BA70-00003928', date: '7/30/2026 6:45:29 PM', customer: 'ELBA FARRO', doc: '116002997', total: '26.90', docType: '03-BOL ELECT' }
+    { id: doc.id, date: doc.date, customer: clienteDoc?.name || 'CLIENTE', doc: doc.customerDoc, total: doc.total, docType: doc.docType }
   ] : [];
 
   const transactionItems = [
@@ -21,7 +24,7 @@ export const ReturnsMainScreen: React.FC = () => {
   ];
 
   return (
-    <div className="absolute inset-0 bg-[#222222] flex flex-col text-[#333] text-[12px] font-sans">
+    <div className="relative w-full min-h-full bg-[#222222] flex flex-col text-[#333] text-[12px] font-sans">
       <div className="flex-1 flex flex-col p-2 space-y-2 overflow-hidden">
         {/* Top Row */}
         <div className="flex flex-1 space-x-2 overflow-hidden">
@@ -57,11 +60,11 @@ export const ReturnsMainScreen: React.FC = () => {
               </div>
             </div>
             <div className="bg-[#dcdcdc] p-1.5 flex justify-end space-x-1 border-t border-gray-400">
-               <Interactive id={(!docNumber || docNumber.trim() !== 'BA70-00003928') ? 'ignore-click' : 'ret-btn-buscar'}>
+               <Interactive id={(!docNumber || docNumber.trim() !== doc.id) ? 'ignore-click' : 'ret-btn-buscar'}>
                   <button 
                     onClick={() => { 
-                      if (!docNumber || docNumber.trim() !== 'BA70-00003928') {
-                        triggerCustomError('Debe ingresar el número de documento correcto (BA70-00003928).');
+                      if (!docNumber || docNumber.trim() !== doc.id) {
+                        triggerCustomError('El número de documento no coincide con el de la boleta que trajo el cliente.');
                         return;
                       }
                       setShowResults(true); 
@@ -83,7 +86,7 @@ export const ReturnsMainScreen: React.FC = () => {
             </div>
             <div className="flex-1 bg-white overflow-y-auto">
               {transactions.map(t => (
-                <Interactive id={`ret-txn-${t.id}`} key={t.id}>
+                <Interactive id="ret-txn-doc" key={t.id}>
                   <div 
                     onClick={() => { setSelectedTransaction(t.id); }}
                     className={`p-2 border-b border-gray-300 cursor-pointer text-[11px] flex ${selectedTransaction === t.id ? 'bg-[#4076a5] text-white' : 'hover:bg-blue-50'}`}
