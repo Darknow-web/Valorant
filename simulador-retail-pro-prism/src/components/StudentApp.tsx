@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useSimulator } from '../store/SimulatorContext';
 import { StudentInfoModal } from './StudentInfoModal';
 import { ScenarioBriefing, ScenarioDrawer } from './ScenarioBriefing';
@@ -6,8 +7,9 @@ import { SimulatorHeader } from './SimulatorHeader';
 import { SimulatorViewport } from './SimulatorViewport';
 import { ScreenManager } from './ScreenManager';
 import { PrismShell } from './ui/PrismUI';
-import { Badge, Button, Card, Notice, Page } from './ui/Kit';
+import { Badge, Button, Card, CifraAnimada, Isotipo, Notice, Page } from './ui/Kit';
 import { scenarios } from '../data/scenarios';
+import { aviso, cascada, elemento, modal, tarjetaInteractiva, vista } from '../lib/motion';
 
 /** Resumen del intento, ya con la nota que calculó el servidor. */
 const CompletedScreen = () => {
@@ -21,28 +23,44 @@ const CompletedScreen = () => {
   }, [submitScore]);
 
   return (
-    <div className="frame absolute inset-0 z-[9999] flex items-center justify-center bg-ink/50 p-4">
-      <Card className="w-full max-w-md p-8 text-center">
-        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-ok-soft text-ok">
+    <motion.div
+      variants={modal}
+      initial="inicial"
+      animate="visible"
+      className="frame absolute inset-0 z-[9999] flex items-center justify-center bg-navy/50 p-4 backdrop-blur-[2px]"
+    >
+      <Card className="w-full max-w-md overflow-hidden p-8 text-center">
+        <motion.div
+          initial={{ scale: 0.6, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.1 }}
+          className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-ok-soft text-ok"
+        >
           <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
           </svg>
-        </div>
+        </motion.div>
         <h2 className="text-xl font-bold text-ink">Módulo completado</h2>
         <p className="mb-6 mt-1 text-sm text-ink-muted">Terminaste el proceso.</p>
 
-        <div className="mb-6 grid grid-cols-3 gap-3">
+        <motion.div variants={cascada(0.08, 0.25)} initial="inicial" animate="visible" className="mb-6 grid grid-cols-3 gap-3">
           {[
-            { label: 'Tiempo', value: `${seconds}s` },
-            { label: 'Errores', value: String(errors) },
-            { label: 'Nota', value: score ?? '—' },
+            { label: 'Tiempo', valor: `${seconds}s`, numero: null },
+            { label: 'Errores', valor: null, numero: errors },
+            { label: 'Nota', valor: score === null ? '—' : null, numero: score },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-lg bg-sunken px-3 py-4">
-              <div className="text-xs text-ink-muted">{stat.label}</div>
-              <div className="mt-1 font-mono text-lg font-semibold text-ink">{stat.value}</div>
-            </div>
+            <motion.div key={stat.label} variants={elemento} className="rounded-xl bg-sunken px-3 py-4">
+              <div className="etiqueta text-ink-muted">{stat.label}</div>
+              <div className="mt-1 text-xl font-bold text-ink">
+                {stat.valor !== null ? (
+                  <span className="cifra">{stat.valor}</span>
+                ) : (
+                  <CifraAnimada valor={stat.numero as number} />
+                )}
+              </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         <div className="mb-6 text-sm">
           {syncStatus === 'sending' && <span className="text-ink-muted">Enviando tu nota…</span>}
@@ -55,109 +73,178 @@ const CompletedScreen = () => {
           Volver a los módulos
         </Button>
       </Card>
-    </div>
+    </motion.div>
   );
 };
 
 /**
- * Aviso de error. No revela el paso correcto: para eso está la pista, que
- * descuenta puntaje. Así el colaborador sigue trabajando desde la situación.
+ * Aviso de error: entra por el borde y no tapa la pantalla del sistema, así el
+ * colaborador puede releer lo que hizo mal sin perder de vista la caja.
+ * Tampoco revela el paso correcto: para eso está la pista, que descuenta.
  */
-const ErrorModal = () => {
+const ErrorToast = () => {
   const { dismissErrorModal, customErrorMessage, triggerHint, currentStep, hintActive } = useSimulator();
   if (!currentStep) return null;
 
   return (
-    <div className="frame fixed inset-0 z-[9999] flex items-center justify-center bg-ink/50 p-4">
-      <Card className="w-full max-w-md overflow-hidden">
-        <div className="h-1 w-full bg-danger" />
-        <div className="p-7">
-          <h2 className="text-lg font-bold text-ink">Ese no era el paso</h2>
-          <p className="mb-4 mt-1 text-sm text-ink-muted">
-            {customErrorMessage || 'Revisa la situación de la tienda y vuelve a intentarlo.'}
-          </p>
+    <motion.div
+      variants={aviso}
+      initial="inicial"
+      animate="visible"
+      exit="salida"
+      role="alert"
+      className="frame pointer-events-none fixed inset-x-0 bottom-0 z-[9999] flex justify-end p-4 sm:inset-x-auto sm:right-0 sm:top-20 sm:bottom-auto"
+    >
+      <Card className="pointer-events-auto w-full max-w-sm overflow-hidden border-warn/30">
+        <div className="h-1 w-full bg-warn" />
+        <div className="p-5">
+          <div className="flex items-start gap-3">
+            <span
+              aria-hidden
+              className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-warn-soft text-sm font-bold text-warn"
+            >
+              !
+            </span>
+            <div>
+              <h2 className="text-sm font-bold text-ink">Ese no era el paso</h2>
+              <p className="prosa mt-1 text-sm text-ink-muted">
+                {customErrorMessage || 'Revisa la situación de la tienda y vuelve a intentarlo.'}
+              </p>
+            </div>
+          </div>
 
           {hintActive && (
-            <div className="mb-4 rounded-lg border border-warn/25 bg-warn-soft px-4 py-3 text-sm text-ink">
+            <div className="mt-3 rounded-xl bg-warn-soft px-3 py-2 text-sm text-ink">
               <span className="font-semibold text-warn">Pista: </span>
               {currentStep.hintMessage || currentStep.instruction}
             </div>
           )}
 
-          <div className="flex gap-3">
+          <div className="mt-4 flex gap-2">
             {!hintActive && (
-              <Button variant="secondary" onClick={triggerHint} className="flex-1">
+              <Button variant="secondary" onClick={triggerHint} className="flex-1 py-2 text-xs">
                 Ver pista
               </Button>
             )}
-            <Button onClick={dismissErrorModal} className="flex-1">
+            <Button onClick={dismissErrorModal} className="flex-1 py-2 text-xs">
               Entendido
             </Button>
           </div>
         </div>
       </Card>
-    </div>
+    </motion.div>
   );
 };
 
 /** Lista de módulos del colaborador. */
 const ModuleMenu = ({ onPick }: { onPick: (moduleId: string) => void }) => {
   const { modulesData, completedModules, operatorName, operatorStore, clearOperator } = useSimulator();
+  const hechos = completedModules.length;
+  const total = modulesData.length;
 
   return (
-    <Page className="px-4 py-8">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 text-sm">
-          <div className="text-ink-muted">
-            Colaborador: <span className="font-semibold text-ink">{operatorName}</span>
-            {operatorStore && <span className="text-ink-subtle"> · {operatorStore}</span>}
-            <button onClick={clearOperator} className="ml-3 font-semibold text-brand hover:underline">
-              Cambiar
-            </button>
+    <Page className="px-4 pb-16 pt-10">
+      <motion.div variants={vista} initial="inicial" animate="visible" className="mx-auto max-w-5xl">
+        <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <div className="mb-4 flex items-center gap-3">
+              <Isotipo className="h-10 w-10" />
+              <span className="etiqueta text-brand">SuperPet · Capacitación</span>
+            </div>
+            <h1 className="text-4xl font-extrabold text-ink">Simulador de caja</h1>
+            <p className="prosa mt-2 text-ink-muted">
+              Cada módulo te pone en una situación de tienda. Lees el caso, sacas de ahí los datos y lo resuelves en el
+              sistema. No hay instrucciones paso a paso.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-line bg-raised px-5 py-4">
+            <div className="etiqueta text-ink-muted">Tu avance</div>
+            <div className="mt-1 text-2xl font-bold text-ink">
+              <span className="cifra">
+                {hechos}/{total}
+              </span>
+            </div>
+            <div className="mt-2 h-1.5 w-32 overflow-hidden rounded-full bg-sunken">
+              <motion.div
+                className="h-full rounded-full bg-brand"
+                initial={{ width: 0 }}
+                animate={{ width: `${total ? (hechos / total) * 100 : 0}%` }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </div>
           </div>
         </div>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-ink">Simulador Retail Pro Prism</h1>
-          <p className="mt-2 text-ink-muted">
-            Elige un módulo. Vas a leer una situación de tienda y resolverla en el sistema, sin instrucciones paso a paso.
-          </p>
+        <div className="mb-6 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+          <span>
+            Colaborador: <span className="font-semibold text-ink">{operatorName}</span>
+          </span>
+          {operatorStore && <Badge tone="sand">{operatorStore}</Badge>}
+          <button onClick={clearOperator} className="font-semibold text-brand hover:underline">
+            Cambiar
+          </button>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <motion.div
+          variants={cascada()}
+          initial="inicial"
+          animate="visible"
+          className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+        >
           {modulesData.map((mod) => {
             const isCompleted = completedModules.includes(mod.id);
             const scenario = scenarios.find((s) => s.moduleId === mod.id);
+            const numero = mod.title.match(/M[oó]dulo (\d+)/)?.[1] ?? '';
+            const nombre = mod.title.replace(/^M[oó]dulo \d+\s*—\s*/, '');
             return (
-              <Card
+              <motion.button
                 key={mod.id}
-                as="button"
+                variants={elemento}
+                {...tarjetaInteractiva}
                 onClick={() => onPick(mod.id)}
-                className={`p-5 text-left transition-all hover:-translate-y-0.5 hover:shadow-md ${
-                  isCompleted ? 'border-ok/40' : ''
-                }`}
+                // El título va partido en dos para la jerarquía visual; la
+                // etiqueta accesible lo mantiene completo para quien navegue
+                // con lector de pantalla.
+                aria-label={`${mod.title}${isCompleted ? ' (completado)' : ''}`}
+                className={cnCard(isCompleted)}
               >
-                <div className="mb-3 flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-ink">{mod.title}</h3>
+                <span
+                  aria-hidden
+                  className={`absolute inset-y-0 left-0 w-1 ${isCompleted ? 'bg-ok' : 'bg-line-strong'}`}
+                />
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <span className="etiqueta text-ink-subtle">Módulo {numero}</span>
                   {isCompleted && <Badge tone="ok">Hecho ✓</Badge>}
                 </div>
-                {scenario && <p className="text-sm text-ink-muted">{scenario.titulo}</p>}
+                <h3 className="font-bold leading-snug text-ink">{nombre}</h3>
+                {scenario && <p className="mt-1.5 text-sm text-ink-muted">{scenario.titulo}</p>}
                 <p className="mt-3 text-xs text-ink-subtle">{mod.steps.length} acciones en el sistema</p>
-              </Card>
+              </motion.button>
             );
           })}
-        </div>
+        </motion.div>
 
-        {completedModules.length === modulesData.length && modulesData.length > 0 && (
-          <div className="mt-10 rounded-xl border border-ok/30 bg-ok-soft px-6 py-8 text-center">
+        {hechos === total && total > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-10 rounded-2xl border border-ok/25 bg-ok-soft px-6 py-8 text-center"
+          >
             <h2 className="text-2xl font-bold text-ok">¡Terminaste todos los módulos!</h2>
             <p className="mt-1 text-ink-muted">Tus resultados ya están con tu entrenador.</p>
-          </div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
     </Page>
   );
 };
+
+const cnCard = (completado: boolean) =>
+  `relative overflow-hidden rounded-2xl border bg-raised p-5 pl-6 text-left shadow-[0_1px_2px_rgba(6,6,67,0.06)] transition-shadow hover:shadow-[0_8px_24px_rgba(6,6,67,0.10)] ${
+    completado ? 'border-ok/30' : 'border-line'
+  }`;
 
 export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => {
   const {
@@ -171,8 +258,9 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
     return (
       <Page className="flex items-center justify-center p-4">
         <Card className="w-full max-w-md p-8 text-center">
+          <Isotipo className="mx-auto mb-5 h-12 w-12" />
           <h2 className="text-lg font-bold text-ink">Este enlace no es válido</h2>
-          <p className="mt-2 text-sm text-ink-muted">
+          <p className="prosa mx-auto mt-2 text-sm text-ink-muted">
             No existe ningún entrenador llamado <span className="font-semibold text-ink">{teacherUsername}</span>. Pídele
             a tu entrenador que te comparta su enlace o su código QR otra vez.
           </p>
@@ -188,62 +276,69 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
   if (configLoading) {
     return (
       <Page className="flex items-center justify-center p-4">
-        <p className="text-sm text-ink-muted">Cargando tus módulos…</p>
+        <div className="text-center">
+          <Isotipo className="mx-auto mb-4 h-12 w-12 animate-pulse" />
+          <p className="text-sm text-ink-muted">Cargando tus módulos…</p>
+        </div>
       </Page>
     );
   }
 
   if (status === 'menu') {
     const briefing = briefingModuleId ? modulesData.find((m) => m.id === briefingModuleId) : null;
-    if (briefing) {
-      return (
-        <Page>
-          <ScenarioBriefing
-            module={briefing}
-            modules={modulesData}
-            catalog={catalog}
-            onBack={() => setBriefingModuleId(null)}
-            onStart={() => {
-              setBriefingModuleId(null);
-              startModule(briefing.id);
+    return (
+      <AnimatePresence mode="wait">
+        {briefing ? (
+          <motion.div key="briefing" variants={vista} initial="inicial" animate="visible" exit="salida">
+            <Page>
+              <ScenarioBriefing
+                module={briefing}
+                modules={modulesData}
+                catalog={catalog}
+                onBack={() => setBriefingModuleId(null)}
+                onStart={() => {
+                  setBriefingModuleId(null);
+                  startModule(briefing.id);
+                }}
+              />
+            </Page>
+          </motion.div>
+        ) : (
+          <ModuleMenu
+            onPick={(moduleId) => {
+              // Se recarga la configuración al abrir cada módulo, para que un
+              // cambio del entrenador se note sin recargar la página.
+              reloadConfig();
+              setBriefingModuleId(moduleId);
             }}
           />
-        </Page>
-      );
-    }
-    return (
-      <ModuleMenu
-        onPick={(moduleId) => {
-          // Se recarga la configuración al abrir cada módulo, para que un cambio
-          // del entrenador se note sin tener que recargar la página.
-          reloadConfig();
-          setBriefingModuleId(moduleId);
-        }}
-      />
+        )}
+      </AnimatePresence>
     );
   }
 
   return (
     // Altura fija de pantalla (`dvh` para que la barra de URL del móvil no la
     // falsee) y sin scroll de página: el desplazamiento y el zoom ocurren dentro
-    // del simulador. Con `min-h` el contenedor crecía a la vez que se medía y se
-    // realimentaba, empujando la barra fuera de la vista.
+    // del simulador.
     <div className="frame flex h-[100dvh] flex-col overflow-hidden bg-surface">
       {status === 'completed' && <CompletedScreen />}
-      {showErrorModal && <ErrorModal />}
-      {showScenario && currentModuleId && (
-        <ScenarioDrawer
-          moduleId={currentModuleId}
-          modules={modulesData}
-          catalog={catalog}
-          onClose={() => setShowScenario(false)}
-        />
-      )}
+      <AnimatePresence>{showErrorModal && <ErrorToast key="error" />}</AnimatePresence>
+      <AnimatePresence>
+        {showScenario && currentModuleId && (
+          <ScenarioDrawer
+            moduleId={currentModuleId}
+            modules={modulesData}
+            catalog={catalog}
+            onClose={() => setShowScenario(false)}
+          />
+        )}
+      </AnimatePresence>
       <SimulatorHeader onShowScenario={() => setShowScenario(true)} />
       <SimulatorViewport>
         {/* El clic de fondo va aquí dentro, no sobre toda el área: así
             desplazarse o hacer zoom en móvil no cuenta como paso fallido. */}
-        <div onClick={() => handleInteract('background')} className="flex min-h-full flex-1 flex-col">
+        <div onClick={() => handleInteract('background')} className="flex h-full w-full flex-col">
           <PrismShell url="sp4mj0jy4j1:8080/prism.shtml">
             <ScreenManager />
           </PrismShell>

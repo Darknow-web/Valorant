@@ -85,6 +85,23 @@ ofrece «Agregarlo al catálogo» para arreglarlo de una vez.
 Un cliente marcado como **agregador** (Rappi, Pedidos Ya) hace que, al asociarlo, la caja pida
 aplicar el nivel de precio del canal digital. Así funcionan los módulos 7 y 8.
 
+## Identidad visual
+
+El marco de entrenamiento usa la paleta SuperPet: rojo `#E21600` para acciones y
+marca, azul oscuro `#060643` como tinta, y beige `#FFECE5` / arena `#f4d0a8` como
+superficies. Los logotipos están en `public/marca/`.
+
+Como el rojo ya significa "SuperPet" y "acción principal", **no** se usa además
+para señalar fallas: los avisos van en ámbar y granate, siempre con icono y con
+una palabra explícita, para que el color nunca sea la única señal.
+
+Las animaciones viven en `src/lib/motion.ts` y respetan `prefers-reduced-motion`.
+
+**Las pantallas de `src/screens/` no llevan nada de esto**: replican Retail Pro y
+conservan su aspecto original. Ese contraste es intencional — el marco es claro y
+cálido, el sistema replicado es oscuro y denso, así que el colaborador siempre
+sabe dónde está.
+
 ## En celular
 
 El sistema de caja está diseñado para pantallas anchas (unos 1280 px) y con tipografías de 10 a

@@ -55,7 +55,7 @@ export const MainMenuScreen = ({ activeSection = 'pos' }: { activeSection?: 'pos
   ];
 
   return (
-    <div className="w-full min-h-full flex flex-col bg-[#1c1c1c] relative font-sans">
+    <div className="w-full h-full flex flex-col bg-[#1c1c1c] relative font-sans">
       <PrismTabs tabs={tabs} activeTabId={activeSection} onTabChange={() => {}} />
 
       <div className="w-full px-[2px] relative z-20">

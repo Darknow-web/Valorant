@@ -3,6 +3,8 @@ import { Button, Card } from './ui/Kit';
 
 /** Ancho con el que están diseñadas las pantallas de Retail Pro. */
 export const DESIGN_WIDTH = 1280;
+/** Alto mínimo para que las pantallas del POS no se aplasten. */
+const DESIGN_MIN_HEIGHT = 640;
 /** Por debajo de esta escala el texto del POS (10-13 px) deja de leerse. */
 const MIN_USABLE_SCALE = 0.5;
 
@@ -10,14 +12,17 @@ const MIN_USABLE_SCALE = 0.5;
  * Envoltorio del simulador para que sea usable en celular sin rediseñar las
  * pantallas, que a propósito conservan el aspecto del sistema real.
  *
- * - Si el simulador cabe encogido y sigue siendo legible (celular en
- *   horizontal, tablet, escritorio angosto), se escala para caber en el ancho.
- * - Si no cabe de forma legible (celular en vertical: el factor sería ~0,30 y
- *   dejaría el texto en 3 px), se sugiere girar el teléfono. Quien prefiera
- *   seguir así navega a tamaño real, con scroll en ambos ejes y pinch-zoom.
+ * Clave: siempre entrega un **escenario con ancho y alto explícitos en píxeles**.
+ * Las pantallas usan `absolute inset-0` y `h-full`, que necesitan un ancestro con
+ * altura definida; al envolverlas antes en un contenedor de altura automática se
+ * quedaban en su altura natural y aparecía una franja vacía debajo en escritorio.
  *
- * Antes nada de esto era posible: tres `overflow-hidden` anidados recortaban el
- * contenido y no dejaban ni desplazarse ni alejar la vista.
+ * - Escritorio: el escenario mide justo el espacio disponible, sin escalar.
+ *   Se ve exactamente igual que antes de adaptar el móvil.
+ * - Horizontal (y tablet): escenario de 1280 px escalado para caber en el ancho.
+ * - Vertical: escalar daría un factor ~0,30 y dejaría el texto en 3 px, así que
+ *   se sugiere girar el teléfono; quien siga navega a tamaño real con scroll y
+ *   zoom.
  */
 export const SimulatorViewport = ({ children }: { children: React.ReactNode }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,49 +53,47 @@ export const SimulatorViewport = ({ children }: { children: React.ReactNode }) =
   }, [canScaleLegibly]);
 
   const showRotatePrompt = !canScaleLegibly && !forceFullSize;
-  // A tamaño real cuando ya cabe, o cuando el colaborador decidió seguir en vertical.
-  const fullSize = fitsAtFullSize || forceFullSize;
+
+  let stage: { width: number; height: number; scale: number };
+  if (fitsAtFullSize) {
+    // Cabe entero: el escenario es el espacio disponible, tal cual.
+    stage = { width: size.width, height: Math.max(size.height, DESIGN_MIN_HEIGHT), scale: 1 };
+  } else if (forceFullSize) {
+    // A tamaño real en una pantalla angosta: se navega con scroll y zoom.
+    stage = { width: DESIGN_WIDTH, height: Math.max(size.height, DESIGN_MIN_HEIGHT), scale: 1 };
+  } else {
+    // Escalado para caber en el ancho, conservando la altura visible.
+    stage = { width: DESIGN_WIDTH, height: Math.max(size.height / rawScale, DESIGN_MIN_HEIGHT), scale: rawScale };
+  }
 
   return (
     <div ref={containerRef} className="relative min-h-0 flex-1 overflow-hidden">
       {showRotatePrompt ? (
         <RotatePrompt onContinue={() => setForceFullSize(true)} />
-      ) : fullSize ? (
-        <ScrollableArea>
-          <div style={{ minWidth: fitsAtFullSize ? undefined : DESIGN_WIDTH }} className="flex min-h-full flex-col">
-            {children}
-          </div>
-        </ScrollableArea>
       ) : (
-        <ScrollableArea>
-          <div style={{ width: size.width, height: size.height }}>
+        <div
+          className="h-full w-full overflow-auto"
+          style={{ touchAction: 'pan-x pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+        >
+          {/* Reserva el espacio que ocupa el escenario ya escalado. */}
+          <div style={{ width: stage.width * stage.scale, height: stage.height * stage.scale }}>
             <div
+              className="flex flex-col"
               style={{
-                width: DESIGN_WIDTH,
-                height: size.height / rawScale,
-                transform: `scale(${rawScale})`,
+                width: stage.width,
+                height: stage.height,
+                transform: stage.scale === 1 ? undefined : `scale(${stage.scale})`,
                 transformOrigin: 'top left',
               }}
-              className="flex flex-col"
             >
               {children}
             </div>
           </div>
-        </ScrollableArea>
+        </div>
       )}
     </div>
   );
 };
-
-/** Área desplazable en ambos ejes, con pinch-zoom permitido. */
-const ScrollableArea = ({ children }: { children: React.ReactNode }) => (
-  <div
-    className="h-full w-full overflow-auto"
-    style={{ touchAction: 'pan-x pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
-  >
-    {children}
-  </div>
-);
 
 const RotatePrompt = ({ onContinue }: { onContinue: () => void }) => (
   <div className="frame flex h-full items-center justify-center bg-surface p-6">

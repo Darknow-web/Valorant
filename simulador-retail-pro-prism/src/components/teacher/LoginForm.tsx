@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AuthUser } from '../../types';
 import { authHeaders, setToken } from '../../lib/session';
-import { Button, Card, Field, Input, Notice, Page } from '../ui/Kit';
+import { Button, Card, Field, Input, Isotipo, Notice, Page } from '../ui/Kit';
 
 /**
  * Ingreso del entrenador o del administrador.
@@ -41,8 +41,9 @@ export const LoginForm = ({ onLogin, onBack }: { onLogin: (user: AuthUser) => vo
   };
 
   return (
-    <Page className="flex items-center justify-center p-4">
+    <Page className="flex items-start justify-center p-4 py-10 sm:items-center">
       <Card className="w-full max-w-sm p-8">
+        <Isotipo className="mb-5 h-12 w-12" />
         <h1 className="text-xl font-bold text-ink">Panel de Entrenadores</h1>
         <p className="mb-6 mt-1 text-sm text-ink-muted">Ingresa con tu usuario para configurar y ver resultados.</p>
 
@@ -112,8 +113,9 @@ export const ChangePasswordForm = ({ onDone, onLogout }: { onDone: () => void; o
   };
 
   return (
-    <Page className="flex items-center justify-center p-4">
+    <Page className="flex items-start justify-center p-4 py-10 sm:items-center">
       <Card className="w-full max-w-sm p-8">
+        <Isotipo className="mb-5 h-12 w-12" />
         <h1 className="text-xl font-bold text-ink">Define tu clave</h1>
         <p className="mb-6 mt-1 text-sm text-ink-muted">
           Estás usando la clave inicial. Elige una nueva de al menos 8 caracteres para continuar.

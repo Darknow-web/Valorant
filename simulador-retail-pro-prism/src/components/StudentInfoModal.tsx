@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useSimulator } from '../store/SimulatorContext';
-import { Button, Card, Field, Input } from './ui/Kit';
+import { motion } from 'motion/react';
+import { Button, Card, Field, Input, Isotipo } from './ui/Kit';
+import { modal } from '../lib/motion';
 
 /**
  * Identificación del colaborador. No hay clave: el acceso lo da el enlace del
@@ -18,8 +20,10 @@ export const StudentInfoModal = ({ teacherUsername }: { teacherUsername: string 
   const canSubmit = name.trim().length > 2 && dni.trim().length >= 6 && store.trim().length > 0;
 
   return (
-    <div className="frame fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
-      <Card className="w-full max-w-md p-8">
+    <div className="frame fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-surface p-4 py-8 sm:items-center">
+      <motion.div variants={modal} initial="inicial" animate="visible" className="w-full max-w-md">
+      <Card className="p-8">
+        <Isotipo className="mb-5 h-12 w-12" />
         <h2 className="text-xl font-bold text-ink">Identifícate para empezar</h2>
         <p className="mb-6 mt-1 text-sm text-ink-muted">
           Tus datos se usan para registrar tu progreso y tu nota en cada módulo
@@ -57,6 +61,7 @@ export const StudentInfoModal = ({ teacherUsername }: { teacherUsername: string 
           Continuar
         </Button>
       </Card>
+      </motion.div>
     </div>
   );
 };

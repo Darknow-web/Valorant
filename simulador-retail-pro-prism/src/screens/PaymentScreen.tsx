@@ -22,7 +22,7 @@ export const PaymentScreen = () => {
     : (totalPaid >= totalDoc && (!showVuelto || appState.vueltoGiven));
 
   return (
-    <div className="w-full min-h-full flex flex-col bg-white">
+    <div className="w-full h-full flex flex-col bg-white">
       {/* Top Black Logo Bar */}
       <div className="h-[32px] px-2 flex items-center bg-[#222222] shrink-0 border-b border-[#111]">
         <img src="https://firebasestorage.googleapis.com/v0/b/simulador-retail-pro.firebasestorage.app/o/Modulo%203%20ventana%20de%20venta%2FLogo%20con%20p%20blanca.png?alt=media" alt="Retail Pro Logo" className="h-[22px] object-contain ml-1" />
@@ -373,13 +373,13 @@ export const PaymentScreen = () => {
            {appState.selectedPaymentMethod === 'Efectivo' && (
            <div className="flex flex-col space-y-1 pt-4">
               <div className="flex space-x-1">
-                 <Interactive id="pay-btn-rappi-pedidos" className="flex-1">
+                 <Interactive id="pay-btn-rappi-pedidos" value="RAPPI" className="flex-1">
                      <button onClick={() => {
                         setAppState({ showAuthModal: true, selectedPaymentMethod: 'RAPPI' });
                         handleInteract('pay-btn-rappi-pedidos', 'RAPPI');
                      }} className="w-full h-full bg-gradient-to-b from-[#6c86a1] to-[#4a637d] text-white py-1.5 text-[12px] shadow-sm rounded-sm border border-[#4a637d]">RAPPI</button>
                  </Interactive>
-                 <Interactive id="pay-btn-rappi-pedidos" className="flex-1">
+                 <Interactive id="pay-btn-rappi-pedidos" value="PEDIDOS YA" className="flex-1">
                      <button onClick={() => {
                         setAppState({ showAuthModal: true, selectedPaymentMethod: 'PEDIDOS YA' });
                         handleInteract('pay-btn-rappi-pedidos', 'PEDIDOS YA');

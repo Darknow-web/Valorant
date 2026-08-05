@@ -24,7 +24,7 @@ export const ReturnsMainScreen: React.FC = () => {
   ];
 
   return (
-    <div className="relative w-full min-h-full bg-[#222222] flex flex-col text-[#333] text-[12px] font-sans">
+    <div className="absolute inset-0 bg-[#222222] flex flex-col text-[#333] text-[12px] font-sans">
       <div className="flex-1 flex flex-col p-2 space-y-2 overflow-hidden">
         {/* Top Row */}
         <div className="flex flex-1 space-x-2 overflow-hidden">

@@ -7,7 +7,7 @@ export const ZOutCloseScreen = () => {
   const { handleInteract, currentModuleId } = useSimulator();
 
   return (
-    <div className="w-full min-h-full flex flex-col bg-[#222222] font-sans">
+    <div className="w-full h-full flex flex-col bg-[#222222] font-sans">
       <div className="bg-gradient-to-b from-[#1c4b7b] to-[#0d2a4a] text-white p-2 flex justify-between items-center text-sm border-b border-[#04111f]">
         <div className="font-bold">Z Out Cierre</div>
         <div className="flex flex-col items-start">

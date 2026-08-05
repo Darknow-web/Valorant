@@ -15,7 +15,7 @@ export const CerrarCajaScreen = () => {
   };
 
   return (
-    <div className="w-full min-h-full flex flex-col bg-[#222222] font-sans">
+    <div className="w-full h-full flex flex-col bg-[#222222] font-sans">
       <PrismHeader title="Cerrar Caja" className="py-2" />
       
       <div className="bg-white h-[3px] w-full"></div>

@@ -36,6 +36,12 @@ export interface Step {
   hintMessage?: string;
   targetValue?: string; // Add targetValue for text input steps
   expectedState?: Record<string, any>; // Used to validate specific AppState values before advancing
+  /**
+   * Controles que el paso permite usar antes de darlo por terminado, sin
+   * contarlos como error. Son las acciones intermedias que la propia
+   * instrucción pide (por ejemplo aplicar el pago antes de imprimir).
+   */
+  allowedTargets?: string[];
   /** Datos extra que usa el validador del paso (clave → valor configurable). */
   data?: Record<string, string>;
   /** Nombres legibles de `data` para el panel del entrenador. */

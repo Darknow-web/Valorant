@@ -8,7 +8,7 @@ export const LoginScreen = () => {
   const { appState, setAppState, handleInteract } = useSimulator();
 
   return (
-    <div className="w-full min-h-full flex flex-col items-center pt-[10vh] bg-[#222222]">
+    <div className="w-full h-full flex flex-col items-center pt-[10vh] bg-[#222222]">
       <div className="w-[850px] flex flex-col overflow-hidden border border-[#555] rounded-[1px] shadow-2xl">
         <PrismHeader title="Retail Pro Prism" className="py-1" />
 

@@ -47,6 +47,39 @@ const defaultAppState: AppState = {
 
 const SimulatorContext = createContext<SimulatorContextType | undefined>(undefined);
 
+/**
+ * ¿Un campo de la pantalla coincide con lo que espera el paso?
+ *
+ * Compara por significado, no por texto. Antes se hacía `String(x ?? '')`, y
+ * como `??` no atrapa el `false`, un booleano sin marcar se convertía en el
+ * texto `'false'` y jamás coincidía con el `''` que esperaba el paso: eso hacía
+ * imposibles los módulos 4 y 5, donde elegir "Tarjeta de Crédito" ya deja
+ * `autorizacionForzada` en `false`.
+ */
+export function valuesMatch(actualRaw: unknown, expectedRaw: unknown): boolean {
+  // `''`, `false`, `null` y `undefined` significan todos "vacío / sin marcar".
+  const isEmpty = (v: unknown) =>
+    v === undefined || v === null || v === false || (typeof v === 'string' && v.trim() === '');
+  if (isEmpty(actualRaw) && isEmpty(expectedRaw)) return true;
+  if (isEmpty(actualRaw) !== isEmpty(expectedRaw)) return false;
+
+  // Casillas: se comparan como booleanos, no como texto.
+  if (typeof actualRaw === 'boolean' || typeof expectedRaw === 'boolean') {
+    const toBool = (v: unknown) => v === true || v === 'true';
+    return toBool(actualRaw) === toBool(expectedRaw);
+  }
+
+  const actual = String(actualRaw).trim();
+  const expected = String(expectedRaw).trim();
+  if (actual === expected) return true;
+
+  // Montos: 200 y 200.00 son el mismo importe.
+  if (actual !== '' && expected !== '' && !isNaN(Number(actual)) && !isNaN(Number(expected))) {
+    return Number(actual) === Number(expected);
+  }
+  return false;
+}
+
 const formatElapsed = (startTime: number | null) => {
   if (!startTime) return '00:00';
   const secs = Math.floor((Date.now() - startTime) / 1000);
@@ -259,7 +292,12 @@ export const SimulatorProvider = ({
 
     if (targetId === stepToProcess.targetId) {
       if (stepToProcess.targetValue !== undefined) {
-        if (value?.trim() !== stepToProcess.targetValue?.trim()) {
+        // Un clic sobre el campo (sin valor) es enfocarlo para escribir, no
+        // responder: no se valida ni se cuenta como error. La validación llega
+        // cuando el colaborador confirma con Enter o con el botón de buscar.
+        if (value === undefined) return true;
+
+        if (value.trim() !== stepToProcess.targetValue.trim()) {
           setState((prev) => ({
             ...prev,
             errors: prev.errors + 1,
@@ -275,14 +313,7 @@ export const SimulatorProvider = ({
         let isValid = true;
         const appStateRecord = snapshot.appState as Record<string, any>;
         for (const [key, expectedValue] of Object.entries(stepToProcess.expectedState)) {
-          const actual = String(appStateRecord[key] ?? '').trim();
-          const expected = String(expectedValue ?? '').trim();
-
-          let isMatch = actual === expected;
-          if (!isMatch && actual !== '' && expected !== '' && !isNaN(Number(actual)) && !isNaN(Number(expected))) {
-            isMatch = Number(actual) === Number(expected);
-          }
-          if (!isMatch) {
+          if (!valuesMatch(appStateRecord[key], expectedValue)) {
             isValid = false;
             break;
           }
@@ -293,7 +324,6 @@ export const SimulatorProvider = ({
             ...prev,
             feedback: { status: 'error', id: targetId },
             errors: prev.errors + 1,
-            hintActive: true,
             showErrorModal: true,
             customErrorMessage: 'Datos incorrectos. Revisa los valores ingresados.',
             mistakeLog: [...prev.mistakeLog, { step: stepToProcess.instruction, pointsDeducted: 1 }],
@@ -365,6 +395,11 @@ export const SimulatorProvider = ({
         'cust-new-doc', 'pos-btn-remove-cust', 'pos-btn-remove', 'modal-auth-ok', 'ignore-click',
       ];
       if (bypassValidationIds.includes(targetId)) return true;
+      // Acciones intermedias que el propio paso pide (aplicar el pago, dar el
+      // vuelto). Sin esto se contaban como error y, peor, el clic quedaba
+      // bloqueado: el Módulo 6 era imposible de terminar porque nunca llegaba a
+      // aplicarse el pago que su instrucción exige.
+      if (stepToProcess.allowedTargets?.includes(targetId)) return true;
       if (stepToProcess.screenId === 'login' && targetId !== 'login-btn-submit') return;
       // Evita que un doble clic justo después de avanzar cuente como error
       if (Date.now() - lastStepChangeTimeRef.current < 400) return;
@@ -379,7 +414,6 @@ export const SimulatorProvider = ({
         ...prev,
         feedback: { status: 'error', id: targetId },
         errors: prev.errors + 1,
-        hintActive: true,
         showErrorModal: true,
         mistakeLog: [...prev.mistakeLog, { step: stepToProcess.instruction, pointsDeducted: 1 }],
       }));

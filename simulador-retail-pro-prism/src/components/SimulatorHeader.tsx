@@ -33,6 +33,7 @@ export const SimulatorHeader = ({ onShowScenario }: { onShowScenario: () => void
   // le quita altura al simulador, que es lo que más escasea en un celular.
   return (
     <div className="relative z-10 shrink-0 border-b border-line bg-raised px-2 py-2 shadow-sm sm:px-4 sm:py-3">
+      <div aria-hidden className="absolute inset-x-0 top-0 h-0.5 bg-brand" />
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2 sm:gap-4">
           <button
@@ -45,7 +46,7 @@ export const SimulatorHeader = ({ onShowScenario }: { onShowScenario: () => void
           </button>
           <div className="min-w-0">
             <h2 className="truncate text-sm font-bold leading-tight text-ink sm:text-base">{moduleTitle}</h2>
-            <div className="text-xs text-ink-muted sm:text-sm">
+            <div className="cifra text-xs text-ink-muted sm:text-sm">
               Paso {currentStepIndex + 1} · {elapsed} · Errores{' '}
               <span className={errors > 0 ? 'font-semibold text-danger' : ''}>{errors}</span>
             </div>
@@ -55,14 +56,14 @@ export const SimulatorHeader = ({ onShowScenario }: { onShowScenario: () => void
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <button
             onClick={onShowScenario}
-            className="rounded-lg bg-brand-soft px-2.5 py-2 text-sm font-semibold text-brand transition-colors hover:bg-brand hover:text-white sm:px-3 sm:py-1.5"
+            className="rounded-xl bg-brand-soft px-2.5 py-2 text-sm font-semibold text-brand transition-colors hover:bg-brand hover:text-white sm:px-3 sm:py-1.5"
           >
             <span className="sm:hidden">Situación</span>
             <span className="hidden sm:inline">Ver la situación</span>
           </button>
           <button
             onClick={triggerHint}
-            className="rounded-lg border border-line-strong px-2.5 py-2 text-sm font-semibold text-ink-muted transition-colors hover:bg-sunken sm:px-3 sm:py-1.5"
+            className="rounded-xl border border-line-strong px-2.5 py-2 text-sm font-semibold text-ink-muted transition-colors hover:bg-sunken sm:px-3 sm:py-1.5"
           >
             <span className="sm:hidden">Pista</span>
             <span className="hidden sm:inline">Pedir pista</span>
@@ -71,7 +72,7 @@ export const SimulatorHeader = ({ onShowScenario }: { onShowScenario: () => void
       </div>
 
       {hintActive && (
-        <div className="mt-2 rounded-lg border border-warn/25 bg-warn-soft px-3 py-2 text-sm text-ink sm:mt-3 sm:px-4 sm:py-3">
+        <div className="mt-2 rounded-xl border border-warn/25 bg-warn-soft px-3 py-2 text-sm text-ink sm:mt-3 sm:px-4 sm:py-3">
           <span className="font-semibold text-warn">Pista: </span>
           {currentStep.hintMessage || currentStep.instruction}
         </div>

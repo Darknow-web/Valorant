@@ -5,7 +5,7 @@ import { PrismLogo } from './PrismLogo';
 
 export const PrismShell = ({ children, url }: { children: React.ReactNode, url?: string }) => {
   return (
-    <div className="flex flex-col w-full h-full min-h-full max-w-full rounded-none bg-[#000000] font-sans">
+    <div className="flex flex-col w-full h-full max-w-full rounded-none overflow-hidden bg-[#000000] font-sans">
       {/* Fake Browser Chrome */}
       <div className="bg-[#f0f0f0] border-b border-gray-300">
         <div className="flex items-end h-10 px-2 space-x-1 pt-2">
@@ -37,7 +37,7 @@ export const PrismShell = ({ children, url }: { children: React.ReactNode, url?:
       </div>
       
       {/* Prism App Area */}
-      <div className="prism-screen flex-1 relative flex flex-col min-h-0">
+      <div className="prism-screen flex-1 relative overflow-hidden flex flex-col">
         {children}
       </div>
     </div>

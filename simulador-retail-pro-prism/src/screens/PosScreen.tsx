@@ -45,7 +45,7 @@ export const PosMainScreen = () => {
   const formattedTotal = numericTotal < 0 ? `-S/.${Math.abs(numericTotal).toFixed(2)}` : `S/.${numericTotal.toFixed(2)}`;
 
   return (
-    <div className="relative w-full min-h-full flex flex-col bg-[#222222]">
+    <div className="absolute inset-0 flex flex-col bg-[#222222]">
       {/* Top Black Logo Bar */}
       <div className="h-[32px] px-2 flex items-center bg-[#222222] shrink-0 border-b border-[#111]">
         <img src="https://firebasestorage.googleapis.com/v0/b/simulador-retail-pro.firebasestorage.app/o/Modulo%203%20ventana%20de%20venta%2FLogo%20con%20p%20blanca.png?alt=media" alt="Retail Pro Logo" className="h-[22px] object-contain ml-1" />
@@ -209,7 +209,6 @@ export const PosMainScreen = () => {
                             value={itemSearchStr}
                             onChange={(e) => {
                                 setItemSearchStr(e.target.value);
-                                handleInteract('pos-search-item', e.target.value);
                             }}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
@@ -329,7 +328,6 @@ export const PosMainScreen = () => {
                         <input type="text" placeholder="RUC / DNI" value={custSearchStr}
                           onChange={(e) => {
                             setCustSearchStr(e.target.value);
-                            handleInteract('pos-search-customer', e.target.value);
                           }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {

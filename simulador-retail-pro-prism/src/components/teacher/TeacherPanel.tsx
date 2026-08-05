@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AuthUser } from '../../types';
 import { clearToken, studentLinkFor } from '../../lib/session';
-import { Badge, Page } from '../ui/Kit';
+import { Badge, Logotipo, Page } from '../ui/Kit';
 import { ShareLinkPanel } from './ShareLinkPanel';
 import { StepDataEditor } from './StepDataEditor';
 import { CatalogEditor } from './CatalogEditor';
@@ -34,11 +34,18 @@ export const TeacherPanel = ({ user, onLogout }: { user: AuthUser; onLogout: () 
   };
 
   return (
-    <Page>
+    <Page conRiel={false}>
       <header className="border-b border-line bg-raised">
+        {/* Barra de marca, como la del manual. */}
+        <div className="bg-brand">
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2.5">
+            <Logotipo className="h-6 brightness-0 invert" />
+            <span className="etiqueta text-white/85">Capacitación de caja</span>
+          </div>
+        </div>
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
           <div>
-            <h1 className="text-lg font-bold text-ink">Panel de Entrenadores — Retail Pro Prism</h1>
+            <h1 className="text-lg font-bold text-ink">Panel de Entrenadores</h1>
             <div className="mt-1 flex items-center gap-2 text-sm text-ink-muted">
               <span>{user.name}</span>
               <Badge tone={isAdmin ? 'brand' : 'neutral'}>{isAdmin ? 'Administrador' : 'Entrenador'}</Badge>

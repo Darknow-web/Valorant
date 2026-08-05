@@ -1,33 +1,50 @@
 @import "tailwindcss";
 
 /*
-  Tema claro corporativo del "marco de entrenamiento" (bienvenida, lista de
-  módulos, guía de situación, panel del entrenador).
+  Identidad SuperPet para el MARCO DE ENTRENAMIENTO (bienvenida, módulos, guía
+  de situación, cierre y panel del entrenador).
 
-  Las pantallas que imitan Retail Pro conservan su apariencia original a
-  propósito: su valor didáctico es parecerse al sistema real.
+  Las pantallas que replican Retail Pro no usan nada de esto: conservan su
+  aspecto original a propósito. Ese contraste es útil — el marco es cálido y
+  claro, el sistema replicado es oscuro y denso, así que el colaborador siempre
+  sabe si está en la capacitación o "dentro" de la caja.
+
+  Tema claro único y deliberado: el sistema replicado ya aporta el mundo oscuro.
 */
 @theme {
-  --color-surface: #f5f7fa;
+  /* --- Marca --- */
+  --color-brand: #e21600;        /* Rojo SuperPet */
+  --color-brand-hover: #b81200;
+  --color-brand-soft: #ffd9d1;
+  --color-navy: #060643;         /* Azul oscuro SuperPet */
+  --color-sand: #f4d0a8;         /* Arena */
+
+  /* --- Superficies. El fondo es el beige de marca, no un gris de catálogo. --- */
+  --color-surface: #ffece5;
   --color-raised: #ffffff;
-  --color-sunken: #eef1f6;
-  --color-line: #dfe3ea;
-  --color-line-strong: #c6ccd8;
+  --color-sunken: #fbe0d6;
+  --color-line: #f0cdc0;
+  --color-line-strong: #dfae9c;
 
-  --color-ink: #172033;
-  --color-ink-muted: #5b6678;
-  --color-ink-subtle: #8792a5;
+  /* --- Tinta: azul oscuro y sus derivados, sesgados al mismo tono --- */
+  --color-ink: #060643;
+  --color-ink-muted: #4a4a6b;
+  --color-ink-subtle: #7c7c96;
 
-  --color-brand: #1c4ed8;
-  --color-brand-hover: #1740b4;
-  --color-brand-soft: #e8eeff;
+  /*
+    Estados. El rojo ya significa "SuperPet" y "acción principal", así que no
+    puede significar también "falla": los avisos usan ámbar y granate, y
+    siempre van acompañados de icono y de una palabra explícita.
+  */
+  --color-ok: #0f7a4a;
+  --color-ok-soft: #d9f2e5;
+  --color-warn: #8a4f04;
+  --color-warn-soft: #fdeacd;
+  --color-danger: #8c1109;
+  --color-danger-soft: #ffd9d1;
 
-  --color-ok: #16794a;
-  --color-ok-soft: #e3f5ec;
-  --color-warn: #96590a;
-  --color-warn-soft: #fdf1dd;
-  --color-danger: #b3261e;
-  --color-danger-soft: #fdeceb;
+  --font-display: "Segoe UI", ui-sans-serif, system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Segoe UI", ui-sans-serif, system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 html,
@@ -39,14 +56,48 @@ body,
 body {
   background-color: var(--color-surface);
   color: var(--color-ink);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Foco visible y consistente en todo el marco de entrenamiento. */
+/* --- Tipografía del marco ------------------------------------------------ */
+
+/* Titulares: peso alto e interletrado cerrado, como el logotipo. */
+.frame :where(h1, h2, h3) {
+  font-family: var(--font-display);
+  letter-spacing: -0.021em;
+  text-wrap: balance;
+}
+
+.frame h1 {
+  letter-spacing: -0.03em;
+}
+
+/* Texto corrido cómodo de leer: ~65 caracteres por línea. */
+.frame .prosa {
+  max-width: 62ch;
+  line-height: 1.65;
+}
+
+/* Micro-etiquetas: mayúsculas con tracking abierto. */
+.frame .etiqueta {
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-weight: 600;
+  font-size: 0.6875rem;
+}
+
+/* Notas, tiempos y cantidades alineados en columna. */
+.frame .cifra {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Foco visible y consistente en todo el marco. */
 .frame :where(button, a, input, select, textarea):focus-visible {
   outline: 2px solid var(--color-brand);
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /*
@@ -70,3 +121,13 @@ body {
   }
 }
 
+/* Quien pida menos movimiento, no lo recibe. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

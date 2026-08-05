@@ -78,9 +78,12 @@ export const modulesData: ModuleData[] = [
       { id: 'm6-s5', instruction: 'Procede a pagar la transacción.', targetId: 'pos-btn-pay', screenId: 'pos-main' },
       { 
         id: 'm6-s6', 
-        instruction: 'Aplica el pago y completa la transacción (Efectivo, Tarjeta o Mixto). Recuerda dar vuelto si el monto recibido es mayor al total. Al finalizar, presiona Imprimir Actualizar.', 
-        targetId: 'pay-btn-print-update', 
-        screenId: 'payment', 
+        instruction: 'Aplica el pago y completa la transacción (Efectivo, Tarjeta o Mixto). Recuerda dar vuelto si el monto recibido es mayor al total. Al finalizar, presiona Imprimir Actualizar.',
+        targetId: 'pay-btn-print-update',
+        screenId: 'payment',
+        // El paso pide expresamente aplicar el pago y dar el vuelto antes de
+        // imprimir: esas acciones no son un error.
+        allowedTargets: ['pay-btn-apply', 'pay-btn-vuelto'],
         validator: (state) => {
             const totalDoc = state.cart.reduce((sum, item) => sum + item.price, 0);
             const totalPaid = state.payments.reduce((sum, p) => sum + p.amount, 0);
