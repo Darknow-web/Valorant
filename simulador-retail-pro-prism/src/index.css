@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/*
+  Tema claro corporativo del "marco de entrenamiento" (bienvenida, lista de
+  módulos, guía de situación, panel del entrenador).
+
+  Las pantallas que imitan Retail Pro conservan su apariencia original a
+  propósito: su valor didáctico es parecerse al sistema real.
+*/
+@theme {
+  --color-surface: #f5f7fa;
+  --color-raised: #ffffff;
+  --color-sunken: #eef1f6;
+  --color-line: #dfe3ea;
+  --color-line-strong: #c6ccd8;
+
+  --color-ink: #172033;
+  --color-ink-muted: #5b6678;
+  --color-ink-subtle: #8792a5;
+
+  --color-brand: #1c4ed8;
+  --color-brand-hover: #1740b4;
+  --color-brand-soft: #e8eeff;
+
+  --color-ok: #16794a;
+  --color-ok-soft: #e3f5ec;
+  --color-warn: #96590a;
+  --color-warn-soft: #fdf1dd;
+  --color-danger: #b3261e;
+  --color-danger-soft: #fdeceb;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Foco visible y consistente en todo el marco de entrenamiento. */
+.frame :where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}

@@ -1,0 +1,97 @@
+# Simulador Retail Pro Prism
+
+Simulador interactivo de **Retail Pro Prism** (POS) para capacitar al personal de tienda en
+venta, pagos, clientes, devoluciones y cierre de caja, sin tocar el sistema real.
+
+Hay dos formas de entrar:
+
+- **Colaborador** — abre el enlace o el QR que le compartió su entrenador. No necesita clave:
+  solo escribe su nombre, DNI y tienda. Ve la lista de módulos y, en cada uno, una
+  **situación de tienda** de la que tiene que deducir los datos. No hay paso a paso.
+- **Entrenador / administrador** — entra en `/#/entrenador` con usuario y clave. Configura los
+  datos de cada módulo, comparte su enlace y QR, conecta su Google Sheet y ve los resultados.
+
+## Ejecutar
+
+**Requisitos:** Node.js 20 o superior.
+
+```bash
+npm install
+npm run dev      # backend Express + Vite en http://localhost:3000
+npm run build    # compila el frontend y el servidor
+npm start        # producción (sirve dist/)
+```
+
+## Variables de entorno
+
+Copia `.env.example` y define al menos `JWT_SECRET` en el despliegue.
+
+| Variable | Para qué sirve |
+|---|---|
+| `JWT_SECRET` | **Obligatoria en producción.** Firma las sesiones del panel. Si falta, el servidor genera una temporal y todas las sesiones se cierran al reiniciar. |
+| `ADMIN_INITIAL_PASSWORD` | Clave inicial de `admin`. Si no la defines, se genera al azar y se imprime en el log de arranque. |
+| `TEACHER_INITIAL_PASSWORD` | Clave inicial de `entrenador`, igual que la anterior. |
+| `FIREBASE_CONFIG` | Configuración de Firebase en una sola línea de JSON. Sin ella todo se guarda en `local_data.json`. |
+| `FIREBASE_CONFIG_PATH` | Alternativa: ruta a un archivo JSON con esa configuración. |
+
+Genera un secreto con:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+```
+
+Las claves iniciales **se piden cambiar en el primer ingreso** y nunca se muestran en pantalla.
+
+## Conectar el Google Sheet
+
+1. Abre tu hoja de cálculo → **Extensiones ▸ Apps Script**.
+2. Borra lo que haya y pega el contenido de [`docs/apps-script.gs`](docs/apps-script.gs).
+3. **Implementar ▸ Nueva implementación ▸ Aplicación web**, ejecutando como tú y con acceso
+   para "Cualquier usuario".
+4. Copia la URL que termina en `/exec` y pégala en **Panel ▸ Google Sheets y nota ▸ URL del Webhook**.
+
+Cada fila lleva: fecha, cajero, DNI, tienda, módulo, puntaje, tiempo en segundos, errores,
+ayudas, aprobado, calificación, entrenador, detalle de errores, detalle del proceso e ID de
+intento. El ID de intento es lo que evita filas repetidas: si el mismo intento se reenvía, el
+script lo ignora.
+
+Si tu hoja quedó con filas antiguas de `Desconocido` / `N/A` / ceros, límpialas con el botón
+**Limpiar filas inválidas** del panel y con la función `limpiarFilasInvalidas()` del Apps
+Script (se ejecuta a mano desde el editor, una sola vez).
+
+## Configurar los datos de cada módulo
+
+En **Panel ▸ Datos de los módulos** el entrenador solo ve **los valores que se validan** (el
+SKU del producto, el documento del cliente, el monto recibido, los datos del voucher, el fondo
+de caja…), agrupados por módulo y con su nombre legible. El proceso y el texto de los pasos no
+se editan: viven en `src/data/modules.ts`.
+
+Debajo de cada módulo se muestra **cómo le va a llegar la situación al colaborador** con los
+valores actuales, así que se ve el efecto del cambio antes de guardarlo.
+
+## Firebase (opcional)
+
+El backend puede guardar usuarios, configuración y resultados en **Firestore**. Todo el acceso
+pasa por el servidor, así que `firestore.rules` está **cerrado** (`allow read, write: if false`)
+y debe quedarse así: abrirlo expondría los hashes de las claves, los webhooks y los resultados
+a cualquiera que tenga la apiKey del proyecto.
+
+Nunca versiones `firebase-applet-config.json`; usa `FIREBASE_CONFIG` en el despliegue.
+
+## Estructura
+
+- `server.ts` — backend Express: sesiones, configuración, registro de notas y sincronización.
+- `docs/apps-script.gs` — el script que va en la hoja de cálculo.
+- `src/App.tsx` — decide qué se ve según el enlace y el rol.
+- `src/components/StudentApp.tsx` — vista del colaborador (módulos, briefing, simulación, cierre).
+- `src/components/ScenarioBriefing.tsx` — la situación de tienda.
+- `src/components/teacher/` — panel del entrenador (compartir/QR, datos, Sheets, resultados, usuarios).
+- `src/components/ui/Kit.tsx` — primitivas del tema claro corporativo.
+- `src/data/modules.ts` — los módulos y sus pasos (fuente de verdad del proceso).
+- `src/data/scenarios.ts` — las 14 situaciones de tienda.
+- `src/lib/stepData.ts` — datos configurables y cómo se aplican sobre los módulos.
+- `src/lib/session.ts` — sesión, enlaces de colaborador e identificadores de intento.
+- `src/screens/` — pantallas simuladas de Retail Pro Prism. **Conservan su apariencia original
+  a propósito:** su valor didáctico es parecerse al sistema real, así que el tema claro se
+  aplica solo al marco de entrenamiento que las envuelve.
+- `src/store/SimulatorContext.tsx` — estado del simulador (pasos, errores, nota, sincronización).

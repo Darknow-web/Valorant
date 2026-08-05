@@ -1,0 +1,14 @@
+rules_version = '2';
+
+// El acceso a Firestore ocurre EXCLUSIVAMENTE desde el servidor Express de la
+// app, nunca desde el navegador. Por eso todo acceso directo con la apiKey
+// pública queda cerrado: la regla anterior (allow read, write: if true) dejaba
+// expuestos los hashes de claves, los webhooks y los resultados de todos los
+// colaboradores a cualquiera que tuviera la apiKey del proyecto.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

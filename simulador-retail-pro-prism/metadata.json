@@ -1,0 +1,6 @@
+{
+  "name": "Simulador Retail Pro Prism",
+  "description": "Entrenamiento interactivo de caja para colaboradores de tienda, con guías de situación y sincronización de notas a Google Sheets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
