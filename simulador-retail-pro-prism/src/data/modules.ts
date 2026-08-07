@@ -221,37 +221,37 @@ export const modulesData: ModuleData[] = [
   },
   {
     id: 'm12',
-    title: 'Módulo 12 — Cierre de caja (Z Out)',
+    title: 'Módulo 12 — Arqueo de caja',
     steps: [
-      { id: 'm12-s1', instruction: 'En el menú principal, haz clic en el botón X/Z-Out.', targetId: 'menu-btn-xz', screenId: 'main-menu' },
-      { id: 'm12-s2', instruction: 'En el menú de opciones, selecciona Z Out Cierre.', targetId: 'xz-btn-close', screenId: 'xz-menu' },
-      { id: 'm12-s3', instruction: 'Haz clic en el botón Cierre /Auditoría en los resultados de búsqueda.', targetId: 'zout-btn-auditoria', screenId: 'z-out-close' },
-      { id: 'm12-s4', instruction: 'Ingresa el monto del fondo de caja de apertura (300.00).', targetId: 'input-fondo-caja', targetValue: '300.00', screenId: 'registro' },
-      { id: 'm12-s5', instruction: 'Haz clic en el botón Siguiente.', targetId: 'btn-siguiente', screenId: 'registro' },
-      { id: 'm12-s6', instruction: 'Selecciona todas las transacciones haciendo clic en el botón con signo de interrogación en la cabecera de la tabla.', targetId: 'btn-check-all-trans', screenId: 'cerrar-caja' },
-      { id: 'm12-s7', instruction: 'Haz clic en el botón Cerrar en la parte inferior.', targetId: 'btn-cerrar-caja', screenId: 'cerrar-caja' },
-      { id: 'm12-s8', instruction: 'Confirma el cierre seleccionando Sí en la advertencia.', targetId: 'modal-confirm-yes', screenId: 'cerrar-caja' },
-      { id: 'm12-s9', instruction: 'Verifica la conciliación y haz clic en Finalizar e Imprimir.', targetId: 'btn-finalizar-imprimir', screenId: 'conciliacion' }
+      { id: 'm12-s1', instruction: 'En el menú principal, ve a X/Z-Out.', targetId: 'menu-btn-xz', screenId: 'main-menu' },
+      { id: 'm12-s2', instruction: 'Selecciona Arqueo en el menú de opciones.', targetId: 'xz-btn-arqueo', screenId: 'xz-menu' },
+      { id: 'm12-s3', instruction: 'Haz clic en el botón Imprimir.', targetId: 'arqueo-btn-imprimir', screenId: 'arqueo' }
     ]
   },
   {
     id: 'm13',
-    title: 'Módulo 13 — Arqueo de caja',
+    title: 'Módulo 13 — Depósito de efectivo',
     steps: [
-      { id: 'm13-s1', instruction: 'En el menú principal, ve a X/Z-Out.', targetId: 'menu-btn-xz', screenId: 'main-menu' },
-      { id: 'm13-s2', instruction: 'Selecciona Arqueo en el menú de opciones.', targetId: 'xz-btn-arqueo', screenId: 'xz-menu' },
-      { id: 'm13-s3', instruction: 'Haz clic en el botón Imprimir.', targetId: 'arqueo-btn-imprimir', screenId: 'arqueo' }
+      { id: 'm13-s1', instruction: 'En Punto de Venta, haz clic en Nuevo Desembolso.', targetId: 'pos-menu-new-desembolso', screenId: 'main-menu' },
+      { id: 'm13-s2', instruction: 'En el submenú, haz clic en Retiro de Dinero.', targetId: 'desembolso-retiro-dinero', screenId: 'main-menu' },
+      { id: 'm13-s3', instruction: 'Verifica la tienda asociada (Sp15 mayolo), en Nota ingresa la fecha (ej. "Cierre 12/08/2026") y haz clic en Agregar Pago.', targetId: 'desembolso-add-payment', screenId: 'desembolso' },
+      { id: 'm13-s4', instruction: 'Haz clic en el apartado de Cantidad.', targetId: 'desembolso-click-cantidad', screenId: 'desembolso' },
+      { id: 'm13-s5', instruction: 'Ingresa el monto del retiro y haz clic en Sólo Actualizar.', targetId: 'desembolso-update', targetValue: '774.41', screenId: 'desembolso' }
     ]
   },
   {
     id: 'm14',
-    title: 'Módulo 14 — Depósito de efectivo',
+    title: 'Módulo 14 — Cierre de caja (Z Out)',
     steps: [
-      { id: 'm14-s1', instruction: 'En Punto de Venta, haz clic en Nuevo Desembolso.', targetId: 'pos-menu-new-desembolso', screenId: 'main-menu' },
-      { id: 'm14-s2', instruction: 'En el submenú, haz clic en Retiro de Dinero.', targetId: 'desembolso-retiro-dinero', screenId: 'main-menu' },
-      { id: 'm14-s3', instruction: 'Verifica la tienda asociada (Sp15 mayolo), en Nota ingresa la fecha (ej. "Cierre 12/08/2026") y haz clic en Agregar Pago.', targetId: 'desembolso-add-payment', screenId: 'desembolso' },
-      { id: 'm14-s4', instruction: 'Haz clic en el apartado de Cantidad.', targetId: 'desembolso-click-cantidad', screenId: 'desembolso' },
-      { id: 'm14-s5', instruction: 'Ingresa el monto del retiro y haz clic en Sólo Actualizar.', targetId: 'desembolso-update', targetValue: '774.41', screenId: 'desembolso' }
+      { id: 'm14-s1', instruction: 'En el menú principal, haz clic en el botón X/Z-Out.', targetId: 'menu-btn-xz', screenId: 'main-menu' },
+      { id: 'm14-s2', instruction: 'En el menú de opciones, selecciona Z Out Cierre.', targetId: 'xz-btn-close', screenId: 'xz-menu' },
+      { id: 'm14-s3', instruction: 'Haz clic en el botón Cierre /Auditoría en los resultados de búsqueda.', targetId: 'zout-btn-auditoria', screenId: 'z-out-close' },
+      { id: 'm14-s4', instruction: 'Ingresa el monto del fondo de caja de apertura (300.00).', targetId: 'input-fondo-caja', targetValue: '300.00', screenId: 'registro' },
+      { id: 'm14-s5', instruction: 'Haz clic en el botón Siguiente.', targetId: 'btn-siguiente', screenId: 'registro' },
+      { id: 'm14-s6', instruction: 'Selecciona todas las transacciones haciendo clic en el botón con signo de interrogación en la cabecera de la tabla.', targetId: 'btn-check-all-trans', screenId: 'cerrar-caja' },
+      { id: 'm14-s7', instruction: 'Haz clic en el botón Cerrar en la parte inferior.', targetId: 'btn-cerrar-caja', screenId: 'cerrar-caja' },
+      { id: 'm14-s8', instruction: 'Confirma el cierre seleccionando Sí en la advertencia.', targetId: 'modal-confirm-yes', screenId: 'cerrar-caja' },
+      { id: 'm14-s9', instruction: 'Verifica la conciliación y haz clic en Finalizar e Imprimir.', targetId: 'btn-finalizar-imprimir', screenId: 'conciliacion' }
     ]
   }
 ];

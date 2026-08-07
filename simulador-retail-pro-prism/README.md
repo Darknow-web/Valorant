@@ -44,11 +44,29 @@ Las claves iniciales **se piden cambiar en el primer ingreso** y nunca se muestr
 
 ## Conectar el Google Sheet
 
+> **La conexión es de CADA ENTRENADOR.** Si pegas la URL estando en la sesión de
+> `admin`, los colaboradores que entren con el enlace de otro entrenador no van a
+> llegar a esa hoja. Entra con el usuario cuyo enlace vas a compartir.
+>
+> Usa el botón **«Probar conexión»** del panel: envía un ping y te dice en claro
+> qué respondió Google (sin configurar, implementación no pública, o listo).
+
 1. Abre tu hoja de cálculo → **Extensiones ▸ Apps Script**.
 2. Borra lo que haya y pega el contenido de [`docs/apps-script.gs`](docs/apps-script.gs).
 3. **Implementar ▸ Nueva implementación ▸ Aplicación web**, ejecutando como tú y con acceso
    para "Cualquier usuario".
-4. Copia la URL que termina en `/exec` y pégala en **Panel ▸ Google Sheets y nota ▸ URL del Webhook**.
+4. En **«Quién tiene acceso»** elige **«Cualquier usuario»**. Si eliges otra cosa,
+   Google responde con su página de inicio de sesión y no se escribe nada: es el
+   fallo más común.
+5. Copia la URL que termina en `/exec` y pégala en **Panel ▸ Google Sheets y nota ▸ URL del Webhook**.
+6. Pulsa **«Probar conexión»** para confirmarlo antes de compartir el enlace.
+
+Cada vez que cambies el Apps Script hay que crear una implementación nueva (o
+subir la versión de la existente): guardar no basta.
+
+El script escribe **por nombre de columna**: lee los títulos de tu hoja y coloca
+cada dato bajo el suyo, sin importar el orden, y agrega al final las columnas que
+falten. Si tenías columnas propias, no se tocan.
 
 Cada fila lleva: fecha, cajero, DNI, tienda, módulo, puntaje, tiempo en segundos, errores,
 ayudas, aprobado, calificación, entrenador, detalle de errores, detalle del proceso e ID de
@@ -84,6 +102,15 @@ ofrece «Agregarlo al catálogo» para arreglarlo de una vez.
 
 Un cliente marcado como **agregador** (Rappi, Pedidos Ya) hace que, al asociarlo, la caja pida
 aplicar el nivel de precio del canal digital. Así funcionan los módulos 7 y 8.
+
+## Nota final del colaborador
+
+La nota final es el **promedio del mejor intento de cada módulo**: repetir un
+módulo siempre suma y nunca resta. Al terminar todos aparece la nota final con
+una celebración si aprueba, o con la lista de módulos por reforzar si todavía no.
+
+El progreso lo calcula el servidor (`GET /api/my-progress`) sobre los intentos ya
+guardados, así que sigue ahí aunque el colaborador entre desde otro equipo.
 
 ## Identidad visual
 

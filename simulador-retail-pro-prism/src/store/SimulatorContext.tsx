@@ -159,6 +159,7 @@ export const SimulatorProvider = ({
     mistakeLog: [],
     processSteps: [],
     score: null,
+    approved: null,
     syncStatus: 'idle',
     syncMessage: '',
     showErrorModal: false,
@@ -226,6 +227,7 @@ export const SimulatorProvider = ({
       mistakeLog: [],
       processSteps: [{ action: 'Inicio del módulo', time: '00:00' }],
       score: null,
+      approved: null,
       syncStatus: 'idle',
       syncMessage: '',
       showErrorModal: false,
@@ -528,6 +530,7 @@ export const SimulatorProvider = ({
       setState((prev) => ({
         ...prev,
         score: data?.log?.score ?? prev.score,
+        approved: data?.log?.approved ?? prev.approved,
         syncStatus: data.status === 'synced' ? 'synced' : 'saved_locally',
         syncMessage: data.message || '',
       }));

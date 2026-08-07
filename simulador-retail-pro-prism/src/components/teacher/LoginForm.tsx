@@ -72,6 +72,12 @@ export const LoginForm = ({ onLogin, onBack }: { onLogin: (user: AuthUser) => vo
             ← Volver al inicio
           </button>
         )}
+
+        {/* Los colaboradores no entran por aquí, y conviene decirlo para que
+            nadie se quede probando claves que no tiene. */}
+        <p className="mt-6 border-t border-line pt-4 text-center text-xs text-ink-subtle">
+          ¿Eres colaborador? Entra con el enlace o el código QR que te compartió tu entrenador.
+        </p>
       </Card>
     </Page>
   );

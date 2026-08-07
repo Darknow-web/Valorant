@@ -172,6 +172,8 @@ export interface SimulationState {
   mistakeLog: MistakeDetail[];
   processSteps: ProcessStepLog[];
   score: number | null;
+  /** Si el intento alcanzó la nota mínima del entrenador. Lo decide el servidor. */
+  approved: boolean | null;
   syncStatus: ScoreSyncStatus;
   syncMessage: string;
   showErrorModal: boolean;

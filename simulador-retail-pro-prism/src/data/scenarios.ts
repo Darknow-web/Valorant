@@ -204,20 +204,6 @@ export const scenarios: Scenario[] = [
   },
   {
     moduleId: 'm12',
-    titulo: 'Fin de turno',
-    contexto:
-      'Son las 9:00 p. m., la tienda ya cerró y toca cuadrar la caja. Antes de irte tienes que cerrar el turno en el sistema y dejar el reporte impreso. En la hoja de apertura del turno está anotado el fondo con el que se abrió.',
-    datos: {
-      fondoApertura: 'm12-s4|targetValue',
-    },
-    pistas: [
-      'La hoja de apertura del turno dice: fondo de caja S/ {{fondoApertura}}.',
-      'El cierre debe incluir todas las transacciones del turno, sin dejar ninguna fuera.',
-    ],
-    objetivo: 'Cierra el turno y deja la conciliación impresa.',
-  },
-  {
-    moduleId: 'm13',
     titulo: 'El jefe pide el corte',
     contexto:
       'A media tarde el jefe de tienda se acerca: "sácame el arqueo, quiero ver cómo vamos hasta ahora". No es un cierre: la caja sigue operando y solo se necesita el reporte del momento.',
@@ -228,12 +214,12 @@ export const scenarios: Scenario[] = [
     objetivo: 'Deja el arqueo impreso sin cerrar la caja.',
   },
   {
-    moduleId: 'm14',
+    moduleId: 'm13',
     titulo: 'Retiro para el banco',
     contexto:
       'Se juntó demasiado efectivo en la gaveta y la política de la tienda no permite tener tanto acumulado. El jefe de tienda cuenta el dinero contigo, lo mete en la bolsa de seguridad y te pide que registres el retiro en el sistema con la fecha en la nota.',
     datos: {
-      monto: 'm14-s5|targetValue',
+      monto: 'm13-s5|targetValue',
     },
     pistas: [
       'Cuentan la bolsa entre los dos y coinciden: S/ {{monto}}.',
@@ -241,6 +227,20 @@ export const scenarios: Scenario[] = [
       'Verifica que la tienda asociada al desembolso sea la tuya antes de agregar el pago.',
     ],
     objetivo: 'Deja el retiro de efectivo registrado por el monto exacto.',
+  },
+  {
+    moduleId: 'm14',
+    titulo: 'Fin de turno',
+    contexto:
+      'Son las 9:00 p. m., la tienda ya cerró y toca cuadrar la caja. Antes de irte tienes que cerrar el turno en el sistema y dejar el reporte impreso. En la hoja de apertura del turno está anotado el fondo con el que se abrió.',
+    datos: {
+      fondoApertura: 'm14-s4|targetValue',
+    },
+    pistas: [
+      'La hoja de apertura del turno dice: fondo de caja S/ {{fondoApertura}}.',
+      'El cierre debe incluir todas las transacciones del turno, sin dejar ninguna fuera.',
+    ],
+    objetivo: 'Cierra el turno y deja la conciliación impresa.',
   },
 ];
 

@@ -361,6 +361,45 @@ app.post('/api/admin/config', requireAuth, async (req: any, res) => {
   res.json({ success: true, ...safeConfig(updated) });
 });
 
+/**
+ * Prueba de conexión con la hoja.
+ *
+ * Sin esto, el entrenador no tenía forma de saber si su hoja estaba bien
+ * conectada hasta que un colaborador terminaba un módulo — y entonces el aviso
+ * llegaba tarde. Envía un ping que el Apps Script reconoce y no escribe fila.
+ */
+app.post('/api/admin/test-sync', requireAuth, async (req: any, res) => {
+  const config = await readConfig(req.user.username);
+
+  if (!config.googleWebhookUrl) {
+    return res.json({
+      ok: false,
+      motivo: 'sin-configurar',
+      mensaje:
+        'Todavía no has pegado la URL del Apps Script. Recuerda que la hoja es de cada entrenador: si la configuraste con otro usuario, aquí no cuenta.',
+    });
+  }
+
+  const resultado = await enviarAlWebhook(config, {
+    action: 'test',
+    data: { esPrueba: true, entrenador: req.user.username },
+  });
+
+  if (resultado.ok) {
+    const info: any = (resultado as any).info || {};
+    return res.json({
+      ok: true,
+      mensaje: info.documento
+        ? `Conectado a «${info.documento}», escribiendo en la pestaña «${info.hoja || 'Resultados'}».`
+        : 'Conexión correcta. Los resultados se escribirán en la pestaña «Resultados».',
+      documento: info.documento,
+      hoja: info.hoja,
+    });
+  }
+
+  return res.json({ ok: false, motivo: 'error', mensaje: resultado.error });
+});
+
 app.post('/api/admin/disconnect', requireAuth, async (req: any, res) => {
   const current = await readConfig(req.user.username);
   current.googleAccessToken = '';
@@ -382,6 +421,51 @@ app.get('/api/step-data', async (req, res) => {
   }
   const config = await readConfig(teacher);
   res.json({ stepData: config.stepData || {}, catalog: config.catalog || null, teacherExists: true });
+});
+
+/**
+ * Progreso del colaborador: la mejor nota de cada módulo y el promedio.
+ *
+ * Se calcula sobre los intentos ya guardados en el servidor, no en el navegador,
+ * así que sobrevive a cambiar de equipo o de teléfono. La nota final es el
+ * promedio del MEJOR intento de cada módulo: repetir un módulo siempre suma.
+ */
+app.get('/api/my-progress', async (req, res) => {
+  const teacher = String(req.query.teacher || '').trim();
+  const dni = String(req.query.dni || '').trim();
+  if (!teacher || !dni) return res.json({ modulos: {}, promedio: null, aprobado: false });
+
+  const config = await readConfig(teacher);
+  const logs = await readStudentLogs(teacher);
+
+  const mejores: Record<string, { score: number; approved: boolean; rating: string; moduleTitle: string }> = {};
+  for (const log of logs) {
+    if (String(log.studentDni || '').trim() !== dni) continue;
+    const id = String(log.moduleId || '').trim();
+    if (!id) continue;
+    const actual = mejores[id];
+    if (!actual || Number(log.score) > actual.score) {
+      mejores[id] = {
+        score: Number(log.score) || 0,
+        approved: !!log.approved,
+        rating: log.rating || '',
+        moduleTitle: log.moduleTitle || '',
+      };
+    }
+  }
+
+  const notas = Object.values(mejores).map((m) => m.score);
+  const promedio = notas.length ? Math.round((notas.reduce((a, b) => a + b, 0) / notas.length) * 10) / 10 : null;
+  const maxScore = config.gradingScale === 'percentage' ? 100 : 20;
+  const passingScore = Number(config.passingScore ?? (config.gradingScale === 'percentage' ? 70 : 14));
+
+  res.json({
+    modulos: mejores,
+    promedio,
+    aprobado: promedio !== null && promedio >= passingScore,
+    notaMinima: passingScore,
+    notaMaxima: maxScore,
+  });
 });
 
 app.get('/api/admin/step-data', requireAuth, async (req: any, res) => {
@@ -498,6 +582,9 @@ app.post('/api/admin/clear-invalid-logs', requireAuth, async (req: any, res) => 
 // --- Sincronización con Google Sheets ---
 // Se envía un OBJETO CON NOMBRES (data) además del array posicional (row), con
 // Content-Type explícito y siguiendo el redirect 302 que devuelve /exec de Apps Script.
+// El Apps Script escribe por NOMBRE de columna, así que este orden solo se usa
+// como respaldo para clientes antiguos. Aun así se mantiene alineado con
+// `buildRow` y con el script para que nada quede corrido.
 const SHEET_HEADERS = [
   'Fecha', 'Cajero', 'DNI', 'Tienda', 'Módulo', 'Puntaje', 'Tiempo (s)',
   'Errores', 'Ayudas', 'Aprobado', 'Calificación', 'Entrenador',
@@ -508,7 +595,6 @@ function buildData(log: any) {
   return {
     fecha: log.timestamp,
     cajero: log.studentName,
-    dni: log.studentDni,
     tienda: log.storeName,
     modulo: log.moduleTitle,
     puntaje: log.score,
@@ -522,6 +608,7 @@ function buildData(log: any) {
     detalleErrores: log.mistakeLogStr,
     detalleProceso: log.processLogStr,
     intentoId: log.attemptId,
+    dni: log.studentDni,
     headers: SHEET_HEADERS,
   };
 }
@@ -535,6 +622,63 @@ function buildRow(log: any) {
   ];
 }
 
+/**
+ * Traduce lo que respondió Google a algo accionable.
+ *
+ * El caso más común y más confuso: Apps Script devuelve su PÁGINA DE INICIO DE
+ * SESIÓN en HTML cuando la implementación no está publicada para "Cualquier
+ * usuario". Sin esta traducción, en el panel aparecía un volcado de HTML.
+ */
+function interpretarRespuesta(text: string, status: number): { ok: boolean; error?: string; info?: any } {
+  const recorte = text.trim().slice(0, 400);
+  const pareceHtml = /^<!DOCTYPE html|^<html/i.test(recorte);
+
+  if (pareceHtml) {
+    if (/accounts\.google\.com|iniciar sesión|sign in|ServiceLogin/i.test(text)) {
+      return {
+        ok: false,
+        error:
+          'Google devolvió su página de inicio de sesión. Tu implementación del Apps Script no está publicada para "Cualquier usuario": entra a Implementar ▸ Gestionar implementaciones y cámbialo.',
+      };
+    }
+    return {
+      ok: false,
+      error:
+        'La URL no respondió como un Apps Script (devolvió una página web). Revisa que sea la que termina en /exec y que la implementación esté activa.',
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(recorte === text.trim() ? text : text);
+    if (parsed && parsed.ok === false) {
+      return { ok: false, error: parsed.error || 'El Apps Script devolvió un error.' };
+    }
+    return { ok: true, info: parsed };
+  } catch {
+    // Respuesta corta y no-JSON con 200: se acepta.
+    if (status >= 200 && status < 300) return { ok: true };
+    return { ok: false, error: `HTTP ${status}: ${recorte}` };
+  }
+}
+
+/** Envía un objeto ya listo al webhook o a la API de Sheets. */
+async function enviarAlWebhook(config: any, payload: any) {
+  if (config.googleWebhookUrl) {
+    const response = await fetch(config.googleWebhookUrl, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+    });
+    const text = await response.text();
+    if (!response.ok && !text.trim()) {
+      return { ok: false, error: `Google respondió con el código ${response.status}.` };
+    }
+    return interpretarRespuesta(text, response.status);
+  }
+  return { ok: false, error: 'Google Sheets / Webhook no configurado.' };
+}
+
 async function syncRow(config: any, log: any) {
   const payload = {
     action: 'appendRow',
@@ -543,23 +687,7 @@ async function syncRow(config: any, log: any) {
   };
   try {
     if (config.googleWebhookUrl) {
-      const response = await fetch(config.googleWebhookUrl, {
-        method: 'POST',
-        redirect: 'follow',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload),
-      });
-      const text = await response.text();
-      if (!response.ok) return { ok: false, error: `HTTP ${response.status}: ${text.slice(0, 300)}` };
-      // Apps Script devuelve 200 incluso ante errores internos; si responde JSON
-      // con ok:false lo tratamos como fallo para no marcarlo como sincronizado.
-      try {
-        const parsed = JSON.parse(text);
-        if (parsed && parsed.ok === false) return { ok: false, error: parsed.error || 'El Apps Script devolvió un error.' };
-      } catch {
-        /* respuesta no-JSON: se asume éxito por el 200 */
-      }
-      return { ok: true };
+      return await enviarAlWebhook(config, payload);
     }
     if (config.googleSpreadsheetId && config.googleAccessToken) {
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${config.googleSpreadsheetId}/values/Sheet1!A1:append?valueInputOption=USER_ENTERED`;

@@ -22,5 +22,7 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "//": "Se acota qué se compila: sin esto, un archivo suelto en la raíz (como el fix.ts que venía en la descarga) tumba el build entero.",
+  "include": ["src", "server.ts", "vite.config.ts"]
 }

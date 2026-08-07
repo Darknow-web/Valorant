@@ -27,6 +27,8 @@ export const SyncConfigPanel = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [probando, setProbando] = useState(false);
+  const [prueba, setPrueba] = useState<{ ok: boolean; mensaje: string } | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/config', { headers: authHeaders() })
@@ -36,10 +38,10 @@ export const SyncConfigPanel = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const save = async () => {
+  const save = async ({ silencioso = false }: { silencioso?: boolean } = {}) => {
     setSaving(true);
     setError('');
-    setMessage('');
+    if (!silencioso) setMessage('');
     try {
       const res = await fetch('/api/admin/config', {
         method: 'POST',
@@ -51,11 +53,30 @@ export const SyncConfigPanel = () => {
         setError(data.error || 'No se pudo guardar.');
         return;
       }
-      setMessage('Configuración guardada.');
+      if (!silencioso) setMessage('Configuración guardada.');
     } catch {
       setError('No se pudo conectar con el servidor.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  /** Envía un ping al Apps Script y muestra en claro lo que respondió Google. */
+  const probar = async () => {
+    setProbando(true);
+    setPrueba(null);
+    setError('');
+    setMessage('');
+    try {
+      // Se guarda primero: probar la URL que aún no está guardada no sirve de nada.
+      await save({ silencioso: true });
+      const res = await fetch('/api/admin/test-sync', { method: 'POST', headers: authHeaders() });
+      const data = await res.json();
+      setPrueba({ ok: !!data.ok, mensaje: data.mensaje || 'Sin respuesta del servidor.' });
+    } catch {
+      setPrueba({ ok: false, mensaje: 'No se pudo conectar con el servidor.' });
+    } finally {
+      setProbando(false);
     }
   };
 
@@ -65,14 +86,30 @@ export const SyncConfigPanel = () => {
 
   return (
     <div className="space-y-5">
+      {/* La configuración es de cada entrenador. Pegarla con otro usuario es el
+          error más fácil de cometer y el más difícil de notar: los colaboradores
+          entrenan igual, pero sus notas no salen de aquí. */}
+      {!config.googleWebhookUrl && (
+        <Notice tone="warn">
+          <strong>Tu hoja de cálculo no está conectada.</strong> Los intentos de tus colaboradores se guardan en este
+          panel, pero no llegan a ninguna hoja. Ojo: la conexión es de cada entrenador, así que si la configuraste con
+          otro usuario, aquí no cuenta.
+        </Notice>
+      )}
+
       <Card>
         <CardHeader
           title="Google Sheets"
           subtitle="Pega la URL del Apps Script publicado como aplicación web."
           action={
-            <Button onClick={save} disabled={saving}>
-              {saving ? 'Guardando…' : 'Guardar'}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" onClick={probar} disabled={probando || saving}>
+                {probando ? 'Probando…' : 'Probar conexión'}
+              </Button>
+              <Button onClick={() => save()} disabled={saving}>
+                {saving ? 'Guardando…' : 'Guardar'}
+              </Button>
+            </div>
           }
         />
         <div className="space-y-4 px-5 py-5">
@@ -93,8 +130,22 @@ export const SyncConfigPanel = () => {
               placeholder="ID de la hoja de cálculo"
             />
           </Field>
+          {prueba && <Notice tone={prueba.ok ? 'ok' : 'danger'}>{prueba.mensaje}</Notice>}
           {message && <Notice tone="ok">{message}</Notice>}
           {error && <Notice tone="danger">{error}</Notice>}
+
+          <details className="rounded-xl bg-sunken px-4 py-3 text-sm text-ink-muted">
+            <summary className="cursor-pointer font-semibold text-ink">¿No llega nada a tu hoja?</summary>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              <li>Usa «Probar conexión»: te dice exactamente qué respondió Google.</li>
+              <li>
+                Al publicar el Apps Script, en <strong>«Quién tiene acceso»</strong> elige{' '}
+                <strong>«Cualquier usuario»</strong>. Es el fallo más común.
+              </li>
+              <li>Cada vez que cambies el script hay que crear una implementación nueva; guardar no basta.</li>
+              <li>Los resultados se escriben en la pestaña «Resultados» de tu hoja.</li>
+            </ul>
+          </details>
         </div>
       </Card>
 
@@ -142,7 +193,7 @@ export const SyncConfigPanel = () => {
             />
           </Field>
           <div className="sm:col-span-2">
-            <Button onClick={save} disabled={saving}>
+            <Button onClick={() => save()} disabled={saving}>
               {saving ? 'Guardando…' : 'Guardar configuración'}
             </Button>
           </div>

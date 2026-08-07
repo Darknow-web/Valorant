@@ -32,6 +32,8 @@ export const ResultsPanel = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  const [confirmDialog, setConfirmDialog] = useState<{ message: string; onConfirm: () => void } | null>(null);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -48,15 +50,16 @@ export const ResultsPanel = () => {
     load();
   }, [load]);
 
-  const post = async (path: string, confirmMessage?: string) => {
-    if (confirmMessage && !window.confirm(confirmMessage)) return;
+  const executePost = async (path: string) => {
     setMessage('');
     setError('');
+    setLoading(true);
     try {
       const res = await fetch(path, { method: 'POST', headers: authHeaders() });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || 'La operación falló.');
+        setLoading(false);
         return;
       }
       if (typeof data.removed === 'number') {
@@ -66,36 +69,69 @@ export const ResultsPanel = () => {
       } else {
         setMessage('Listo.');
       }
-      await load();
+      await load(); // load() sets loading to false in finally
     } catch {
       setError('No se pudo conectar con el servidor.');
+      setLoading(false);
     }
+  };
+
+  const post = (path: string, confirmMessage?: string) => {
+    if (confirmMessage) {
+      setConfirmDialog({
+        message: confirmMessage,
+        onConfirm: () => {
+          setConfirmDialog(null);
+          executePost(path);
+        },
+      });
+      return;
+    }
+    executePost(path);
   };
 
   const invalidCount = logs.filter(INVALID).length;
 
   return (
     <Card>
+      {confirmDialog && (
+        <div className="frame fixed inset-0 z-[9999] flex items-center justify-center bg-ink/50 p-4 backdrop-blur-[2px]">
+          <Card className="w-full max-w-sm p-6 text-center">
+            <h3 className="mb-4 text-lg font-bold text-ink">¿Estás seguro?</h3>
+            <p className="mb-6 text-sm text-ink-muted">{confirmDialog.message}</p>
+            <div className="flex justify-center gap-3">
+              <Button variant="secondary" onClick={() => setConfirmDialog(null)}>
+                Cancelar
+              </Button>
+              <Button variant="danger" onClick={confirmDialog.onConfirm}>
+                Sí, continuar
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
       <CardHeader
         title="Resultados de colaboradores"
         subtitle={`${logs.length} intento(s) registrado(s).`}
         action={
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" onClick={load}>
+            <Button variant="secondary" onClick={load} disabled={loading}>
               Actualizar
             </Button>
-            <Button variant="secondary" onClick={() => post('/api/admin/retry-sync')}>
+            <Button variant="secondary" onClick={() => post('/api/admin/retry-sync')} disabled={loading}>
               Reintentar sync
             </Button>
             <Button
               variant="secondary"
               onClick={() => post('/api/admin/clear-invalid-logs', '¿Eliminar las filas sin colaborador o sin módulo?')}
+              disabled={loading}
             >
               Limpiar filas inválidas
             </Button>
             <Button
               variant="danger"
               onClick={() => post('/api/admin/clear-logs', '¿Eliminar TODOS los resultados? Esto no se puede deshacer.')}
+              disabled={loading}
             >
               Borrar todo
             </Button>
