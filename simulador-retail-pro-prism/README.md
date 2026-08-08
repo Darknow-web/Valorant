@@ -42,11 +42,27 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 
 Las claves iniciales **se piden cambiar en el primer ingreso** y nunca se muestran en pantalla.
 
+## Dónde se guardan los datos
+
+Sin configuración de Firebase, **todo se guarda en un archivo del disco del contenedor y se
+borra en cada reinicio**: entrenadores, notas, catálogo y avance. El panel del administrador
+lo avisa con una franja roja, y `GET /api/health` responde `{"almacen":"local"}`.
+
+Para que los datos sobrevivan hay que conectar Firestore: **[`docs/conectar-firebase.md`](docs/conectar-firebase.md)**.
+
+| Dato | Alcance |
+|---|---|
+| Datos de los módulos, reglas de nota, resultados | De cada entrenador |
+| **Productos y clientes** | **Compartidos por todas las cuentas** |
+| **Conexión con Google Sheets** | **Una sola, y la configura solo el administrador** |
+| Avance del colaborador (intentos, módulo a medias) | De cada colaborador, por DNI |
+
 ## Conectar el Google Sheet
 
-> **La conexión es de CADA ENTRENADOR.** Si pegas la URL estando en la sesión de
-> `admin`, los colaboradores que entren con el enlace de otro entrenador no van a
-> llegar a esa hoja. Entra con el usuario cuyo enlace vas a compartir.
+> **Solo el administrador.** La hoja es **una sola para toda la organización**: las notas de
+> todos los entrenadores caen ahí y se distinguen por la columna «Entrenador». Los entrenadores
+> ven si está conectada, pero no pueden cambiarla — antes cualquiera podía, y bastaba con que
+> uno se equivocara de usuario al pegar la URL para que sus notas no llegaran a ninguna parte.
 >
 > Usa el botón **«Probar conexión»** del panel: envía un ping y te dice en claro
 > qué respondió Google (sin configurar, implementación no pública, o listo).
@@ -58,7 +74,8 @@ Las claves iniciales **se piden cambiar en el primer ingreso** y nunca se muestr
 4. En **«Quién tiene acceso»** elige **«Cualquier usuario»**. Si eliges otra cosa,
    Google responde con su página de inicio de sesión y no se escribe nada: es el
    fallo más común.
-5. Copia la URL que termina en `/exec` y pégala en **Panel ▸ Google Sheets y nota ▸ URL del Webhook**.
+5. Copia la URL que termina en `/exec` y pégala en **Panel ▸ Google Sheets ▸ URL del Webhook**
+   (con la sesión de administrador).
 6. Pulsa **«Probar conexión»** para confirmarlo antes de compartir el enlace.
 
 Cada vez que cambies el Apps Script hay que crear una implementación nueva (o
@@ -89,6 +106,9 @@ valores actuales, así que se ve el efecto del cambio antes de guardarlo.
 
 ## Productos y clientes
 
+> Es el **único apartado compartido**: lo que edita un entrenador lo ven todas las cuentas. Los
+> datos de los módulos y las reglas de nota siguen siendo de cada uno.
+
 En **Panel ▸ Productos y clientes** está el catálogo de la tienda simulada: es lo que la caja
 encuentra cuando el colaborador escribe un código. Ahí se editan el código, la descripción y el
 precio de cada producto; el documento, el nombre y el correo de cada cliente; las marcas de
@@ -103,11 +123,37 @@ ofrece «Agregarlo al catálogo» para arreglarlo de una vez.
 Un cliente marcado como **agregador** (Rappi, Pedidos Ya) hace que, al asociarlo, la caja pida
 aplicar el nivel de precio del canal digital. Así funcionan los módulos 7 y 8.
 
-## Nota final del colaborador
+## El turno del colaborador
 
-La nota final es el **promedio del mejor intento de cada módulo**: repetir un
-módulo siempre suma y nunca resta. Al terminar todos aparece la nota final con
-una celebración si aprueba, o con la lista de módulos por reforzar si todavía no.
+Los 14 módulos son **un turno seguido**, de la apertura al cierre. Al entrar por primera vez ve
+un preámbulo con su nombre y su tienda, y cada caso arranca con una frase que lo engancha con el
+anterior. El menú los agrupa en «La mañana», «La tarde» y «El cierre».
+
+### Dos intentos por módulo
+
+Cada módulo se puede hacer **dos veces** (uno más una repetición) y cuenta el mejor. Lo que
+gasta un intento y lo que no:
+
+| Acción | ¿Gasta intento? |
+|---|---|
+| Terminar el módulo | Sí |
+| **Salir al menú a medias** | **No** — se guarda el paso, las pantallas y los errores, y al volver retoma ahí |
+| **«Volver a empezar»** | **Sí** — empieza limpio, sin errores, así que tiene que costar |
+| **«Reacomodar pantallas»** | **No** — solo recoloca la pantalla del paso en curso |
+
+«Reacomodar» es la salida garantizada: no retrocede pasos, no borra errores y no gasta nada. Es
+lo que asegura que ninguna combinación de clics pueda dejar a un colaborador encerrado.
+
+El límite lo hace cumplir el servidor, no el navegador: recargar la página no lo esquiva.
+
+### La nota final y el cierre
+
+La nota final es el **promedio del mejor intento de cada módulo**: repetir un módulo siempre
+suma y nunca resta. Al completar los 14 aparece, al pie del menú, el cierre del relato: puede
+usar las repeticiones que le queden o **cerrar el turno**, que lanza la celebración a pantalla
+completa (o un mensaje de ánimo si no llegó a la nota mínima). También puede **reiniciar toda la
+capacitación**: recupera sus intentos, y las notas ya enviadas siguen guardadas en el panel y en
+la hoja.
 
 El progreso lo calcula el servidor (`GET /api/my-progress`) sobre los intentos ya
 guardados, así que sigue ahí aunque el colaborador entre desde otro equipo.
@@ -143,14 +189,41 @@ El sistema de caja está diseñado para pantallas anchas (unos 1280 px) y con ti
 El resto del marco de entrenamiento (bienvenida, módulos, guía de situación, panel) es
 responsive y se usa con normalidad en el teléfono.
 
-## Firebase (opcional)
+## Firebase
 
-El backend puede guardar usuarios, configuración y resultados en **Firestore**. Todo el acceso
-pasa por el servidor, así que `firestore.rules` está **cerrado** (`allow read, write: if false`)
-y debe quedarse así: abrirlo expondría los hashes de las claves, los webhooks y los resultados
-a cualquiera que tenga la apiKey del proyecto.
+El backend guarda usuarios, configuración, resultados y avance en **Firestore**. Sin configurar,
+cae a un archivo local que el despliegue borra en cada reinicio — ver [«Dónde se guardan los
+datos»](#dónde-se-guardan-los-datos) y la guía [`docs/conectar-firebase.md`](docs/conectar-firebase.md).
+
+Todo el acceso pasa por el servidor, así que `firestore.rules` está **cerrado**
+(`allow read, write: if false`) y debe quedarse así: abrirlo expondría los hashes de las claves,
+los webhooks y los resultados a cualquiera que tenga la apiKey del proyecto.
 
 Nunca versiones `firebase-applet-config.json`; usa `FIREBASE_CONFIG` en el despliegue.
+
+Al conectar Firestore por primera vez, si está vacío y hay datos en `local_data.json`, el
+servidor los sube una sola vez para que no se pierda lo ya cargado.
+
+> Aparte de Firestore, las pantallas del POS cargan sus iconos desde un **bucket público de
+> Firebase Storage** (`src/config/icons.ts`). Si ese bucket se borra o cambia de proyecto, las
+> pantallas se quedan sin iconos: conviene no tocarlo.
+
+## Pruebas
+
+Necesitan el proyecto compilado (`npm run build`) y Playwright con el Chromium del entorno.
+
+```bash
+node tests/e2e-iconos.mjs         # los 32 badges son discos, sin agujeros dentro
+node tests/e2e-datos.mjs          # qué es compartido, qué es de cada uno, quién puede tocar Sheets
+node tests/e2e-camino-feliz.mjs   # los 14 módulos se terminan haciendo lo correcto
+node tests/e2e-intentos.mjs       # los dos intentos, salir a medias y volver a empezar
+node tests/e2e-atascos.mjs        # NINGÚN error deja un módulo atascado (el largo)
+```
+
+`e2e-atascos.mjs` es la prueba que da la garantía: para cada módulo y cada paso, llega hasta ese
+paso, pulsa a lo tonto todo lo que hay en pantalla —incluidos los «No» y «Cancelar» de los
+modales— y exige que el módulo todavía se pueda terminar. Si falla, dice el módulo, el paso y la
+secuencia exacta de clics.
 
 ## Estructura
 
@@ -171,3 +244,8 @@ Nunca versiones `firebase-applet-config.json`; usa `FIREBASE_CONFIG` en el despl
   a propósito:** su valor didáctico es parecerse al sistema real, así que el tema claro se
   aplica solo al marco de entrenamiento que las envuelve.
 - `src/store/SimulatorContext.tsx` — estado del simulador (pasos, errores, nota, sincronización).
+- `src/components/PreambuloHistoria.tsx` — la entrada del relato, con el nombre y la tienda.
+- `src/lib/estadoModulo.ts` — guardar y retomar un módulo a medias, y gastar intentos.
+- `src/lib/progreso.ts` — avance, intentos restantes y qué se puede repetir.
+- `scripts/redondear-iconos.py` — deja los badges como discos perfectos (se corre a mano).
+- `tests/` — pruebas de extremo a extremo; ver «Pruebas».

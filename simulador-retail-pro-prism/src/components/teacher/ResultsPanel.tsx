@@ -26,7 +26,7 @@ const INVALID = (log: StudentLog) =>
   !log.moduleTitle?.trim() ||
   log.moduleTitle.toUpperCase() === 'N/A';
 
-export const ResultsPanel = () => {
+export const ResultsPanel = ({ isAdmin = false }: { isAdmin?: boolean }) => {
   const [logs, setLogs] = useState<StudentLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -118,9 +118,13 @@ export const ResultsPanel = () => {
             <Button variant="secondary" onClick={load} disabled={loading}>
               Actualizar
             </Button>
-            <Button variant="secondary" onClick={() => post('/api/admin/retry-sync')} disabled={loading}>
-              Reintentar sync
-            </Button>
+            {/* Subir lo pendiente toca la hoja de toda la organización, así que
+                es cosa del administrador, igual que conectarla. */}
+            {isAdmin && (
+              <Button variant="secondary" onClick={() => post('/api/admin/retry-sync')} disabled={loading}>
+                Reintentar sync
+              </Button>
+            )}
             <Button
               variant="secondary"
               onClick={() => post('/api/admin/clear-invalid-logs', '¿Eliminar las filas sin colaborador o sin módulo?')}

@@ -42,6 +42,13 @@ export interface Step {
    * instrucción pide (por ejemplo aplicar el pago antes de imprimir).
    */
   allowedTargets?: string[];
+  /**
+   * Estado que la pantalla del paso necesita para poder completarse (por
+   * ejemplo, que el modal siga abierto). Si el colaborador lo apaga por error
+   * —pulsando "Cancelar" o "No"— se vuelve a encender, porque el botón que lo
+   * reabriría vive en una pantalla a la que ya no se puede volver.
+   */
+  keepState?: Partial<AppState>;
   /** Datos extra que usa el validador del paso (clave → valor configurable). */
   data?: Record<string, string>;
   /** Nombres legibles de `data` para el panel del entrenador. */
@@ -136,12 +143,29 @@ export interface ScenarioClue {
   texto: string;
 }
 
+/** Momento del turno al que pertenece un caso, para agrupar el menú. */
+export type TramoDelTurno = 'manana' | 'tarde' | 'cierre';
+
 export interface Scenario {
   moduleId: string;
   titulo: string;
+  /**
+   * Una sola frase que engancha con el caso anterior, para que los 14 módulos
+   * se lean como un turno seguido y no como catorce ejercicios sueltos. Se
+   * muestra encima del titular, en gris. No repite datos ni alarga el relato.
+   */
+  enlace?: string;
+  /** En qué momento del turno ocurre. Agrupa las tarjetas del menú. */
+  tramo?: TramoDelTurno;
   contexto: string;
   /** Referencias a datos: clave -> 'stepId|targetValue' o 'stepId|expectedState.clave' */
   datos: Record<string, string>;
+  /**
+   * Nombre con el que se muestra cada dato en la ficha del caso. El colaborador
+   * los lee como "evidencias" sueltas, para no tener que rebuscarlos dentro del
+   * relato cuando está a mitad del proceso.
+   */
+  etiquetas?: Record<string, string>;
   pistas: string[];
   objetivo: string;
 }

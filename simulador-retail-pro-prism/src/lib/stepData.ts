@@ -168,6 +168,9 @@ export type FieldKind = 'producto' | 'cliente' | 'otro';
 
 export function fieldKind(field: ConfigurableField): FieldKind {
   const label = field.label.toLowerCase();
+  // El cliente del módulo de creación es justo el que NO debe existir todavía:
+  // exigirle estar en el catálogo daría un aviso al revés.
+  if (label.includes('nuevo')) return 'otro';
   if (label.includes('producto')) return 'producto';
   if (label.includes('documento') || label.includes('ruc') || label.includes('cliente')) return 'cliente';
   return 'otro';

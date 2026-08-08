@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useSimulator } from '../store/SimulatorContext';
 import { StudentInfoModal } from './StudentInfoModal';
+import { PreambuloHistoria } from './PreambuloHistoria';
 import { ScenarioBriefing, ScenarioDrawer } from './ScenarioBriefing';
 import { SimulatorHeader } from './SimulatorHeader';
 import { SimulatorViewport } from './SimulatorViewport';
@@ -9,10 +10,29 @@ import { ScreenManager } from './ScreenManager';
 import { PrismShell } from './ui/PrismUI';
 import { Badge, Button, Card, CifraAnimada, Isotipo, Notice, Page } from './ui/Kit';
 import { scenarios } from '../data/scenarios';
+import { TramoDelTurno } from '../types';
 import { aviso, cascada, elemento, modal, tarjetaInteractiva, vista } from '../lib/motion';
 import { lanzarConfeti } from '../lib/confeti';
 import { GatoAnimando, Huella, PerroFeliz } from './ui/Mascotas';
-import { Progreso, PROGRESO_VACIO, modulosPorReforzar, obtenerProgreso } from '../lib/progreso';
+import {
+  Progreso,
+  PROGRESO_VACIO,
+  intentosRestantes,
+  modulosPorReforzar,
+  modulosRepetibles,
+  obtenerProgreso,
+  puedeEntrar,
+  puedeReiniciar,
+} from '../lib/progreso';
+import { EstadoModuloGuardado, leerEstadoModulo, marcarBandera, reiniciarCapacitacion } from '../lib/estadoModulo';
+import {
+  iconoDeCelebracion,
+  iconoDeError,
+  iconoDeModulo,
+  iconoFinalAnimo,
+  iconoFinalCelebracion,
+  ilustracionHistoria,
+} from '../assets/iconos';
 
 /**
  * Resumen del intento, con la nota que calculó el servidor.
@@ -20,9 +40,12 @@ import { Progreso, PROGRESO_VACIO, modulosPorReforzar, obtenerProgreso } from '.
  * Si aprobó, cae confeti y aparece el perrito; si no, un gatito y un mensaje que
  * invita a repetirlo. Nunca se regaña: el objetivo es que vuelva a intentarlo.
  */
-const CompletedScreen = () => {
-  const { exitModule, errors, startTime, endTime, submitScore, score, approved, syncStatus, syncMessage } =
-    useSimulator();
+const CompletedScreen = ({ quedanIntentos }: { quedanIntentos: number }) => {
+  const { exitModule, errors, startTime, endTime, submitScore, score, approved, syncStatus, syncMessage,
+    completedModules } = useSimulator();
+  // La ocasión es el número de módulos ya completados: así cada módulo que
+  // aprueba trae un icono distinto, y el mismo intento muestra siempre el mismo.
+  const iconoLogro = iconoDeCelebracion(completedModules.length);
   const seconds = endTime && startTime ? Math.round((endTime - startTime) / 1000) : 0;
 
   // Un solo envío por intento: el contexto ignora reenvíos del mismo attemptId,
@@ -54,7 +77,13 @@ const CompletedScreen = () => {
           transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.1 }}
           className="mx-auto mb-4 w-fit"
         >
-          {approved === false ? <GatoAnimando /> : <PerroFeliz />}
+          {approved !== false && iconoLogro ? (
+            <img src={iconoLogro} alt="" aria-hidden className="h-36 w-36 object-contain" />
+          ) : approved === false ? (
+            <GatoAnimando />
+          ) : (
+            <PerroFeliz />
+          )}
         </motion.div>
 
         <h2 className="text-2xl font-extrabold text-ink">
@@ -65,7 +94,9 @@ const CompletedScreen = () => {
             ? 'Terminaste el proceso.'
             : approved
               ? 'Aprobaste este módulo. Así se hace en tienda.'
-              : 'Todavía no llegas a la nota mínima. Repítelo: se guarda tu mejor intento, así que solo puedes mejorar.'}
+              : quedanIntentos > 0
+                ? 'Todavía no llegas a la nota mínima. Te queda una repetición: se guarda tu mejor intento, así que solo puedes mejorar.'
+                : 'Todavía no llegas a la nota mínima y ya usaste tus dos oportunidades en este módulo. Se guarda tu mejor intento.'}
         </p>
 
         <motion.div variants={cascada(0.08, 0.25)} initial="inicial" animate="visible" className="mb-6 grid grid-cols-3 gap-3">
@@ -95,7 +126,7 @@ const CompletedScreen = () => {
         </div>
 
         <Button onClick={exitModule} className="w-full">
-          {approved === false ? 'Volver e intentarlo otra vez' : 'Volver a los módulos'}
+          {approved === false && quedanIntentos > 0 ? 'Volver e intentarlo otra vez' : 'Volver a los módulos'}
         </Button>
       </Card>
     </motion.div>
@@ -107,9 +138,22 @@ const CompletedScreen = () => {
  * colaborador puede releer lo que hizo mal sin perder de vista la caja.
  * Tampoco revela el paso correcto: para eso está la pista, que descuenta.
  */
-const ErrorToast = () => {
-  const { dismissErrorModal, customErrorMessage, triggerHint, currentStep, hintActive } = useSimulator();
+const ErrorToast = ({ puedeReiniciarModulo }: { key?: string; puedeReiniciarModulo: boolean }) => {
+  const {
+    dismissErrorModal, customErrorMessage, triggerHint, currentStep, hintActive,
+    fallosSeguidos, restartModule, reacomodarPantallas, errors,
+  } = useSimulator();
+
+  // Un icono de ánimo distinto en cada equivocación. Se deriva del contador de
+  // errores en vez de guardarse en estado: así cambia aunque el aviso ya esté
+  // abierto, y siempre sale el mismo para el mismo error.
+  const iconoAnimo = iconoDeError(errors);
+
   if (!currentStep) return null;
+
+  // Tres fallos seguidos contra el mismo paso: repetir el mismo aviso ya no
+  // ayuda. Se le ofrecen las salidas reales en vez de dejarlo insistiendo.
+  const atascado = fallosSeguidos >= 3;
 
   return (
     <motion.div
@@ -124,16 +168,33 @@ const ErrorToast = () => {
         <div className="h-1 w-full bg-warn" />
         <div className="p-5">
           <div className="flex items-start gap-3">
-            <span
-              aria-hidden
-              className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-warn-soft text-sm font-bold text-warn"
-            >
-              !
-            </span>
+            {iconoAnimo ? (
+              <motion.img
+                key={iconoAnimo}
+                src={iconoAnimo}
+                alt=""
+                aria-hidden
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                className="-my-1 h-24 w-24 shrink-0 object-contain"
+              />
+            ) : (
+              <span
+                aria-hidden
+                className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-warn-soft text-sm font-bold text-warn"
+              >
+                !
+              </span>
+            )}
             <div>
-              <h2 className="text-sm font-bold text-ink">Ese no era el paso</h2>
+              <h2 className="text-sm font-bold text-ink">
+                {atascado ? 'Se te atoró aquí' : 'Ese no era el paso'}
+              </h2>
               <p className="prosa mt-1 text-sm text-ink-muted">
-                {customErrorMessage || 'Revisa la situación de la tienda y vuelve a intentarlo.'}
+                {atascado
+                  ? 'Llevas varios intentos en el mismo paso. Puedes ver la pista, o reacomodar las pantallas si crees que algo se quedó trabado: eso no te cuesta nada.'
+                  : customErrorMessage || 'Revisa la situación de la tienda y vuelve a intentarlo.'}
               </p>
             </div>
           </div>
@@ -145,10 +206,35 @@ const ErrorToast = () => {
             </div>
           )}
 
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex flex-wrap gap-2">
             {!hintActive && (
               <Button variant="secondary" onClick={triggerHint} className="flex-1 py-2 text-xs">
                 Ver pista
+              </Button>
+            )}
+            {atascado && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  reacomodarPantallas();
+                  dismissErrorModal();
+                }}
+                className="flex-1 py-2 text-xs"
+              >
+                Reacomodar
+              </Button>
+            )}
+            {atascado && puedeReiniciarModulo && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  restartModule();
+                  dismissErrorModal();
+                }}
+                className="flex-1 py-2 text-xs"
+                title="Empiezas de cero y gasta tu repetición."
+              >
+                Volver a empezar
               </Button>
             )}
             <Button onClick={dismissErrorModal} className="flex-1 py-2 text-xs">
@@ -161,130 +247,374 @@ const ErrorToast = () => {
   );
 };
 
-/** Lista de módulos del colaborador. */
+const TRAMOS: { id: TramoDelTurno; titulo: string; hora: string }[] = [
+  { id: 'manana', titulo: 'La mañana', hora: '8:45 a. m. — mediodía' },
+  { id: 'tarde', titulo: 'La tarde', hora: 'Mediodía — 7:00 p. m.' },
+  { id: 'cierre', titulo: 'El cierre', hora: '7:00 p. m. — fin de turno' },
+];
 
 /**
- * Cierre de la capacitación: la nota final es el promedio del mejor intento de
- * cada módulo. Si aprueba, se celebra; si no, se reconoce lo avanzado y se
- * señala qué conviene repetir, sin dramatismo.
+ * El aviso de cierre, como última escena del relato.
+ *
+ * Va al final del menú y NO en una ventana emergente, por dos razones. Una
+ * emergente taparía justo la lista de módulos que este bloque le está
+ * ofreciendo repetir, obligándole a cerrarla para hacer lo que ella misma
+ * propone. Y una emergente que aparece sola al volver al menú es el patrón que
+ * ya dio problemas antes (la celebración que se relanzaba en cada regreso).
  */
-const CierreFinal = ({
+const AvisoDeCierre = ({
   progreso,
-  idsModulos,
-  titulos,
+  tienda,
+  repetibles,
+  onFinalizar,
+  onReiniciarTodo,
 }: {
   progreso: Progreso;
-  idsModulos: string[];
+  tienda: string;
+  repetibles: number;
+  onFinalizar: () => void;
+  onReiniciarTodo: () => void;
+}) => {
+  const [confirmandoReinicio, setConfirmandoReinicio] = useState(false);
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="mt-12 overflow-hidden rounded-3xl bg-navy px-6 py-8 text-white shadow-[0_20px_50px_-24px_rgba(6,6,67,0.6)] sm:px-9 sm:py-10"
+    >
+      <p className="etiqueta text-sand">9:12 p. m. · {tienda || 'tu tienda'}</p>
+      <h2 className="mt-2 text-balance text-3xl font-extrabold leading-tight sm:text-4xl">
+        La reja está abajo y la caja cuadrada.
+      </h2>
+      <p className="prosa mt-3 text-white/75">
+        {repetibles > 0
+          ? `Hiciste los ${Object.keys(progreso.modulos).length} momentos del turno. Te queda una repetición en ${
+              repetibles === 1 ? 'un módulo' : `${repetibles} módulos`
+            }: puedes usarla para subir tu nota, o cerrar el turno y quedarte con la que tienes.`
+          : `Hiciste los ${Object.keys(progreso.modulos).length} momentos del turno y ya usaste todas tus oportunidades. Solo queda cerrar el turno.`}
+      </p>
+
+      <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Button onClick={onFinalizar}>Cerrar el turno</Button>
+        {repetibles > 0 && (
+          <p className="text-sm text-white/60">
+            …o sube a un módulo de arriba y vuelve a entrar. Tu mejor intento es el que cuenta.
+          </p>
+        )}
+      </div>
+
+      <div className="mt-7 border-t border-white/15 pt-4">
+        {confirmandoReinicio ? (
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <p className="min-w-0 flex-1 text-white/75">
+              Empiezas la capacitación desde cero, con todas tus oportunidades de vuelta.{' '}
+              <span className="font-semibold text-sand">Las notas que ya enviaste quedan guardadas</span> en el panel
+              de tu entrenador; solo dejan de contar para tu avance.
+            </p>
+            <button
+              onClick={onReiniciarTodo}
+              className="rounded-lg bg-brand px-3 py-1.5 font-semibold text-white transition-colors hover:bg-brand-hover"
+            >
+              Sí, empezar de cero
+            </button>
+            <button
+              onClick={() => setConfirmandoReinicio(false)}
+              className="rounded-lg border border-white/25 px-3 py-1.5 font-semibold text-white/75 transition-colors hover:bg-white/10"
+            >
+              Mejor no
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmandoReinicio(true)}
+            className="text-sm font-semibold text-white/55 underline-offset-4 hover:text-white hover:underline"
+          >
+            Reiniciar toda la capacitación
+          </button>
+        )}
+      </div>
+    </motion.section>
+  );
+};
+
+/**
+ * El telón: pantalla completa al cerrar el turno.
+ *
+ * Es deliberadamente distinta de la celebración de un módulo —a pantalla
+ * completa, con su propia entrada y un confeti más largo—, porque cerrar la
+ * capacitación no puede sentirse igual que aprobar el módulo 7.
+ */
+const TelonFinal = ({
+  progreso,
+  titulos,
+  tienda,
+  onVolver,
+}: {
+  progreso: Progreso;
   titulos: { id: string; title: string }[];
+  tienda: string;
+  onVolver: () => void;
 }) => {
   const aprobado = progreso.aprobado;
-  const porReforzar = modulosPorReforzar(progreso, idsModulos);
+  const porReforzar = modulosPorReforzar(progreso, titulos.map((m) => m.id));
+  const ilustracion = ilustracionHistoria('cierre');
+  const icono = aprobado ? iconoFinalCelebracion() : iconoFinalAnimo();
 
   useEffect(() => {
     if (!aprobado) return;
-    const detener = lanzarConfeti({ duracion: 3400, cantidad: 180 });
+    // Más largo y más denso que el de un módulo: es el final del recorrido.
+    const detener = lanzarConfeti({ duracion: 4200, cantidad: 200 });
     return detener;
   }, [aprobado]);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.25 }}
-      className={`mt-10 overflow-hidden rounded-2xl border px-6 py-8 text-center ${
-        aprobado ? 'border-ok/25 bg-ok-soft' : 'border-warn/25 bg-warn-soft'
-      }`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="frame min-h-[100dvh] overflow-y-auto bg-navy text-white"
     >
-      <motion.div
-        initial={{ scale: 0.7, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 220, damping: 15, delay: 0.35 }}
-        className="mx-auto mb-4 w-fit"
-      >
-        {aprobado ? <PerroFeliz className="h-28 w-28" /> : <GatoAnimando className="h-28 w-28" />}
-      </motion.div>
+      <div className="mx-auto flex min-h-[100dvh] max-w-2xl flex-col justify-center px-5 py-14 text-center">
+        <motion.div
+          initial={{ scale: 0.6, opacity: 0, rotate: aprobado ? -8 : 0 }}
+          animate={{ scale: 1, opacity: 1, rotate: 0 }}
+          transition={
+            aprobado
+              ? { type: 'spring', stiffness: 220, damping: 12, delay: 0.15 }
+              : { duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.15 }
+          }
+          className="mx-auto mb-6 w-fit"
+        >
+          {icono ? (
+            // Aprobado: late de alegría. No aprobado: respira despacio, que es
+            // aliento y no fiesta.
+            <motion.img
+              src={icono}
+              alt=""
+              aria-hidden
+              animate={aprobado ? { scale: [1, 1.06, 1] } : { scale: [1, 1.03, 1] }}
+              transition={{
+                duration: aprobado ? 1.6 : 3,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                delay: 0.9,
+              }}
+              className="h-40 w-40 object-contain sm:h-48 sm:w-48"
+            />
+          ) : aprobado ? (
+            <PerroFeliz className="h-32 w-32" />
+          ) : (
+            <GatoAnimando className="h-32 w-32" />
+          )}
+        </motion.div>
 
-      <h2 className={`text-3xl font-extrabold ${aprobado ? 'text-ok' : 'text-warn'}`}>
-        {aprobado ? '¡Felicitaciones!' : 'Ya casi está'}
-      </h2>
-      <p className="prosa mx-auto mt-2 text-ink-muted">
-        {aprobado
-          ? 'Completaste toda la capacitación de caja con nota aprobatoria. Estás listo para el mostrador.'
-          : 'Terminaste todos los módulos. Para aprobar la capacitación te falta subir el promedio; repite los que te quedaron cortos y tu mejor intento es el que cuenta.'}
-      </p>
-
-      <div className="mx-auto mt-6 w-fit rounded-2xl bg-raised px-8 py-5">
-        <div className="etiqueta text-ink-muted">Tu nota final</div>
-        <div className="mt-1 text-5xl font-extrabold text-ink">
-          <CifraAnimada valor={progreso.promedio ?? 0} />
-        </div>
-        <div className="mt-1 text-sm text-ink-muted">
-          de {progreso.notaMaxima} · se aprueba con <span className="cifra">{progreso.notaMinima}</span>
-        </div>
-      </div>
-
-      <p className="mt-4 text-xs text-ink-subtle">Promedio del mejor intento de cada módulo.</p>
-
-      {!aprobado && porReforzar.length > 0 && (
-        <div className="mx-auto mt-6 max-w-md rounded-xl bg-raised px-5 py-4 text-left">
-          <p className="etiqueta mb-2 flex items-center gap-2 text-warn">
-            <Huella /> Para subir el promedio
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
+          <p className="etiqueta text-sand">
+            {aprobado ? 'Capacitación completa' : `Fin del turno · ${tienda || 'tu tienda'}`}
           </p>
-          <ul className="space-y-1 text-sm text-ink">
-            {porReforzar.map((id) => {
-              const mod = titulos.find((m) => m.id === id);
-              return <li key={id}>· {mod?.title || id}</li>;
-            })}
-          </ul>
-        </div>
-      )}
+          <h1 className="mt-2 text-balance text-4xl font-extrabold leading-tight sm:text-5xl">
+            {aprobado ? '¡Felicitaciones!' : 'Buen turno. Falta poco.'}
+          </h1>
+          <p className="prosa mx-auto mt-4 text-white/75">
+            {aprobado
+              ? 'Completaste toda la capacitación de caja con nota aprobatoria. Estás listo para el mostrador.'
+              : 'Cerraste el turno completo, y eso ya es mucho. Para aprobar te falta subir el promedio: mira abajo qué conviene reforzar y habla con tu entrenador. Nadie aprende la caja en un día.'}
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.65, type: 'spring', stiffness: 200, damping: 18 }}
+          className="mx-auto mt-8 w-fit rounded-2xl bg-raised px-10 py-6"
+        >
+          <div className="etiqueta text-ink-subtle">Tu nota final</div>
+          <div className="cifra mt-1 text-6xl font-extrabold leading-none tracking-tight text-navy">
+            <CifraAnimada valor={progreso.promedio ?? 0} />
+          </div>
+          <div className="mt-1 text-sm text-ink-muted">
+            de {progreso.notaMaxima} · se aprueba con <span className="cifra">{progreso.notaMinima}</span>
+          </div>
+        </motion.div>
+
+        <p className="mt-4 text-xs text-white/55">Promedio del mejor intento de cada módulo.</p>
+
+        {!aprobado && porReforzar.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.85 }}
+            className="mx-auto mt-7 w-full max-w-md rounded-xl bg-raised px-5 py-4 text-left"
+          >
+            <p className="etiqueta mb-2 flex items-center gap-2 text-warn">
+              <Huella /> Lo que conviene reforzar
+            </p>
+            <ul className="space-y-1 text-sm text-ink">
+              {porReforzar.map((id) => {
+                const mod = titulos.find((m) => m.id === id);
+                return <li key={id}>· {mod?.title || id}</li>;
+              })}
+            </ul>
+          </motion.div>
+        )}
+
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.1 }}
+          onClick={onVolver}
+          className="mx-auto mt-9 text-sm font-semibold text-white/60 underline-offset-4 hover:text-white hover:underline"
+        >
+          Volver a la lista de módulos
+        </motion.button>
+      </div>
     </motion.div>
   );
 };
 
-const ModuleMenu = ({ onPick, progreso }: { onPick: (moduleId: string) => void; progreso: Progreso }) => {
+const ModuleMenu = ({
+  onPick,
+  progreso,
+  onFinalizar,
+  onReiniciarTodo,
+}: {
+  onPick: (moduleId: string) => void;
+  progreso: Progreso;
+  onFinalizar: () => void;
+  onReiniciarTodo: () => void;
+}) => {
   const { modulesData, operatorName, operatorStore, clearOperator } = useSimulator();
   const total = modulesData.length;
   // El avance sale de las notas guardadas en el servidor, no de esta sesión:
   // así sigue ahí aunque el colaborador entre desde otro equipo.
   const hechos = Object.keys(progreso.modulos).length;
   const promedio = progreso.promedio;
+  const repetibles = modulosRepetibles(progreso, modulesData.map((m) => m.id)).length;
+
+  const porTramo = useMemo(() => {
+    const mapa = new Map<TramoDelTurno, typeof modulesData>();
+    for (const mod of modulesData) {
+      const tramo = scenarios.find((s) => s.moduleId === mod.id)?.tramo || 'manana';
+      if (!mapa.has(tramo)) mapa.set(tramo, []);
+      mapa.get(tramo)!.push(mod);
+    }
+    return mapa;
+  }, [modulesData]);
+
+  const tarjeta = (mod: (typeof modulesData)[number]) => {
+    const mejor = progreso.modulos[mod.id];
+    const aMedias = progreso.aMedias[mod.id];
+    const restantes = intentosRestantes(progreso, mod.id);
+    const abierto = puedeEntrar(progreso, mod.id);
+    const scenario = scenarios.find((s) => s.moduleId === mod.id);
+    const numero = mod.title.match(/M[oó]dulo (\d+)/)?.[1] ?? '';
+    const icono = iconoDeModulo(mod.id);
+    const nombre = mod.title.replace(/^M[oó]dulo \d+\s*—\s*/, '');
+
+    return (
+      <motion.button
+        key={mod.id}
+        variants={elemento}
+        {...(abierto ? tarjetaInteractiva : {})}
+        disabled={!abierto}
+        onClick={() => abierto && onPick(mod.id)}
+        // El título va partido en dos para la jerarquía visual; la etiqueta
+        // accesible lo mantiene completo para quien navegue con lector de pantalla.
+        aria-label={`${mod.title}${mejor ? ` (nota ${mejor.score})` : ''}${abierto ? '' : ' (sin oportunidades)'}`}
+        className={cnCard(!!mejor, abierto)}
+      >
+        <div className="mb-2.5 flex items-start justify-between gap-2">
+          {icono ? (
+            <img
+              src={icono}
+              alt=""
+              aria-hidden
+              className="h-16 w-16 shrink-0 rounded-xl object-contain sm:h-[4.5rem] sm:w-[4.5rem]"
+              loading="lazy"
+            />
+          ) : (
+            <span className="cifra text-2xl font-extrabold leading-none tracking-tight text-line-strong">
+              {numero}
+            </span>
+          )}
+          {mejor && (
+            <Badge tone={mejor.approved ? 'ok' : 'warn'}>
+              <span className="cifra">{mejor.score}</span>
+              {mejor.approved ? ' ✓' : ''}
+            </Badge>
+          )}
+        </div>
+
+        {icono && <p className="etiqueta mb-0.5 text-ink-subtle">Módulo {numero}</p>}
+        {scenario && (
+          <h3 className="text-balance text-[17px] font-bold leading-snug text-navy">{scenario.titulo}</h3>
+        )}
+        <p className="mt-1 text-sm leading-snug text-ink-muted">{nombre}</p>
+
+        {/* Estado del módulo: a medias, con repetición disponible, o agotado.
+            Es lo que evita que el colaborador gaste su última oportunidad sin
+            saber que era la última. */}
+        <p className="mt-3 text-xs font-semibold">
+          {aMedias ? (
+            <span className="text-brand">
+              A medias · paso {aMedias.currentStepIndex + 1} de {aMedias.totalPasos || mod.steps.length}
+            </span>
+          ) : !abierto ? (
+            <span className="text-ink-subtle">Sin oportunidades · nota final {mejor?.score ?? '—'}</span>
+          ) : restantes === 1 && mejor ? (
+            <span className="text-warn">Te queda 1 repetición</span>
+          ) : (
+            <span className="text-ink-subtle">
+              {mod.steps.length} <span className="sm:hidden">acciones</span>
+              <span className="hidden sm:inline">acciones en el sistema</span>
+            </span>
+          )}
+        </p>
+      </motion.button>
+    );
+  };
 
   return (
-    <Page className="px-4 pb-16 pt-10">
+    <Page className="px-4 pb-16 pt-7 sm:pt-10">
       <motion.div variants={vista} initial="inicial" animate="visible" className="mx-auto max-w-5xl">
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
+        <div className="mb-7 flex flex-wrap items-end justify-between gap-5 sm:mb-10 sm:gap-6">
           <div>
             <div className="mb-4 flex items-center gap-3">
               <Isotipo className="h-10 w-10" />
               <span className="etiqueta text-brand">SuperPet · Capacitación</span>
             </div>
-            <h1 className="text-4xl font-extrabold text-ink">Simulador de caja</h1>
+            <h1 className="text-[2rem] font-extrabold leading-tight text-ink sm:text-4xl">Tu turno en la caja</h1>
             <p className="prosa mt-2 text-ink-muted">
-              Cada módulo te pone en una situación de tienda. Lees el caso, sacas de ahí los datos y lo resuelves en el
-              sistema. No hay instrucciones paso a paso.
+              Un turno completo, de la apertura al cierre. Lees lo que pasa en el mostrador, sacas de ahí los datos y
+              lo resuelves en el sistema. No hay instrucciones paso a paso.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-line bg-raised px-5 py-4">
-            <div className="etiqueta text-ink-muted">Tu avance</div>
-            <div className="mt-1 text-2xl font-bold text-ink">
-              <span className="cifra">
+          {/* La nota final es el promedio, así que es ella la que manda aquí:
+              el contador de módulos pasa a ser el dato de apoyo. */}
+          <div className="w-full rounded-2xl border border-line bg-raised px-5 py-4 sm:w-auto sm:min-w-[13rem]">
+            <div className="etiqueta text-ink-subtle">{promedio !== null ? 'Tu promedio' : 'Tu avance'}</div>
+            <div className="mt-0.5 flex items-baseline gap-1.5">
+              <span className="cifra text-4xl font-extrabold leading-none tracking-tight text-navy">
+                {promedio !== null ? promedio : `${hechos}/${total}`}
+              </span>
+              {promedio !== null && (
+                <span className="text-sm font-semibold text-ink-subtle">de {progreso.notaMaxima}</span>
+              )}
+            </div>
+            <div className="mt-2.5 flex items-center gap-2">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-sunken">
+                <motion.div
+                  className="h-full rounded-full bg-brand"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${total ? (hechos / total) * 100 : 0}%` }}
+                  transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                />
+              </div>
+              <span className="cifra shrink-0 text-xs font-semibold text-ink-subtle">
                 {hechos}/{total}
               </span>
-            </div>
-            {promedio !== null && (
-              <div className="mt-1 text-sm text-ink-muted">
-                Promedio <span className="cifra font-bold text-ink">{promedio}</span> de {progreso.notaMaxima}
-              </div>
-            )}
-            <div className="mt-2 h-1.5 w-32 overflow-hidden rounded-full bg-sunken">
-              <motion.div
-                className="h-full rounded-full bg-brand"
-                initial={{ width: 0 }}
-                animate={{ width: `${total ? (hechos / total) * 100 : 0}%` }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              />
             </div>
           </div>
         </div>
@@ -299,74 +629,72 @@ const ModuleMenu = ({ onPick, progreso }: { onPick: (moduleId: string) => void; 
           </button>
         </div>
 
-        <motion.div
-          variants={cascada()}
-          initial="inicial"
-          animate="visible"
-          className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
-        >
-          {modulesData.map((mod) => {
-            const mejor = progreso.modulos[mod.id];
-            const isCompleted = !!mejor;
-            const scenario = scenarios.find((s) => s.moduleId === mod.id);
-            const numero = mod.title.match(/M[oó]dulo (\d+)/)?.[1] ?? '';
-            const nombre = mod.title.replace(/^M[oó]dulo \d+\s*—\s*/, '');
-            return (
-              <motion.button
-                key={mod.id}
-                variants={elemento}
-                {...tarjetaInteractiva}
-                onClick={() => onPick(mod.id)}
-                // El título va partido en dos para la jerarquía visual; la
-                // etiqueta accesible lo mantiene completo para quien navegue
-                // con lector de pantalla.
-                aria-label={`${mod.title}${isCompleted ? ' (completado)' : ''}`}
-                className={cnCard(isCompleted)}
+        {/* Los módulos van agrupados por momento del turno: es la misma lista de
+            siempre, pero leída como una jornada y no como catorce ejercicios. */}
+        {TRAMOS.map((tramo) => {
+          const modulos = porTramo.get(tramo.id) || [];
+          if (!modulos.length) return null;
+          return (
+            <section key={tramo.id} className="mb-9">
+              <div className="mb-3 flex items-baseline gap-3 border-b border-line pb-2">
+                <h2 className="text-lg font-extrabold text-navy">{tramo.titulo}</h2>
+                <span className="etiqueta text-ink-subtle">{tramo.hora}</span>
+              </div>
+              <motion.div
+                variants={cascada()}
+                initial="inicial"
+                animate="visible"
+                className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3"
               >
-                <span
-                  aria-hidden
-                  className={`absolute inset-y-0 left-0 w-1 ${
-                    mejor ? (mejor.approved ? 'bg-ok' : 'bg-warn') : 'bg-line-strong'
-                  }`}
-                />
-                <div className="mb-2 flex items-start justify-between gap-2">
-                  <span className="etiqueta text-ink-subtle">Módulo {numero}</span>
-                  {mejor && (
-                    <Badge tone={mejor.approved ? 'ok' : 'warn'}>
-                      <span className="cifra">{mejor.score}</span>
-                      {mejor.approved ? ' ✓' : ' · repetir'}
-                    </Badge>
-                  )}
-                </div>
-                <h3 className="font-bold leading-snug text-ink">{nombre}</h3>
-                {scenario && <p className="mt-1.5 text-sm text-ink-muted">{scenario.titulo}</p>}
-                <p className="mt-3 text-xs text-ink-subtle">{mod.steps.length} acciones en el sistema</p>
-              </motion.button>
-            );
-          })}
-        </motion.div>
+                {modulos.map(tarjeta)}
+              </motion.div>
+            </section>
+          );
+        })}
 
         {hechos === total && total > 0 && (
-          <CierreFinal progreso={progreso} idsModulos={modulesData.map((m) => m.id)} titulos={modulesData} />
+          <AvisoDeCierre
+            progreso={progreso}
+            tienda={operatorStore}
+            repetibles={repetibles}
+            onFinalizar={onFinalizar}
+            onReiniciarTodo={onReiniciarTodo}
+          />
         )}
       </motion.div>
     </Page>
   );
 };
 
-const cnCard = (completado: boolean) =>
-  `relative overflow-hidden rounded-2xl border bg-raised p-5 pl-6 text-left shadow-[0_1px_2px_rgba(6,6,67,0.06)] transition-shadow hover:shadow-[0_8px_24px_rgba(6,6,67,0.10)] ${
-    completado ? 'border-ok/30' : 'border-line'
-  }`;
+const cnCard = (completado: boolean, abierto: boolean) =>
+  `relative overflow-hidden rounded-2xl border bg-raised p-4 text-left sm:p-5 shadow-[0_1px_2px_rgba(6,6,67,0.06)] transition-all ${
+    abierto
+      ? 'hover:border-brand/35 hover:shadow-[0_10px_28px_-12px_rgba(6,6,67,0.22)]'
+      : 'cursor-not-allowed opacity-60'
+  } ${completado ? 'border-ok/30' : 'border-line'}`;
 
 export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => {
   const {
     status, startModule, modulesData, showErrorModal, handleInteract, currentModuleId,
-    operatorName, operatorDni, catalog, configLoading, teacherMissing, reloadConfig,
+    operatorName, operatorDni, operatorStore, catalog, configLoading, teacherMissing, reloadConfig,
+    intentosGastados,
   } = useSimulator();
   const [briefingModuleId, setBriefingModuleId] = useState<string | null>(null);
+  const [estadoGuardado, setEstadoGuardado] = useState<EstadoModuloGuardado | null>(null);
   const [showScenario, setShowScenario] = useState(false);
   const [progreso, setProgreso] = useState<Progreso>(PROGRESO_VACIO);
+  const [progresoCargado, setProgresoCargado] = useState(false);
+  const [preambuloListo, setPreambuloListo] = useState(false);
+  const [verTelon, setVerTelon] = useState(false);
+
+  const identidad = { teacher: teacherUsername, dni: operatorDni };
+
+  const recargarProgreso = useCallback(async () => {
+    if (!operatorDni) return;
+    const p = await obtenerProgreso(teacherUsername, operatorDni);
+    setProgreso(p);
+    setProgresoCargado(true);
+  }, [teacherUsername, operatorDni]);
 
   // El progreso se recarga al volver al menú, para que la nota del módulo que
   // acaba de terminar ya aparezca en su tarjeta.
@@ -374,12 +702,22 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
     if (status !== 'menu' || !operatorDni) return;
     let cancelado = false;
     obtenerProgreso(teacherUsername, operatorDni).then((p) => {
-      if (!cancelado) setProgreso(p);
+      if (cancelado) return;
+      setProgreso(p);
+      setProgresoCargado(true);
     });
     return () => {
       cancelado = true;
     };
   }, [status, teacherUsername, operatorDni]);
+
+  // Gastar un intento (pulsar «Volver a empezar») cambia lo que el colaborador
+  // puede hacer AHORA MISMO, sin salir del módulo: hay que releer el progreso en
+  // el momento, no al volver al menú.
+  useEffect(() => {
+    if (intentosGastados === 0) return;
+    recargarProgreso();
+  }, [intentosGastados, recargarProgreso]);
 
   if (teacherMissing) {
     return (
@@ -400,7 +738,7 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
 
   // Sin la configuración del entrenador no se puede empezar: hacerlo llevaba a
   // entrenar con unos datos y validar contra otros.
-  if (configLoading) {
+  if (configLoading || !progresoCargado) {
     return (
       <Page className="flex items-center justify-center p-4">
         <div className="text-center">
@@ -408,6 +746,42 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
           <p className="text-sm text-ink-muted">Cargando tus módulos…</p>
         </div>
       </Page>
+    );
+  }
+
+  // La entrada del relato, una sola vez. La marca vive en el servidor, así que
+  // no vuelve a salir aunque cambie de teléfono.
+  if (!progreso.preambuloVisto && !preambuloListo) {
+    return (
+      <PreambuloHistoria
+        nombre={operatorName}
+        tienda={operatorStore}
+        totalModulos={modulesData.length}
+        onEmpezar={() => {
+          setPreambuloListo(true);
+          marcarBandera(identidad, { preambuloVisto: true });
+          setProgreso((p) => ({ ...p, preambuloVisto: true }));
+        }}
+      />
+    );
+  }
+
+  // El telón sale cuando el colaborador cierra el turno, y también al volver a
+  // entrar si ya lo había cerrado: la capacitación tiene un final visible.
+  if (status === 'menu' && (verTelon || (progreso.finalizado && !briefingModuleId))) {
+    return (
+      <TelonFinal
+        progreso={progreso}
+        titulos={modulesData}
+        tienda={operatorStore}
+        onVolver={() => {
+          setVerTelon(false);
+          if (progreso.finalizado) {
+            marcarBandera(identidad, { finalizado: false });
+            setProgreso((p) => ({ ...p, finalizado: false }));
+          }
+        }}
+      />
     );
   }
 
@@ -422,10 +796,16 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
                 module={briefing}
                 modules={modulesData}
                 catalog={catalog}
-                onBack={() => setBriefingModuleId(null)}
+                reanudar={estadoGuardado}
+                intentosRestantes={intentosRestantes(progreso, briefing.id)}
+                onBack={() => {
+                  setBriefingModuleId(null);
+                  setEstadoGuardado(null);
+                }}
                 onStart={() => {
                   setBriefingModuleId(null);
-                  startModule(briefing.id);
+                  startModule(briefing.id, estadoGuardado);
+                  setEstadoGuardado(null);
                 }}
               />
             </Page>
@@ -433,10 +813,23 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
         ) : (
           <ModuleMenu
             progreso={progreso}
-            onPick={(moduleId) => {
+            onFinalizar={() => {
+              marcarBandera(identidad, { finalizado: true });
+              setProgreso((p) => ({ ...p, finalizado: true }));
+              setVerTelon(true);
+            }}
+            onReiniciarTodo={async () => {
+              await reiniciarCapacitacion(identidad);
+              setVerTelon(false);
+              await recargarProgreso();
+            }}
+            onPick={async (moduleId) => {
               // Se recarga la configuración al abrir cada módulo, para que un
               // cambio del entrenador se note sin recargar la página.
               reloadConfig();
+              setEstadoGuardado(
+                await leerEstadoModulo({ teacher: teacherUsername, dni: operatorDni, moduleId })
+              );
               setBriefingModuleId(moduleId);
             }}
           />
@@ -445,13 +838,19 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
     );
   }
 
+  const puedeReiniciarModulo = !!currentModuleId && puedeReiniciar(progreso, currentModuleId);
+
   return (
     // Altura fija de pantalla (`dvh` para que la barra de URL del móvil no la
     // falsee) y sin scroll de página: el desplazamiento y el zoom ocurren dentro
     // del simulador.
     <div className="frame flex h-[100dvh] flex-col overflow-hidden bg-surface">
-      {status === 'completed' && <CompletedScreen />}
-      <AnimatePresence>{showErrorModal && <ErrorToast key="error" />}</AnimatePresence>
+      {status === 'completed' && (
+        <CompletedScreen quedanIntentos={currentModuleId ? intentosRestantes(progreso, currentModuleId) - 1 : 0} />
+      )}
+      <AnimatePresence>
+        {showErrorModal && <ErrorToast key="error" puedeReiniciarModulo={puedeReiniciarModulo} />}
+      </AnimatePresence>
       <AnimatePresence>
         {showScenario && currentModuleId && (
           <ScenarioDrawer
@@ -462,7 +861,7 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
           />
         )}
       </AnimatePresence>
-      <SimulatorHeader onShowScenario={() => setShowScenario(true)} />
+      <SimulatorHeader onShowScenario={() => setShowScenario(true)} puedeReiniciar={puedeReiniciarModulo} />
       <SimulatorViewport>
         {/* El clic de fondo va aquí dentro, no sobre toda el área: así
             desplazarse o hacer zoom en móvil no cuenta como paso fallido. */}

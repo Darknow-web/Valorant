@@ -23,7 +23,20 @@
  * vuelve a descuadrar las filas.
  */
 
-/** Pestaña donde se escriben los resultados. Cámbiala si usas otro nombre. */
+/**
+ * Versión de ESTE archivo. El panel del entrenador la lee al pulsar «Probar
+ * conexión»: si no llega, es que la URL sigue sirviendo una implementación
+ * antigua (guardar el código no basta, hay que publicar una versión nueva).
+ */
+var VERSION = 3;
+
+/**
+ * Pestaña donde se escriben los resultados.
+ *
+ * Si tu hoja ya venía recibiendo datos en otra pestaña (por ejemplo «Hoja 1»),
+ * el script sigue escribiendo ahí en vez de crear una nueva: partir los
+ * resultados en dos pestañas es peor que respetar la que ya usabas.
+ */
 var SHEET_NAME = 'Resultados';
 
 /** Título de la columna ▸ nombre del dato que envía la aplicación. */
@@ -68,6 +81,7 @@ function doPost(e) {
       return json({
         ok: true,
         prueba: true,
+        version: VERSION,
         hoja: SHEET_NAME,
         documento: SpreadsheetApp.getActiveSpreadsheet().getName(),
         columnas: headers.length
@@ -93,7 +107,7 @@ function doPost(e) {
 }
 
 function doGet() {
-  return json({ ok: true, service: 'Retail Pro Prism webhook', hoja: SHEET_NAME });
+  return json({ ok: true, service: 'Retail Pro Prism webhook', version: VERSION, hoja: SHEET_NAME });
 }
 
 /** El servidor envía text/plain, así que el cuerpo llega en e.postData.contents. */
@@ -103,6 +117,10 @@ function parseBody(e) {
   }
   if (e && e.parameter && e.parameter.data) {
     try { return JSON.parse(e.parameter.data); } catch (err) { return null; }
+  }
+  // El servidor manda los mismos datos como parámetros sueltos, de respaldo.
+  if (e && e.parameter && e.parameter.cajero) {
+    return { action: 'appendRow', data: e.parameter };
   }
   return null;
 }
@@ -116,7 +134,27 @@ function rowToData(row) {
 
 function getSheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  return ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
+
+  var preferida = ss.getSheetByName(SHEET_NAME);
+  if (preferida) return preferida;
+
+  // Antes de crear una pestaña nueva, se busca alguna que ya esté recibiendo
+  // estos resultados (tiene «Cajero» y «Módulo» en su fila de títulos). Así, si
+  // ya tenías historial en «Hoja 1», los datos nuevos siguen cayendo ahí.
+  var hojas = ss.getSheets();
+  for (var i = 0; i < hojas.length; i++) {
+    var ancho = hojas[i].getLastColumn();
+    if (ancho === 0) continue;
+    var titulos = hojas[i].getRange(1, 1, 1, ancho).getValues()[0].map(function (t) {
+      return String(t).trim();
+    });
+    if (titulos.indexOf('Cajero') !== -1 && titulos.indexOf('Módulo') !== -1) {
+      SHEET_NAME = hojas[i].getName();
+      return hojas[i];
+    }
+  }
+
+  return ss.insertSheet(SHEET_NAME);
 }
 
 /**

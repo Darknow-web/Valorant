@@ -199,6 +199,14 @@ export const StepDataEditor = () => {
                     })}
                   </div>
 
+                  {scenario && scenario.faltantes.length > 0 && (
+                    <Notice tone="warn">
+                      Hay {scenario.faltantes.length} dato
+                      {scenario.faltantes.length === 1 ? '' : 's'} sin valor. La situación se lo mostrará al
+                      colaborador como pendiente, y ese paso no se podrá completar.
+                    </Notice>
+                  )}
+
                   {scenario && (
                     <div className="rounded-lg border border-line bg-sunken px-4 py-3">
                       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">

@@ -4,9 +4,26 @@ import { modulesData as defaultModulesData } from '../data/modules';
 import { Catalog, cloneDefaultCatalog, normalizeCatalog } from '../data/catalog';
 import { applyStepData } from '../lib/stepData';
 import { newAttemptId } from '../lib/session';
+import {
+  EstadoModuloGuardado,
+  borrarEstadoModulo,
+  consumirIntento,
+  guardarEstadoModulo,
+} from '../lib/estadoModulo';
 
 interface SimulatorContextType extends SimulationState {
-  startModule: (moduleId: string) => void;
+  /** Empieza el módulo, o lo retoma donde quedó si se le pasa lo guardado. */
+  startModule: (moduleId: string, reanudar?: EstadoModuloGuardado | null) => void;
+  /**
+   * Vuelve a empezar el módulo en curso desde cero: pantallas limpias, errores
+   * y pistas borrados y cronómetro a cero. Gasta una oportunidad.
+   */
+  restartModule: () => void;
+  /**
+   * Recoloca las pantallas en lo que el paso en curso necesita, sin retroceder
+   * pasos, sin borrar errores y sin gastar intento. Es la salida garantizada.
+   */
+  reacomodarPantallas: () => void;
   exitModule: () => void;
   handleInteract: (targetId: string, value?: string, isFinalSubmit?: boolean) => boolean | void;
   triggerCustomError: (message: string, points?: number) => void;
@@ -25,6 +42,16 @@ interface SimulatorContextType extends SimulationState {
   configLoading: boolean;
   /** El enlace apunta a un entrenador que no existe. */
   teacherMissing: boolean;
+  /** Fallos seguidos contra el paso en curso: a partir de 3 se ofrece ayuda. */
+  fallosSeguidos: number;
+  /** El colaborador retomó un módulo que había dejado a medias. */
+  reanudado: boolean;
+  /**
+   * Sube cada vez que se gasta un intento. Quien muestre el progreso lo observa
+   * para volver a pedirlo: si no, «Volver a empezar» se seguiría ofreciendo
+   * después de haber gastado la única repetición que había.
+   */
+  intentosGastados: number;
   reloadConfig: () => void;
   dismissErrorModal: () => void;
   customErrorMessage?: string;
@@ -78,6 +105,23 @@ export function valuesMatch(actualRaw: unknown, expectedRaw: unknown): boolean {
     return Number(actual) === Number(expected);
   }
   return false;
+}
+
+/**
+ * Deja el estado de las pantallas como el paso lo necesita para poder cumplirse.
+ *
+ * Es lo que sostiene los modales que el propio paso exige: los botones
+ * "Cancelar" y "No" no pasan por la validación, apagan el flag y siguen, y hay
+ * pasos —el crédito de tienda del Módulo 11— cuyo botón de reapertura vive en
+ * una pantalla que ya quedó atrás.
+ *
+ * Vive fuera del componente porque lo usan dos cosas: el efecto que lo sostiene
+ * solo, y el botón «Reacomodar pantallas», que es la salida garantizada cuando
+ * algo queda en un sitio del que el colaborador no sabe volver.
+ */
+export function reencuadrarPaso(step: Step | null | undefined, appState: AppState): AppState {
+  if (!step?.keepState) return appState;
+  return { ...appState, ...step.keepState };
 }
 
 const formatElapsed = (startTime: number | null) => {
@@ -200,41 +244,167 @@ export const SimulatorProvider = ({
     }));
   };
 
-  const startModule = (moduleId: string) => {
-    const initialAppState = { ...defaultAppState };
-    // Todos los módulos posteriores a la apertura de caja arrancan con la caja
-    // ya abierta; solo el 1 (ingreso) y el 2 (apertura) empiezan con ella cerrada.
+  /**
+   * Las pantallas tal como las encuentra el colaborador al empezar el módulo.
+   *
+   * Todos los módulos posteriores a la apertura de caja arrancan con la caja ya
+   * abierta; solo el 1 (ingreso) y el 2 (apertura) empiezan con ella cerrada.
+   */
+  const pantallasIniciales = (moduleId: string): AppState => {
+    const inicial = { ...defaultAppState };
     if (moduleId !== 'm1' && moduleId !== 'm2') {
-      initialAppState.registerOpen = true;
-      initialAppState.fondoCaja = catalogRef.current.fondoCajaInicial;
+      inicial.registerOpen = true;
+      inicial.fondoCaja = catalogRef.current.fondoCajaInicial;
     }
+    return inicial;
+  };
 
-    currentStepIndexRef.current = 0;
+  /** Identidad para guardar el avance en el servidor. */
+  const identidad = (moduleId: string) => ({
+    teacher: teacherUsername,
+    dni: stateRef.current.operatorDni,
+    moduleId,
+  });
+
+  const [reanudado, setReanudado] = useState(false);
+  const [intentosGastados, setIntentosGastados] = useState(0);
+
+  const startModule = (moduleId: string, reanudar?: EstadoModuloGuardado | null) => {
+    currentStepIndexRef.current = reanudar?.currentStepIndex ?? 0;
     advancingRef.current = false;
+    setFallosSeguidos(0);
+    setReanudado(!!reanudar);
+
+    // Retomar un módulo a medias NO gasta intento y NO limpia errores: es el
+    // mismo intento, que sigue justo donde lo dejó.
+    const inicio = reanudar
+      ? Date.now() - (Number(reanudar.elapsedMs) || 0)
+      : Date.now();
 
     setState((prev) => ({
       ...prev,
       status: 'running',
       currentModuleId: moduleId,
-      currentStepIndex: 0,
-      errors: 0,
-      startTime: Date.now(),
+      currentStepIndex: reanudar?.currentStepIndex ?? 0,
+      errors: reanudar?.errors ?? 0,
+      startTime: inicio,
       endTime: null,
       feedback: null,
       hintActive: false,
-      appState: initialAppState,
-      attemptId: newAttemptId(),
-      mistakeLog: [],
-      processSteps: [{ action: 'Inicio del módulo', time: '00:00' }],
+      appState: reanudar?.appState
+        ? { ...pantallasIniciales(moduleId), ...reanudar.appState }
+        : pantallasIniciales(moduleId),
+      attemptId: reanudar?.attemptId || newAttemptId(),
+      mistakeLog: reanudar?.mistakeLog ?? [],
+      processSteps: reanudar?.processSteps?.length
+        ? [...reanudar.processSteps, { action: 'Retomó el módulo', time: formatElapsed(inicio) }]
+        : [{ action: 'Inicio del módulo', time: '00:00' }],
       score: null,
       approved: null,
       syncStatus: 'idle',
       syncMessage: '',
       showErrorModal: false,
+      customErrorMessage: undefined,
     }));
   };
 
+  /**
+   * Vuelve a empezar el módulo desde cero: paso 1, pantallas limpias, errores y
+   * pistas borrados y cronómetro a cero.
+   *
+   * Gasta una de las dos oportunidades del módulo. Tiene que costar: si borrar
+   * los errores fuera gratis, bastaría con reiniciar cada vez que se falla para
+   * sacar siempre nota perfecta. La interfaz solo ofrece el botón cuando
+   * después del reinicio todavía queda el intento que se va a jugar.
+   */
+  const restartModule = () => {
+    const { currentModuleId } = stateRef.current;
+    if (!currentModuleId) return;
+
+    consumirIntento(identidad(currentModuleId));
+    setIntentosGastados((n) => n + 1);
+
+    currentStepIndexRef.current = 0;
+    advancingRef.current = false;
+    setFallosSeguidos(0);
+    setReanudado(false);
+
+    setState((prev) => ({
+      ...prev,
+      currentStepIndex: 0,
+      feedback: null,
+      hintActive: false,
+      showErrorModal: false,
+      customErrorMessage: undefined,
+      appState: pantallasIniciales(currentModuleId),
+      errors: 0,
+      mistakeLog: [],
+      startTime: Date.now(),
+      attemptId: newAttemptId(),
+      processSteps: [{ action: 'Volvió a empezar el módulo', time: '00:00' }],
+    }));
+  };
+
+  /**
+   * Recoloca las pantallas en lo que el paso en curso necesita.
+   *
+   * Es la salida garantizada: si una combinación rara de clics deja la pantalla
+   * en un sitio del que el colaborador no sabe volver, esto lo devuelve al
+   * estado desde el que el paso se puede completar, SIN retroceder pasos, sin
+   * borrar errores y sin gastar intento. No se puede usar para hacer trampa
+   * porque no perdona nada ni salta nada: el paso sigue exigiendo lo suyo.
+   */
+  const reacomodarPantallas = () => {
+    const snapshot = stateRef.current;
+    const mod = modulesRef.current.find((m) => m.id === snapshot.currentModuleId);
+    const paso = mod?.steps[currentStepIndexRef.current];
+    if (!paso) return;
+
+    advancingRef.current = false;
+    setState((prev) => ({
+      ...prev,
+      feedback: null,
+      showErrorModal: false,
+      customErrorMessage: undefined,
+      // El índice del estado vuelve a alinearse con el de la referencia: si se
+      // hubieran desincronizado, la pantalla mostrada dejaría de ser la del paso.
+      currentStepIndex: currentStepIndexRef.current,
+      appState: reencuadrarPaso(paso, prev.appState),
+      processSteps: [
+        ...prev.processSteps,
+        { action: 'Reacomodó las pantallas', time: formatElapsed(prev.startTime) },
+      ],
+    }));
+  };
+
+  /**
+   * Sale al menú GUARDANDO lo que llevaba hecho.
+   *
+   * Antes salir borraba el intento entero. Ahora el paso, las pantallas y los
+   * errores quedan en el servidor: al volver a entrar retoma ahí mismo y no
+   * gasta ninguna de sus dos oportunidades.
+   */
   const exitModule = () => {
+    const snapshot = stateRef.current;
+    const mod = modulesRef.current.find((m) => m.id === snapshot.currentModuleId);
+
+    if (snapshot.status === 'running' && mod && snapshot.attemptId) {
+      guardarEstadoModulo(identidad(mod.id), {
+        attemptId: snapshot.attemptId,
+        currentStepIndex: currentStepIndexRef.current,
+        totalPasos: mod.steps.length,
+        appState: snapshot.appState,
+        errors: snapshot.errors,
+        mistakeLog: snapshot.mistakeLog,
+        processSteps: [
+          ...snapshot.processSteps,
+          { action: 'Salió al menú (avance guardado)', time: formatElapsed(snapshot.startTime) },
+        ],
+        elapsedMs: snapshot.startTime ? Date.now() - snapshot.startTime : 0,
+      });
+    }
+
+    setReanudado(false);
     setState((prev) => ({
       ...prev,
       status: 'menu',
@@ -243,8 +413,12 @@ export const SimulatorProvider = ({
       feedback: null,
       hintActive: false,
       showErrorModal: false,
+      customErrorMessage: undefined,
     }));
   };
+
+  /** Fallos seguidos contra el mismo paso; se reinicia al avanzar. */
+  const [fallosSeguidos, setFallosSeguidos] = useState(0);
 
   const currentStepIndexRef = useRef<number>(0);
   const lastStepChangeTimeRef = useRef<number>(Date.now());
@@ -277,6 +451,40 @@ export const SimulatorProvider = ({
     return () => clearTimeout(timer);
   }, [state.currentStepIndex, state.status, state.currentModuleId]);
 
+  // Sostiene el estado que el paso en curso necesita (`keepState`).
+  //
+  // Los botones "Cancelar" y "No" de los modales no pasan por la validación:
+  // apagan el flag y siguen. Para la mayoría de los casos basta con poder
+  // repetir el paso que abrió el modal, pero hay uno —el crédito de tienda del
+  // Módulo 11— donde el botón que lo abre vive en una pantalla que el paso ya
+  // dejó atrás. Ahí el módulo quedaba muerto sin retorno posible. Con esto, el
+  // modal que el paso exige se vuelve a abrir solo.
+  useEffect(() => {
+    if (state.status !== 'running') return;
+    const mod = modulesRef.current.find((m) => m.id === state.currentModuleId);
+    const step = mod?.steps[state.currentStepIndex];
+    if (!step?.keepState) return;
+
+    // El propio paso cierra su ventana al darse por cumplido. Si se reabriera
+    // entonces, quedaría tapando la pantalla y el módulo se trabaría por culpa
+    // del arreglo. Solo se sostiene mientras el paso sigue pendiente.
+    if (advancingRef.current) return;
+
+    const actual = state.appState as Record<string, unknown>;
+    const faltantes = Object.entries(step.keepState).filter(
+      ([clave, valor]) => actual[clave] !== valor
+    );
+    if (faltantes.length === 0) return;
+
+    const indice = state.currentStepIndex;
+    const timer = setTimeout(() => {
+      // Se vuelve a comprobar: entre medio el paso pudo completarse.
+      if (advancingRef.current || currentStepIndexRef.current !== indice) return;
+      setState((prev) => ({ ...prev, appState: reencuadrarPaso(step, prev.appState) }));
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [state.appState, state.currentStepIndex, state.status, state.currentModuleId]);
+
   const handleInteract = (targetId: string, value?: string, _isFinalSubmit?: boolean): boolean | void => {
     const snapshot = stateRef.current;
     if (snapshot.status !== 'running') return;
@@ -300,6 +508,7 @@ export const SimulatorProvider = ({
         if (value === undefined) return true;
 
         if (value.trim() !== stepToProcess.targetValue.trim()) {
+          setFallosSeguidos((f) => f + 1);
           setState((prev) => ({
             ...prev,
             errors: prev.errors + 1,
@@ -322,6 +531,7 @@ export const SimulatorProvider = ({
         }
 
         if (!isValid) {
+          setFallosSeguidos((f) => f + 1);
           setState((prev) => ({
             ...prev,
             feedback: { status: 'error', id: targetId },
@@ -338,6 +548,7 @@ export const SimulatorProvider = ({
           steps: mod.steps,
         });
         if (validationResult !== true) {
+          setFallosSeguidos((f) => f + 1);
           setState((prev) => ({
             ...prev,
             errors: prev.errors + 1,
@@ -352,8 +563,17 @@ export const SimulatorProvider = ({
 
       setState((prev) => ({ ...prev, feedback: { status: 'success', id: targetId } }));
 
+      // El paso salió bien: la racha de fallos vuelve a cero.
+      setFallosSeguidos(0);
       advancingRef.current = true;
+      // Red de seguridad: si por lo que sea el avance no llegara a ejecutarse,
+      // `advancingRef` se quedaría en `true` y la aplicación dejaría de aceptar
+      // clics para siempre. Este temporizador lo suelta pase lo que pase.
+      const sueltaDeEmergencia = setTimeout(() => {
+        advancingRef.current = false;
+      }, 3000);
       setTimeout(() => {
+        clearTimeout(sueltaDeEmergencia);
         currentStepIndexRef.current += 1;
         lastStepChangeTimeRef.current = Date.now();
         advancingRef.current = false;
@@ -372,10 +592,20 @@ export const SimulatorProvider = ({
             processSteps,
           };
 
+          // Si el `action` de un paso reventara, antes se perdía TODO el avance
+          // de este bloque: la referencia del paso ya había subido y el estado
+          // se quedaba en el paso anterior, así que la pantalla mostrada dejaba
+          // de ser la que la validación esperaba y el módulo quedaba muerto.
+          // Ahora el fallo se aísla: se pierde el efecto de ese `action`, no el
+          // avance ni el módulo.
           if (stepToProcess.action) {
-            const appStateCopy = JSON.parse(JSON.stringify(newState.appState));
-            stepToProcess.action(appStateCopy);
-            newState.appState = appStateCopy;
+            try {
+              const appStateCopy = JSON.parse(JSON.stringify(newState.appState));
+              stepToProcess.action(appStateCopy);
+              newState.appState = appStateCopy;
+            } catch (error) {
+              console.error('[prism] El paso no pudo aplicar su acción:', stepToProcess.id, error);
+            }
           }
 
           if (nextIndex >= mod.steps.length) {
@@ -394,9 +624,25 @@ export const SimulatorProvider = ({
       if (value !== undefined) return;
       const bypassValidationIds = [
         'cust-new-name', 'cust-new-lastname', 'cust-new-email', 'cust-new-doctype',
-        'cust-new-doc', 'pos-btn-remove-cust', 'pos-btn-remove', 'modal-auth-ok', 'ignore-click',
+        'cust-new-doc', 'pos-btn-remove-cust', 'modal-auth-ok', 'ignore-click',
       ];
       if (bypassValidationIds.includes(targetId)) return true;
+      // Quitar un artículo del carrito es una corrección legítima. El botón real
+      // lleva el índice de la línea (`pos-btn-remove-0`), así que la lista de
+      // arriba nunca coincidía y quitar un producto mal agregado era imposible.
+      if (targetId.startsWith('pos-btn-remove')) return true;
+
+      // Un paso YA CUMPLIDO se puede repetir. Es la salida de casi todos los
+      // atascos: los botones "No", "Cancelar" y "Cerrar" de los modales no pasan
+      // por aquí y cierran lo que el paso actual necesita, mientras que el botón
+      // que lo reabriría sí pasaba y quedaba bloqueado para siempre. Permitirlo
+      // devuelve el clic a la pantalla, que reabre el modal o el submenú por sí
+      // sola —igual que en el sistema real— sin contar error ni saltarse nada:
+      // el paso en curso sigue exigiendo lo suyo para avanzar.
+      const yaCumplido = mod.steps
+        .slice(0, currentStepIndexRef.current)
+        .some((paso) => paso.targetId === targetId);
+      if (yaCumplido) return true;
       // Acciones intermedias que el propio paso pide (aplicar el pago, dar el
       // vuelto). Sin esto se contaban como error y, peor, el clic quedaba
       // bloqueado: el Módulo 6 era imposible de terminar porque nunca llegaba a
@@ -412,6 +658,7 @@ export const SimulatorProvider = ({
         targetId.includes('pay-method') || targetId.includes('pay-select-card-type');
       if (isInputError) return;
 
+      setFallosSeguidos((f) => f + 1);
       setState((prev) => ({
         ...prev,
         feedback: { status: 'error', id: targetId },
@@ -520,10 +767,19 @@ export const SimulatorProvider = ({
       const data = await res.json();
 
       if (!res.ok) {
-        submittedAttemptsRef.current.delete(attemptId);
+        // El límite de intentos no es un fallo de red: no tiene sentido dejar
+        // que lo reintente, y el guardado a medias ya no sirve para nada.
+        if (data?.limiteAlcanzado) {
+          borrarEstadoModulo({ teacher: teacherUsername, dni: operatorDni, moduleId: mod.id });
+        } else {
+          submittedAttemptsRef.current.delete(attemptId);
+        }
         setState((prev) => ({ ...prev, syncStatus: 'failed', syncMessage: data?.error || 'No se pudo registrar la nota.' }));
         return;
       }
+
+      // El intento terminó: lo guardado a medias deja de tener sentido.
+      borrarEstadoModulo({ teacher: teacherUsername, dni: operatorDni, moduleId: mod.id });
 
       // El puntaje oficial lo calcula el servidor con la configuración del
       // entrenador (penalización por error y por pista, escala de nota).
@@ -545,6 +801,8 @@ export const SimulatorProvider = ({
       value={{
         ...state,
         startModule,
+        restartModule,
+        reacomodarPantallas,
         exitModule,
         handleInteract,
         triggerCustomError,
@@ -560,6 +818,9 @@ export const SimulatorProvider = ({
         catalog,
         configLoading,
         teacherMissing,
+        fallosSeguidos,
+        reanudado,
+        intentosGastados,
         reloadConfig,
         dismissErrorModal,
       }}

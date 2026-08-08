@@ -8,13 +8,22 @@ import { useSimulator } from '../store/SimulatorContext';
  * La instrucción del paso NO se muestra: el colaborador trabaja a partir de la
  * situación. Solo la revela pidiendo la pista, que descuenta puntaje.
  */
-export const SimulatorHeader = ({ onShowScenario }: { onShowScenario: () => void }) => {
+export const SimulatorHeader = ({
+  onShowScenario,
+  puedeReiniciar,
+}: {
+  onShowScenario: () => void;
+  /** Reiniciar gasta una oportunidad: si ya no le quedan, no se ofrece. */
+  puedeReiniciar: boolean;
+}) => {
   const {
-    moduleTitle, currentStep, currentStepIndex, errors, exitModule,
-    triggerHint, hintActive, startTime, status,
+    moduleTitle, currentStep, currentStepIndex, errors, exitModule, restartModule,
+    reacomodarPantallas, triggerHint, hintActive, startTime, status,
   } = useSimulator();
 
   const [elapsed, setElapsed] = useState('00:00');
+  /** El reinicio pide confirmación: devuelve al paso 1 y eso no se deshace. */
+  const [confirmandoReinicio, setConfirmandoReinicio] = useState(false);
 
   useEffect(() => {
     if (!startTime || status !== 'running') return;
@@ -39,7 +48,8 @@ export const SimulatorHeader = ({ onShowScenario }: { onShowScenario: () => void
           <button
             onClick={exitModule}
             className="shrink-0 rounded-lg border border-line-strong px-2.5 py-2 text-sm font-semibold text-ink transition-colors hover:bg-sunken sm:px-3 sm:py-1.5"
-            aria-label="Salir del módulo"
+            aria-label="Salir al menú guardando el avance"
+            title="Sales al menú y tu avance queda guardado: al volver retomas en este mismo paso."
           >
             <span aria-hidden>←</span>
             <span className="ml-1 hidden sm:inline">Salir</span>
@@ -54,6 +64,30 @@ export const SimulatorHeader = ({ onShowScenario }: { onShowScenario: () => void
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {/* La salida garantizada. No retrocede pasos, no borra errores y no
+              gasta intento: solo devuelve las pantallas al sitio desde el que
+              el paso en curso se puede completar. Va siempre visible porque su
+              razón de ser es servir justo cuando algo salió mal. */}
+          <button
+            onClick={reacomodarPantallas}
+            className="rounded-xl border border-line-strong px-2.5 py-2 text-sm font-semibold text-ink-muted transition-colors hover:bg-sunken sm:px-3 sm:py-1.5"
+            aria-label="Reacomodar las pantallas"
+            title="¿Se te quedó una ventana trabada? Esto devuelve las pantallas a su sitio. No pierdes nada."
+          >
+            <span aria-hidden>⟳</span>
+            <span className="ml-1 hidden xl:inline">Reacomodar</span>
+          </button>
+          {puedeReiniciar && (
+            <button
+              onClick={() => setConfirmandoReinicio(true)}
+              className="rounded-xl border border-line-strong px-2.5 py-2 text-sm font-semibold text-ink-muted transition-colors hover:bg-sunken sm:px-3 sm:py-1.5"
+              aria-label="Volver a empezar el módulo desde cero"
+              title="Empiezas el módulo de nuevo, sin errores. Gasta tu repetición."
+            >
+              <span aria-hidden>↺</span>
+              <span className="ml-1 hidden lg:inline">Volver a empezar</span>
+            </button>
+          )}
           <button
             onClick={onShowScenario}
             className="rounded-xl bg-brand-soft px-2.5 py-2 text-sm font-semibold text-brand transition-colors hover:bg-brand hover:text-white sm:px-3 sm:py-1.5"
@@ -70,6 +104,33 @@ export const SimulatorHeader = ({ onShowScenario }: { onShowScenario: () => void
           </button>
         </div>
       </div>
+
+      {confirmandoReinicio && (
+        <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl border border-line-strong bg-sunken px-3 py-2 text-sm sm:mt-3 sm:px-4 sm:py-3">
+          <p className="min-w-0 flex-1 text-ink">
+            Empiezas el módulo de nuevo: paso 1, sin errores y con el tiempo a cero.{' '}
+            <span className="font-semibold text-warn">Gasta tu repetición: será tu último intento.</span>{' '}
+            <span className="text-ink-muted">
+              Si solo se te trabó una ventana, usa «Reacomodar»: eso no cuesta nada.
+            </span>
+          </p>
+          <button
+            onClick={() => {
+              restartModule();
+              setConfirmandoReinicio(false);
+            }}
+            className="rounded-lg bg-brand px-3 py-1.5 font-semibold text-white transition-colors hover:bg-brand-hover"
+          >
+            Volver a empezar
+          </button>
+          <button
+            onClick={() => setConfirmandoReinicio(false)}
+            className="rounded-lg border border-line-strong px-3 py-1.5 font-semibold text-ink-muted transition-colors hover:bg-raised"
+          >
+            Seguir aquí
+          </button>
+        </div>
+      )}
 
       {hintActive && (
         <div className="mt-2 rounded-xl border border-warn/25 bg-warn-soft px-3 py-2 text-sm text-ink sm:mt-3 sm:px-4 sm:py-3">

@@ -1,24 +1,61 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AuthUser } from '../../types';
 import { clearToken, studentLinkFor } from '../../lib/session';
 import { Badge, Logotipo, Page } from '../ui/Kit';
 import { ShareLinkPanel } from './ShareLinkPanel';
 import { StepDataEditor } from './StepDataEditor';
 import { CatalogEditor } from './CatalogEditor';
-import { SyncConfigPanel } from './SyncConfigPanel';
+import { GradingConfigPanel, SheetConfigPanel } from './SyncConfigPanel';
 import { ResultsPanel } from './ResultsPanel';
 import { UsersPanel } from './UsersPanel';
 
-type TabId = 'compartir' | 'datos' | 'catalogo' | 'sheets' | 'resultados' | 'usuarios';
+type TabId = 'compartir' | 'datos' | 'catalogo' | 'nota' | 'sheets' | 'resultados' | 'usuarios';
 
 const TABS: { id: TabId; label: string; adminOnly?: boolean }[] = [
   { id: 'compartir', label: 'Compartir' },
   { id: 'datos', label: 'Datos de los módulos' },
   { id: 'catalogo', label: 'Productos y clientes' },
-  { id: 'sheets', label: 'Google Sheets y nota' },
+  { id: 'nota', label: 'Nota y calificación' },
+  // La hoja es una sola para toda la organización, así que la conecta el
+  // administrador. Un entrenador que la cambiara desviaría las notas de todos.
+  { id: 'sheets', label: 'Google Sheets', adminOnly: true },
   { id: 'resultados', label: 'Resultados' },
   { id: 'usuarios', label: 'Entrenadores', adminOnly: true },
 ];
+
+interface Salud {
+  almacen: 'firestore' | 'local';
+  proyecto: string;
+  motivo: string;
+}
+
+/**
+ * Dónde están cayendo los datos ahora mismo.
+ *
+ * Sin esto, una app sin Firestore configurado funciona perfectamente hasta que
+ * el servidor se reinicia y desaparecen los entrenadores, las notas y el
+ * catálogo. Nadie se enteraba de que estaba pasando porque no había forma de
+ * verlo. Ahora se ve, y en rojo.
+ */
+const AvisoDeAlmacen = () => {
+  const [salud, setSalud] = useState<Salud | null>(null);
+
+  useEffect(() => {
+    fetch('/api/health')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => data && setSalud(data))
+      .catch(() => setSalud(null));
+  }, []);
+
+  if (!salud || salud.almacen === 'firestore') return null;
+
+  return (
+    <div className="bg-danger px-4 py-3 text-center text-sm text-white">
+      <strong>Los datos se están guardando en el disco del servidor y se borran al reiniciar.</strong>{' '}
+      {salud.motivo} Conecta Firestore siguiendo <code className="rounded bg-white/20 px-1">docs/conectar-firebase.md</code>.
+    </div>
+  );
+};
 
 export const TeacherPanel = ({ user, onLogout }: { user: AuthUser; onLogout: () => void }) => {
   const [tab, setTab] = useState<TabId>('compartir');
@@ -36,6 +73,7 @@ export const TeacherPanel = ({ user, onLogout }: { user: AuthUser; onLogout: () 
   return (
     <Page conRiel={false}>
       <header className="border-b border-line bg-raised">
+        {isAdmin && <AvisoDeAlmacen />}
         {/* Barra de marca, como la del manual. */}
         <div className="bg-brand">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2.5">
@@ -87,8 +125,9 @@ export const TeacherPanel = ({ user, onLogout }: { user: AuthUser; onLogout: () 
         {tab === 'compartir' && <ShareLinkPanel username={user.username} name={user.name} />}
         {tab === 'datos' && <StepDataEditor key={`datos-${catalogVersion}`} />}
         {tab === 'catalogo' && <CatalogEditor onSaved={() => setCatalogVersion((v) => v + 1)} />}
-        {tab === 'sheets' && <SyncConfigPanel />}
-        {tab === 'resultados' && <ResultsPanel />}
+        {tab === 'nota' && <GradingConfigPanel />}
+        {tab === 'sheets' && isAdmin && <SheetConfigPanel />}
+        {tab === 'resultados' && <ResultsPanel isAdmin={isAdmin} />}
         {tab === 'usuarios' && isAdmin && <UsersPanel currentUsername={user.username} />}
       </main>
     </Page>
