@@ -99,6 +99,15 @@ export interface AppState {
   newCustomerDocType?: string;
   storeCredit: number;
   showStoreCreditModal?: boolean;
+  /**
+   * Pestaña abierta en el punto de venta ('Venta' | 'Orden' | 'Devolucion').
+   *
+   * Vive aquí y no dentro de la pantalla porque «Reacomodar pantallas» tiene que
+   * poder devolverla a su sitio: irse a «Devolución» en un módulo de venta
+   * normal escondía la búsqueda de artículos y dejaba el paso sin forma de
+   * cumplirse.
+   */
+  posTab?: string;
 }
 
 export interface MistakeDetail {

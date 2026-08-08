@@ -6,8 +6,13 @@ import { Icons } from '../config/icons';
 import { findCustomer, findProduct } from '../data/catalog';
 
 export const PosMainScreen = () => {
-  const [activeTab, setActiveTab] = React.useState('Venta');
   const { appState, setAppState, handleInteract, currentModuleId, catalog, triggerCustomError } = useSimulator();
+  // La pestaña vive en el estado del simulador y no aquí dentro, para que
+  // «Reacomodar pantallas» pueda devolverla a «Venta»: irse a «Devolución» por
+  // error en un módulo de venta escondía la búsqueda de artículos y del cliente,
+  // y el paso se quedaba sin forma de cumplirse.
+  const activeTab = appState.posTab || 'Venta';
+  const setActiveTab = (tab: string) => setAppState({ posTab: tab });
   const [itemSearchStr, setItemSearchStr] = useState('');
   const [custSearchStr, setCustSearchStr] = useState('');
 
@@ -288,7 +293,14 @@ export const PosMainScreen = () => {
                               <div className="flex-1 flex items-center justify-center border-r border-[#0a2c50] hover:bg-[#174f8a] cursor-pointer">Tipo de Artículo</div>
                               <div className="flex-1 flex items-center justify-center border-r border-[#0a2c50] hover:bg-[#174f8a] cursor-pointer">Descuentos</div>
                               <div className="flex-1 flex items-center justify-center border-r border-[#0a2c50] hover:bg-[#174f8a] cursor-pointer">Anular</div>
-                              <Interactive id={`pos-btn-remove-${i}`} className="flex-1 flex"><div className="w-full h-full flex items-center justify-center border-r border-[#0a2c50] hover:bg-[#174f8a] cursor-pointer" onClick={() => {
+                              {/* Un artículo DEVUELTO (precio negativo) no se puede quitar del
+                                  documento, igual que ya pasaba con el cliente de la devolución.
+                                  Quitarlo dejaba la nota de crédito sin líneas y sin forma de
+                                  recuperarla: el artículo solo se puede traer desde la búsqueda
+                                  del documento, que en ese punto ya quedó atrás, así que el
+                                  módulo se volvía imposible de terminar. */}
+                              <Interactive id={item.price < 0 ? 'ignore-click' : `pos-btn-remove-${i}`} className="flex-1 flex"><div className={`w-full h-full flex items-center justify-center border-r border-[#0a2c50] ${item.price < 0 ? 'text-gray-500 cursor-not-allowed' : 'hover:bg-[#174f8a] cursor-pointer'}`} onClick={() => {
+                                 if (item.price < 0) return;
                                  const newCart = [...appState.cart];
                                  newCart.splice(i, 1);
                                  setAppState({ cart: newCart });

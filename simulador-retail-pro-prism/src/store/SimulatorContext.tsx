@@ -70,6 +70,7 @@ const defaultAppState: AppState = {
   returnItems: [],
   fondoCaja: '',
   storeCredit: 0,
+  posTab: 'Venta',
 };
 
 const SimulatorContext = createContext<SimulatorContextType | undefined>(undefined);
@@ -122,6 +123,57 @@ export function valuesMatch(actualRaw: unknown, expectedRaw: unknown): boolean {
 export function reencuadrarPaso(step: Step | null | undefined, appState: AppState): AppState {
   if (!step?.keepState) return appState;
   return { ...appState, ...step.keepState };
+}
+
+/**
+ * Estado ESTORBO: ventanas abiertas y forma de pago a medio elegir.
+ *
+ * Es lo único que «Reacomodar pantallas» tiene derecho a tocar. Se distingue
+ * del avance real —el carrito, el cliente, los pagos ya aplicados, el crédito
+ * de tienda, la caja abierta— que NO se toca nunca: eso es trabajo hecho y
+ * borrarlo sería castigar al colaborador por pedir ayuda.
+ */
+const ESTADO_ESTORBO: Partial<AppState> = {
+  showAuthModal: false,
+  showNCTransferenciaModal: false,
+  showStoreCreditModal: false,
+  showNewCustomerModal: false,
+  showPriceLevelModal: false,
+  authCode: '',
+  pendingCustomer: null,
+  // La forma de pago vuelve a Efectivo, que es de donde salen todos los caminos.
+  // Sin esto, pulsar RAPPI o «NC TRANSFERENCIA» por error en un módulo de venta
+  // normal escondía el campo del importe y dejaba el paso imposible de cumplir.
+  selectedPaymentMethod: 'Efectivo',
+  takeAmount: '',
+  cardType: '',
+  tipoProcesamiento: 'Manual',
+  e115: '',
+  e116: '',
+  noAutorizacion: '',
+  autorizacionForzada: false,
+  // Los pagos aplicados por error también estorban, y mucho: el mismo hueco de
+  // la pantalla muestra «Pago» o «Vuelto» según si lo cobrado ya cubre el
+  // documento. Un importe disparatado aplicado sin querer convertía el botón
+  // «Pago» en «Vuelto» y el paso que pedía aplicar el pago se volvía imposible.
+  // Se vacían: el colaborador vuelve a cobrar, que es lo que dice su caso.
+  payments: [],
+  vueltoGiven: false,
+  // La pestaña del punto de venta. Irse a «Devolución» en un módulo de venta
+  // normal escondía la búsqueda de artículos y del cliente.
+  posTab: 'Venta',
+};
+
+/**
+ * Devuelve las pantallas al estado desde el que el paso en curso SÍ se puede
+ * completar, sin retroceder pasos ni borrar el avance de la transacción.
+ *
+ * Es la salida garantizada. Primero se quita el estorbo (ventanas abiertas,
+ * forma de pago a medias) y después se repone lo que el propio paso exige, que
+ * puede ser justamente una de esas ventanas.
+ */
+export function reacomodarParaElPaso(step: Step | null | undefined, appState: AppState): AppState {
+  return reencuadrarPaso(step, { ...appState, ...ESTADO_ESTORBO });
 }
 
 const formatElapsed = (startTime: number | null) => {
@@ -369,7 +421,7 @@ export const SimulatorProvider = ({
       // El índice del estado vuelve a alinearse con el de la referencia: si se
       // hubieran desincronizado, la pantalla mostrada dejaría de ser la del paso.
       currentStepIndex: currentStepIndexRef.current,
-      appState: reencuadrarPaso(paso, prev.appState),
+      appState: reacomodarParaElPaso(paso, prev.appState),
       processSteps: [
         ...prev.processSteps,
         { action: 'Reacomodó las pantallas', time: formatElapsed(prev.startTime) },

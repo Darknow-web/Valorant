@@ -122,19 +122,41 @@ async function sabotear(page, contador) {
  * cumplidos son inofensivas (el simulador permite repetir un paso cumplido),
  * y las que faltan lo llevan hasta el final.
  */
+/** Al repasar el camino no hace falta esperar tanto: ver `ejecutar`. */
+const PACIENCIA_REPASO = 1500;
+
 async function terminaIgual(page, moduleId) {
-  for (const accion of CAMINOS[moduleId]) {
-    try {
-      await ejecutar(page, accion);
-    } catch {
-      // Un control que ya no está puede ser normal (el paso quedó atrás).
-      // Lo que decide es si el módulo llega a completarse.
-    }
+  // Primero lo mismo que haría el colaborador perdido, y lo mismo que le dice
+  // la aplicación: pulsar «Reacomodar pantallas». Es la salida garantizada, y
+  // por eso es justo lo que esta prueba tiene que verificar que funciona: no
+  // retrocede pasos, no borra errores, no gasta intento.
+  const reacomodar = page.getByRole('button', { name: 'Reacomodar las pantallas' });
+  if (await visible(reacomodar, 1500)) {
+    await reacomodar.click().catch(() => {});
+    await page.waitForTimeout(500);
     await cerrarAviso(page);
-    // Comprobación instantánea entre acciones: esperar aquí multiplicaría por
-    // el número de pasos el tiempo de toda la prueba.
-    if (await page.getByRole('heading', { name: /Módulo completado|¡Muy bien!|Casi lo tienes/ }).first().isVisible()) {
-      return true;
+  }
+
+  // Dos vueltas al camino. Una persona que sabe lo que hace reintenta lo que no
+  // le salió a la primera; el guion tiene que poder hacer lo mismo, o acusaría
+  // de atasco a pantallas perfectamente utilizables. Los desplegables llevan la
+  // espera normal: abrirlos y elegir es una secuencia de dos tiempos.
+  for (let vuelta = 0; vuelta < 2; vuelta++) {
+    for (const accion of CAMINOS[moduleId]) {
+      const paciencia =
+        accion.tipo === 'abrirDesplegable' || accion.tipo === 'elegirOpcion' ? 4000 : PACIENCIA_REPASO;
+      try {
+        await ejecutar(page, accion, paciencia);
+      } catch {
+        // Un control que ya no está puede ser normal (el paso quedó atrás).
+        // Lo que decide es si el módulo llega a completarse.
+      }
+      await cerrarAviso(page);
+      // Comprobación instantánea entre acciones: esperar aquí multiplicaría por
+      // el número de pasos el tiempo de toda la prueba.
+      if (await page.getByRole('heading', { name: /Módulo completado|¡Muy bien!|Casi lo tienes/ }).first().isVisible()) {
+        return true;
+      }
     }
   }
   return estaCompletado(page, 9000);

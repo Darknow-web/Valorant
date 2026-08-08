@@ -97,15 +97,23 @@ export async function entrarAlModulo(page, moduleId) {
   await page.locator('#simulador-marco, .frame').first().waitFor({ timeout: 8000 });
 }
 
-const ESPERA = { timeout: 6000 };
+const ESPERA_NORMAL = 6000;
 
-/** Ejecuta una acción del solver sobre la página. */
-export async function ejecutar(page, accion) {
+/**
+ * Ejecuta una acción del solver sobre la página.
+ *
+ * `paciencia` baja el tiempo de espera. Al REPETIR un camino (la prueba
+ * anti-atascos lo hace en cada caso) muchas acciones corresponden a pasos ya
+ * cumplidos y sus controles ya no están: esperarlas 6 s a cada una convertía la
+ * prueba en horas de nada.
+ */
+export async function ejecutar(page, accion, paciencia = ESPERA_NORMAL) {
+  const ESPERA = { timeout: paciencia };
   switch (accion.tipo) {
     case 'clic': {
       const objetivo = page.locator(`#${accion.id}`).nth(accion.indice ?? 0);
       await objetivo.waitFor(ESPERA);
-      await objetivo.click({ timeout: 6000 });
+      await objetivo.click({ timeout: paciencia });
       break;
     }
     case 'escribirEn': {
