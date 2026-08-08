@@ -67,14 +67,16 @@ async function sabotear(page, contador) {
     .locator('#root button:visible, #root [id]:visible')
     .evaluateAll((nodos) =>
       nodos
+        // La barra del simulador es del marco de entrenamiento, no del sistema
+        // de caja: salir del módulo o reiniciarlo no es "equivocarse dentro del
+        // módulo", es otra cosa. Se excluye por su marca y no por el texto de
+        // sus botones, que cambia con el ancho de la pantalla.
+        .filter((n) => !n.closest('[data-barra-simulador]'))
         .map((n) => ({
           id: n.id || '',
           texto: (n.textContent || '').trim().slice(0, 24),
           etiqueta: n.tagName,
         }))
-        // La barra del simulador es del marco de entrenamiento, no del POS:
-        // salir o reiniciar no es "equivocarse dentro del módulo".
-        .filter((n) => !['Salir', 'Reacomodar', 'Volver a empezar', 'Pedir pista'].includes(n.texto))
         .filter((n) => n.id !== 'root')
     );
 
@@ -84,7 +86,12 @@ async function sabotear(page, contador) {
     const selector = objetivo.id ? `[id="${objetivo.id.replace(/"/g, '\\"')}"]` : null;
     try {
       if (selector) {
-        await page.locator(selector).first().click({ timeout: 1200, force: true });
+        // Sin `force`: si el botón está tapado por una ventana modal, Playwright
+        // se niega a pulsarlo, que es exactamente lo que le pasa a un dedo. Con
+        // `force` el guion atravesaba el modal de autorización y pulsaba el
+        // «Pago» de detrás, y luego acusaba de atasco a una pantalla en la que
+        // nadie habría podido meterse en ese lío.
+        await page.locator(selector).first().click({ timeout: 1200 });
       } else if (objetivo.texto) {
         await page.getByRole('button', { name: objetivo.texto, exact: true }).first().click({ timeout: 1200 });
       }

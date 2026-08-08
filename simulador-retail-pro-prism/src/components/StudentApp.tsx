@@ -4,6 +4,7 @@ import { useSimulator } from '../store/SimulatorContext';
 import { StudentInfoModal } from './StudentInfoModal';
 import { PreambuloHistoria } from './PreambuloHistoria';
 import { ScenarioBriefing, ScenarioDrawer } from './ScenarioBriefing';
+import { RankingColaboradores } from './RankingColaboradores';
 import { SimulatorHeader } from './SimulatorHeader';
 import { SimulatorViewport } from './SimulatorViewport';
 import { ScreenManager } from './ScreenManager';
@@ -329,7 +330,7 @@ const AvisoDeCierre = ({
         ) : (
           <button
             onClick={() => setConfirmandoReinicio(true)}
-            className="text-sm font-semibold text-white/55 underline-offset-4 hover:text-white hover:underline"
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-white/55 underline-offset-4 hover:text-white hover:underline"
           >
             Reiniciar toda la capacitación
           </button>
@@ -464,7 +465,7 @@ const TelonFinal = ({
           animate={{ opacity: 1 }}
           transition={{ delay: 1.1 }}
           onClick={onVolver}
-          className="mx-auto mt-9 text-sm font-semibold text-white/60 underline-offset-4 hover:text-white hover:underline"
+          className="mx-auto mt-7 inline-flex min-h-11 items-center text-sm font-semibold text-white/60 underline-offset-4 hover:text-white hover:underline"
         >
           Volver a la lista de módulos
         </motion.button>
@@ -478,11 +479,13 @@ const ModuleMenu = ({
   progreso,
   onFinalizar,
   onReiniciarTodo,
+  onVerRanking,
 }: {
   onPick: (moduleId: string) => void;
   progreso: Progreso;
   onFinalizar: () => void;
   onReiniciarTodo: () => void;
+  onVerRanking: () => void;
 }) => {
   const { modulesData, operatorName, operatorStore, clearOperator } = useSimulator();
   const total = modulesData.length;
@@ -616,6 +619,16 @@ const ModuleMenu = ({
                 {hechos}/{total}
               </span>
             </div>
+
+            {/* El ranking se abre desde aquí y no desde el final de la lista:
+                en celular, el pie del menú queda a catorce tarjetas de
+                distancia y nadie baja hasta allí. */}
+            <button
+              onClick={onVerRanking}
+              className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-line-strong px-3 py-2.5 text-sm font-semibold text-brand transition-colors hover:bg-brand-soft"
+            >
+              <span aria-hidden>🏆</span> Ver el ranking
+            </button>
           </div>
         </div>
 
@@ -624,7 +637,7 @@ const ModuleMenu = ({
             Colaborador: <span className="font-semibold text-ink">{operatorName}</span>
           </span>
           {operatorStore && <Badge tone="sand">{operatorStore}</Badge>}
-          <button onClick={clearOperator} className="font-semibold text-brand hover:underline">
+          <button onClick={clearOperator} className="inline-flex min-h-11 items-center px-1 font-semibold text-brand hover:underline">
             Cambiar
           </button>
         </div>
@@ -686,6 +699,7 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
   const [progresoCargado, setProgresoCargado] = useState(false);
   const [preambuloListo, setPreambuloListo] = useState(false);
   const [verTelon, setVerTelon] = useState(false);
+  const [verRanking, setVerRanking] = useState(false);
 
   const identidad = { teacher: teacherUsername, dni: operatorDni };
 
@@ -766,6 +780,14 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
     );
   }
 
+  if (status === 'menu' && verRanking) {
+    return (
+      <Page>
+        <RankingColaboradores dni={operatorDni} onVolver={() => setVerRanking(false)} />
+      </Page>
+    );
+  }
+
   // El telón sale cuando el colaborador cierra el turno, y también al volver a
   // entrar si ya lo había cerrado: la capacitación tiene un final visible.
   if (status === 'menu' && (verTelon || (progreso.finalizado && !briefingModuleId))) {
@@ -818,6 +840,7 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
               setProgreso((p) => ({ ...p, finalizado: true }));
               setVerTelon(true);
             }}
+            onVerRanking={() => setVerRanking(true)}
             onReiniciarTodo={async () => {
               await reiniciarCapacitacion(identidad);
               setVerTelon(false);

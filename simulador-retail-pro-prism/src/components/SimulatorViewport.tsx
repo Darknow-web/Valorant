@@ -67,7 +67,7 @@ export const SimulatorViewport = ({ children }: { children: React.ReactNode }) =
   }
 
   return (
-    <div ref={containerRef} className="relative min-h-0 flex-1 overflow-hidden">
+    <div ref={containerRef} data-pos className="relative min-h-0 flex-1 overflow-hidden">
       {showRotatePrompt ? (
         <RotatePrompt onContinue={() => setForceFullSize(true)} />
       ) : (

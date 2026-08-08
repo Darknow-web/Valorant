@@ -22,6 +22,23 @@ export const BASE = `http://127.0.0.1:${PUERTO}`;
 
 /** Arranca el servidor compilado con un almacén local limpio. */
 export async function arrancarServidor() {
+  // Si el puerto ya responde es que quedó un servidor de una ejecución anterior
+  // que se cortó. Antes esto pasaba desapercibido y la prueba se ejecutaba
+  // contra el build VIEJO: fallaba por cosas ya arregladas, o peor, pasaba por
+  // cosas que ya no funcionaban.
+  try {
+    const previo = await fetch(`${BASE}/api/health`);
+    if (previo.ok) {
+      throw new Error(
+        `Ya hay algo escuchando en ${BASE}. Es un servidor de una ejecución anterior: ` +
+          'ciérralo con `pkill -f dist/server.cjs` antes de volver a probar.'
+      );
+    }
+  } catch (e) {
+    if (String(e.message).includes('Ya hay algo escuchando')) throw e;
+    // Cualquier otro error significa que el puerto está libre, que es lo normal.
+  }
+
   const almacen = path.join(RAIZ, 'local_data.json');
   if (fs.existsSync(almacen)) fs.rmSync(almacen);
 

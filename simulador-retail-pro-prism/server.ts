@@ -710,6 +710,135 @@ app.get('/api/my-progress', async (req, res) => {
   });
 });
 
+/**
+ * Los diez colaboradores con mejor turno de toda la empresa.
+ *
+ * Se agrupa por DNI y no por entrenador: quien entrenó con dos entrenadores es
+ * una sola persona en la tabla. El orden lo decide, en este orden, cuántos
+ * módulos completó, su promedio y el tiempo que le tomó — así terminar el turno
+ * entero pesa más que sacar un 20 en un solo módulo, que es lo que hace que la
+ * competencia empuje hacia donde interesa.
+ *
+ * La respuesta NUNCA lleva el DNI de nadie. Es un endpoint público (el
+ * colaborador no tiene sesión), así que solo salen nombre y tienda, que es lo
+ * que el propio ranking necesita para motivar.
+ */
+const CUANTOS_EN_EL_RANKING = 10;
+const CACHE_RANKING_MS = 60_000;
+
+interface FilaRanking {
+  dni: string;
+  nombre: string;
+  tienda: string;
+  modulos: number;
+  promedio: number;
+  segundos: number;
+}
+
+let cacheRanking: { calculadoEn: number; filas: FilaRanking[] } | null = null;
+
+async function calcularRanking(): Promise<FilaRanking[]> {
+  if (cacheRanking && Date.now() - cacheRanking.calculadoEn < CACHE_RANKING_MS) {
+    return cacheRanking.filas;
+  }
+
+  const users = await readUsers();
+  // { dni: { nombre, tienda, entrenadores, mejores: { moduleId: {score, segundos, cuando} } } }
+  const personas = new Map<string, any>();
+
+  for (const user of users) {
+    const logs = await readStudentLogs(user.username);
+    for (const log of logs) {
+      const dni = String(log.studentDni || '').trim();
+      const moduleId = String(log.moduleId || '').trim();
+      if (!dni || !moduleId) continue;
+      if (!isValidLog(log)) continue;
+
+      let persona = personas.get(dni);
+      if (!persona) {
+        persona = { dni, nombre: '', tienda: '', entrenadores: new Set<string>(), mejores: {} as Record<string, any> };
+        personas.set(dni, persona);
+      }
+      persona.entrenadores.add(user.username);
+      // Se queda el nombre y la tienda del intento más reciente.
+      const cuando = Number(log.registradoEn || 0);
+      if (!persona.ultimoDato || cuando >= persona.ultimoDato) {
+        persona.ultimoDato = cuando;
+        persona.nombre = String(log.studentName || '').trim() || persona.nombre;
+        persona.tienda = String(log.storeName || '').trim() || persona.tienda;
+      }
+
+      const anterior = persona.mejores[moduleId];
+      const score = Number(log.score) || 0;
+      if (!anterior || score > anterior.score) {
+        persona.mejores[moduleId] = { score, segundos: Number(log.totalSeconds) || 0, cuando };
+      }
+    }
+  }
+
+  // Quien reinició su capacitación arranca de cero también aquí: sus intentos
+  // anteriores dejan de contar, igual que en su propio avance.
+  for (const persona of personas.values()) {
+    let reiniciadoEn = 0;
+    for (const entrenador of persona.entrenadores) {
+      const estado = await readEstado(entrenador, persona.dni);
+      if (Number(estado.reiniciadoEn) > reiniciadoEn) reiniciadoEn = Number(estado.reiniciadoEn);
+    }
+    if (!reiniciadoEn) continue;
+    for (const [moduleId, mejor] of Object.entries<any>(persona.mejores)) {
+      if (mejor.cuando < reiniciadoEn) delete persona.mejores[moduleId];
+    }
+  }
+
+  const filas: FilaRanking[] = [];
+  for (const persona of personas.values()) {
+    const mejores = Object.values<any>(persona.mejores);
+    if (!mejores.length) continue;
+    const suma = mejores.reduce((a, m) => a + m.score, 0);
+    filas.push({
+      dni: persona.dni,
+      nombre: persona.nombre,
+      tienda: persona.tienda,
+      modulos: mejores.length,
+      promedio: Math.round((suma / mejores.length) * 10) / 10,
+      segundos: mejores.reduce((a, m) => a + m.segundos, 0),
+    });
+  }
+
+  filas.sort(
+    (a, b) => b.modulos - a.modulos || b.promedio - a.promedio || a.segundos - b.segundos
+  );
+
+  cacheRanking = { calculadoEn: Date.now(), filas };
+  return filas;
+}
+
+app.get('/api/ranking', async (req, res) => {
+  const dni = String(req.query.dni || '').trim();
+  const filas = await calcularRanking();
+
+  // El DNI se usa solo para señalar la fila propia, y jamás se devuelve.
+  const publica = (fila: FilaRanking, puesto: number) => ({
+    puesto,
+    nombre: fila.nombre,
+    tienda: fila.tienda,
+    modulos: fila.modulos,
+    promedio: fila.promedio,
+    segundos: fila.segundos,
+    esTu: !!dni && fila.dni === dni,
+  });
+
+  const top = filas.slice(0, CUANTOS_EN_EL_RANKING).map((f, i) => publica(f, i + 1));
+
+  // Si el colaborador quedó fuera del top, se le devuelve su fila aparte con su
+  // puesto real: un ranking que no te dice dónde estás desanima en vez de picar.
+  const miIndice = dni ? filas.findIndex((f) => f.dni === dni) : -1;
+  const tuFila =
+    miIndice >= CUANTOS_EN_EL_RANKING ? publica(filas[miIndice], miIndice + 1) : null;
+
+  res.json({ top, tuFila, totalColaboradores: filas.length });
+});
+
 const PROGRESO_VACIO_SERVIDOR = {
   modulos: {},
   promedio: null,
@@ -1212,6 +1341,11 @@ app.post('/api/submit-score', async (req, res) => {
 
   existing.unshift(newLog);
   await writeStudentLogs(teacher, existing.slice(0, 500));
+
+  // La tabla de los diez mejores acaba de quedar desactualizada. Sin esto, un
+  // colaborador que termina su módulo y entra al ranking se ve todavía sin la
+  // nota que acaba de sacar, que es justo cuando más ganas tiene de mirarla.
+  cacheRanking = null;
 
   // Terminar el módulo consume un intento y cierra el guardado a medias.
   const usados = usadosAntes + 1;

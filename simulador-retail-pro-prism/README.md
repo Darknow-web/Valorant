@@ -146,6 +146,20 @@ lo que asegura que ninguna combinación de clics pueda dejar a un colaborador en
 
 El límite lo hace cumplir el servidor, no el navegador: recargar la página no lo esquiva.
 
+### El ranking de los diez mejores
+
+Desde el botón **«Ver el ranking»**, junto a su promedio, el colaborador ve la tabla de los diez
+mejores turnos **de toda la empresa** (`GET /api/ranking`). Manda quien completó más módulos; a
+igualdad de módulos, el promedio; y si también empatan, el tiempo — así terminar el turno entero
+pesa más que sacar un 20 suelto.
+
+Los tres primeros van en un podio y del cuarto al décimo en una lista. Quien queda fuera del top
+ve su fila al final, con su puesto real: un ranking que no te dice dónde estás desanima en vez de
+picar.
+
+Se publican **nombre y tienda**, nunca el DNI: el endpoint es público, igual que el enlace del
+colaborador. El resultado se cachea 60 segundos y se refresca en cuanto alguien registra una nota.
+
 ### La nota final y el cierre
 
 La nota final es el **promedio del mejor intento de cada módulo**: repetir un módulo siempre
@@ -215,10 +229,17 @@ Necesitan el proyecto compilado (`npm run build`) y Playwright con el Chromium d
 ```bash
 node tests/e2e-iconos.mjs         # los 32 badges son discos, sin agujeros dentro
 node tests/e2e-datos.mjs          # qué es compartido, qué es de cada uno, quién puede tocar Sheets
+node tests/e2e-ranking.mjs        # orden del ranking, top 10 y que no se publique ningún DNI
 node tests/e2e-camino-feliz.mjs   # los 14 módulos se terminan haciendo lo correcto
 node tests/e2e-intentos.mjs       # los dos intentos, salir a medias y volver a empezar
+node tests/e2e-movil.mjs          # todas las pantallas en dos tamaños de teléfono
 node tests/e2e-atascos.mjs        # NINGÚN error deja un módulo atascado (el largo)
 ```
+
+`e2e-movil.mjs` recorre las pantallas a 360×740 y 390×844 y exige cuatro cosas: que la página no
+se desplace en horizontal, que ningún texto quede cortado, que todo lo que se pulsa mida 40 px y
+que la barra del simulador no pase de 72 px de alto. Las pantallas del POS quedan fuera del
+control de tamaño táctil: replican el sistema real y se usan con zoom, a propósito.
 
 `e2e-atascos.mjs` es la prueba que da la garantía: para cada módulo y cada paso, llega hasta ese
 paso, pulsa a lo tonto todo lo que hay en pantalla —incluidos los «No» y «Cancelar» de los
@@ -248,4 +269,6 @@ secuencia exacta de clics.
 - `src/lib/estadoModulo.ts` — guardar y retomar un módulo a medias, y gastar intentos.
 - `src/lib/progreso.ts` — avance, intentos restantes y qué se puede repetir.
 - `scripts/redondear-iconos.py` — deja los badges como discos perfectos (se corre a mano).
+- `src/components/RankingColaboradores.tsx` — el podio y la tabla de los diez mejores.
+- `src/lib/ranking.ts` — consulta del ranking y formato del tiempo.
 - `tests/` — pruebas de extremo a extremo; ver «Pruebas».

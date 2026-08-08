@@ -16,3 +16,5 @@ tests/atasco-*.png
 
 # Hojas de contacto del script de iconos
 scripts/revision/
+
+tests/movil/

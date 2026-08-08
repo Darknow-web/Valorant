@@ -40,7 +40,7 @@ es documentación viva**. Si no, bórralo y dilo en tu resumen.
 
 ## Qué se acaba de cambiar (no lo deshagas)
 
-Esta es la ronda 8. Los cambios que ya están hechos y probados:
+Esta es la ronda 9. Los cambios que ya están hechos y probados:
 
 1. **Iconos.** Los 32 badges de `src/assets/iconos/modulos/` y `errores/` son ahora **discos
    perfectos**. Se arregló el icono final (`modulos/8.webp`), donde el recorte de fondo se había
@@ -68,7 +68,16 @@ Esta es la ronda 8. Los cambios que ya están hechos y probados:
    panel del administrador muestra una franja roja cuando es local. Hay migración automática del
    archivo local a Firestore la primera vez. Guía en `docs/conectar-firebase.md`.
 
-6. **Relato.** Preámbulo personalizado (`src/components/PreambuloHistoria.tsx`), frase de
+6. **Ranking.** `GET /api/ranking` devuelve los diez mejores de toda la empresa (módulos
+   completados → promedio → tiempo), sin publicar ningún DNI, y se ve desde «Ver el ranking» en
+   el menú del colaborador.
+
+7. **Celular.** La barra del simulador recorta el título y agrupa «Reacomodar» y «Volver a
+   empezar» tras un menú «⋯»; los datos del caso van a una columna. Todo está cubierto por
+   `tests/e2e-movil.mjs`, que exige que no haya desbordes, ni texto cortado, ni botones por
+   debajo de 40 px, ni una barra de más de 72 px de alto.
+
+8. **Relato.** Preámbulo personalizado (`src/components/PreambuloHistoria.tsx`), frase de
    enganche entre casos (`enlace` en `src/data/scenarios.ts`), menú agrupado en mañana / tarde /
    cierre, y cierre del turno con celebración a pantalla completa o mensaje de ánimo.
 
@@ -81,8 +90,10 @@ npm run build
 
 node tests/e2e-iconos.mjs         # 32 iconos: discos, sin agujeros dentro
 node tests/e2e-datos.mjs          # qué es compartido y quién puede tocar Sheets
+node tests/e2e-ranking.mjs        # orden del ranking y que no se publique ningún DNI
 node tests/e2e-camino-feliz.mjs   # los 14 módulos se terminan
 node tests/e2e-intentos.mjs       # los dos intentos y el guardado a medias
+node tests/e2e-movil.mjs          # todas las pantallas en dos tamaños de teléfono
 node tests/e2e-atascos.mjs        # ningún error atasca un módulo (tarda ~1 h)
 ```
 

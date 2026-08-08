@@ -48,8 +48,8 @@ const FichaDato = ({ dato }: { dato: Evidencia }) => {
       title="Copiar"
       className="group relative h-full w-full rounded-xl border border-line bg-raised px-4 py-3 text-left transition-colors hover:border-brand/40 hover:bg-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
     >
-      <p className="etiqueta pr-16 text-ink-subtle">{dato.etiqueta}</p>
-      <p className="cifra mt-1 break-all text-[17px] font-bold leading-snug text-navy">{dato.valor}</p>
+      <p className="etiqueta pr-14 text-ink-subtle">{dato.etiqueta}</p>
+      <p className="cifra mt-1 break-words text-[17px] font-bold leading-snug text-navy">{dato.valor}</p>
       {/* El aviso va superpuesto: si reservara su línea, cada ficha crecería
           una altura que en el celular no compensa. */}
       <span
@@ -69,9 +69,14 @@ const Evidencias = ({ scenario, compacto = false }: { scenario: ResolvedScenario
   return (
     <div>
       <h2 className="etiqueta mb-2 text-ink-muted">Los datos del caso</h2>
+      {/* Una sola columna en celular. Con dos, cada ficha medía ~170 px: la
+          etiqueta se partía en tres líneas y un SKU de 13 dígitos se cortaba por
+          la mitad, que es justo lo que no puede pasar con un dato que hay que
+          teclear. El cajón lateral sí mantiene sus dos columnas: ahí los datos
+          ya se consultan de un vistazo. */}
       <motion.div
         variants={cascada(0.05)}
-        className={compacto ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-2 gap-2 sm:grid-cols-2'}
+        className={compacto ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-1 gap-2 sm:grid-cols-2'}
       >
         {scenario.evidencias.map((dato) => (
           <motion.div key={dato.clave} variants={elemento}>
@@ -107,7 +112,7 @@ export const ScenarioBriefing = ({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-7 sm:py-14">
-      <button onClick={onBack} className="mb-8 text-sm font-semibold text-brand hover:underline">
+      <button onClick={onBack} className="mb-6 inline-flex min-h-11 items-center text-sm font-semibold text-brand hover:underline">
         ← Volver a los módulos
       </button>
 
@@ -240,7 +245,7 @@ export const ScenarioDrawer = ({
             <p className="etiqueta text-brand">El caso</p>
             <h2 className="mt-1 text-2xl font-extrabold leading-tight text-navy">{scenario.titulo}</h2>
           </div>
-          <button onClick={onClose} className="shrink-0 text-sm font-semibold text-brand hover:underline">
+          <button onClick={onClose} className="shrink-0 inline-flex min-h-11 items-center px-2 text-sm font-semibold text-brand hover:underline">
             Cerrar
           </button>
         </div>

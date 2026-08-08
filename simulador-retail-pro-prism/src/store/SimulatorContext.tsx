@@ -499,8 +499,20 @@ export const SimulatorProvider = ({
     const step = mod?.steps[state.currentStepIndex];
     if (!step || step.targetId !== 'auto') return;
 
-    const timer = setTimeout(() => handleInteractRef.current?.('auto'), 800);
-    return () => clearTimeout(timer);
+    // Se REINTENTA hasta que el paso avance de verdad.
+    //
+    // Un paso "auto" no tiene botón: si su único disparo se perdiera —porque
+    // justo en ese instante había un avance en curso y el clic se ignoró—, el
+    // módulo se quedaba parado para siempre en «Revisa que la transacción se ha
+    // completado», sin nada que el colaborador pudiera pulsar para salir. Y es
+    // el último paso de casi todos los módulos, así que se perdía el intento
+    // entero. Con el reintento, el paso automático siempre termina cumpliéndose.
+    const primero = setTimeout(() => handleInteractRef.current?.('auto'), 800);
+    const insistir = setInterval(() => handleInteractRef.current?.('auto'), 600);
+    return () => {
+      clearTimeout(primero);
+      clearInterval(insistir);
+    };
   }, [state.currentStepIndex, state.status, state.currentModuleId]);
 
   // Sostiene el estado que el paso en curso necesita (`keepState`).
