@@ -158,6 +158,59 @@ try {
       await contexto.close();
     }
   }
+  // ------------------------------------------------------------------
+  // Módulo 5: cubrir todo el documento con la tarjeta y arreglarlo
+  // ------------------------------------------------------------------
+  // El pago mixto es el caso más fácil de hacer mal: si la tarjeta cubre el
+  // documento entero, ya no queda saldo pendiente, así que aplicar el efectivo
+  // que el caso pide no crea ningún pago y el paso de cierre —que exige los
+  // dos— no se puede cumplir. La salida es anular y volver a cobrar en el orden
+  // correcto, y el aviso del paso lo dice con esas palabras. Aquí se comprueba
+  // que esa salida existe de verdad.
+  console.log('\n  m5 · la tarjeta cubrió todo el documento');
+  {
+    const contexto = await navegador.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await contexto.newPage();
+    const camino = CAMINOS.m5;
+
+    try {
+      await entrarComoColaborador(page, { dni: '64000005' });
+      await entrarAlModulo(page, 'm5');
+
+      const desdeElEfectivo = camino.findIndex((a) => a.tipo === 'escribirEtiqueta');
+      const trasElEfectivo = camino.findIndex((a) => a.id === 'pay-btn-apply') + 1;
+
+      // El efectivo parcial, bien hecho. Hasta aquí todo correcto.
+      for (const accion of camino.slice(0, trasElEfectivo)) {
+        await ejecutar(page, accion);
+        await cerrarAviso(page);
+      }
+
+      // Y ahora el descuido: lo anula. El paso del efectivo ya está dado por
+      // bueno, así que el módulo pasa al de la tarjeta sin ningún pago hecho, y
+      // la tarjeta se lleva el documento entero.
+      comprobar('m5: se puede anular el efectivo ya aplicado', await anularPrimerPago(page));
+      for (const accion of camino.slice(trasElEfectivo)) {
+        await ejecutar(page, accion);
+        await cerrarAviso(page);
+      }
+      comprobar('m5: con la tarjeta cubriéndolo todo NO se cierra', !(await estaCompletado(page, 2500)));
+      await cerrarAviso(page);
+
+      // La salida: anular ese pago y cobrar en el orden que pide el caso.
+      comprobar('m5: se puede anular el pago de más', await anularPrimerPago(page));
+      for (const accion of camino.slice(desdeElEfectivo)) {
+        await ejecutar(page, accion);
+        await cerrarAviso(page);
+      }
+      comprobar('m5: anulando y cobrando en orden, el módulo se termina', await estaCompletado(page));
+    } catch (e) {
+      comprobar('m5: recorrido completo', false, e.message.split('\n')[0]);
+      await page.screenshot({ path: 'tests/deshacer-m5.png', fullPage: true }).catch(() => {});
+    } finally {
+      await contexto.close();
+    }
+  }
 } finally {
   await navegador.close();
   pararServidor(servidor);
