@@ -132,11 +132,17 @@ async function sabotear(page, contador) {
 /** Al repasar el camino no hace falta esperar tanto: ver `ejecutar`. */
 const PACIENCIA_REPASO = 1500;
 
-async function terminaIgual(page, moduleId) {
-  // Primero lo mismo que haría el colaborador perdido, y lo mismo que le dice
-  // la aplicación: pulsar «Reacomodar pantallas». Es la salida garantizada, y
-  // por eso es justo lo que esta prueba tiene que verificar que funciona: no
-  // retrocede pasos, no borra errores, no gasta intento.
+/**
+ * Deshace el estorbo con las dos salidas gratuitas y a la vista que tiene el
+ * colaborador: «Reacomodar pantallas» y «Anular» sobre los pagos que sobren.
+ *
+ * Las dos hacen falta, y en este orden. «Reacomodar» cierra ventanas y deshace
+ * la forma de pago a medio elegir, pero ya no vacía los pagos —vaciarlos se
+ * llevaba por delante los buenos—, así que un cobro equivocado solo se quita
+ * con «Anular», que es exactamente lo que le dice el aviso del paso de cierre
+ * cuando el documento quedó cobrado por donde no era.
+ */
+async function deshacerElEstorbo(page) {
   const reacomodar = page.getByRole('button', { name: 'Reacomodar las pantallas' });
   if (await visible(reacomodar, 1500)) {
     await reacomodar.click().catch(() => {});
@@ -144,24 +150,27 @@ async function terminaIgual(page, moduleId) {
     await cerrarAviso(page);
   }
 
-  // Y después «Anular» sobre los pagos que hayan quedado sueltos. Es la otra
-  // salida gratuita y a la vista que tiene el colaborador, y desde que
-  // «Reacomodar» ya no vacía los pagos —vaciarlos se llevaba por delante los
-  // buenos— es la que corresponde para deshacer un cobro equivocado. El guion
-  // tiene que usar las mismas salidas que la persona, o mide algo que no existe.
-  for (let intento = 0; intento < 4; intento++) {
+  for (let intento = 0; intento < 6; intento++) {
     const anular = page.getByRole('button', { name: 'Anular', exact: true }).first();
     if (!(await visible(anular, 800))) break;
     await anular.click().catch(() => {});
     await page.waitForTimeout(300);
     await cerrarAviso(page);
   }
+}
 
+async function terminaIgual(page, moduleId) {
   // Dos vueltas al camino. Una persona que sabe lo que hace reintenta lo que no
   // le salió a la primera; el guion tiene que poder hacer lo mismo, o acusaría
   // de atasco a pantallas perfectamente utilizables. Los desplegables llevan la
   // espera normal: abrirlos y elegir es una secuencia de dos tiempos.
+  //
+  // Y cada vuelta empieza deshaciendo el estorbo, no solo la primera: al repasar
+  // el camino se vuelven a aplicar cobros, y si la vuelta anterior dejó el
+  // documento pagado de más, lo que toca es anular y volver a cobrar — que es
+  // lo que haría cualquiera en una caja.
   for (let vuelta = 0; vuelta < 2; vuelta++) {
+    await deshacerElEstorbo(page);
     for (const accion of CAMINOS[moduleId]) {
       const paciencia =
         accion.tipo === 'abrirDesplegable' || accion.tipo === 'elegirOpcion' ? 4000 : PACIENCIA_REPASO;

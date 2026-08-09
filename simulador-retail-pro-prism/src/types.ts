@@ -89,8 +89,16 @@ export interface AppState {
   applyPriceLevelToExisting?: boolean;
   authCode?: string;
   showAuthModal?: boolean;
-  showNCTransferenciaModal?: boolean;
+  /**
+   * A qué agregador se le está cobrando en la ventana del código.
+   *
+   * No se puede deducir de `selectedPaymentMethod`: «Reacomodar pantallas» lo
+   * devuelve a 'Efectivo' —tiene que hacerlo, o los botones de RAPPI y PEDIDOS
+   * YA desaparecen—, y entonces el OK de la ventana creaba el cobro a nombre de
+   * Efectivo. El pedido quedaba cobrado por donde no era y el módulo no cerraba.
+   */
   authMethod?: string;
+  showNCTransferenciaModal?: boolean;
   showNewCustomerModal?: boolean;
   newCustomerName?: string;
   newCustomerLastName?: string;

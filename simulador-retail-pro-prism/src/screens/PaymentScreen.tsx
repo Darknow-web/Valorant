@@ -177,13 +177,26 @@ export const PaymentScreen = () => {
                       // seleccionado: dejándola en 'RAPPI' desaparecían de la
                       // pantalla para siempre. Es lo mismo que ya hace el
                       // ACEPTAR de la ventana de NC Transferencia.
-                      const metodo = appState.selectedPaymentMethod;
+                      // El agregador sale de `authMethod`, no de la forma de pago
+                      // seleccionada: «Reacomodar pantallas» devuelve esa a
+                      // 'Efectivo' —tiene que hacerlo, o los botones de RAPPI y
+                      // PEDIDOS YA desaparecen de la pantalla—, y entonces este
+                      // OK creaba el cobro a nombre de Efectivo. El pedido
+                      // quedaba cobrado por donde no era, el paso de cierre lo
+                      // rechazaba con razón y no había manera de arreglarlo.
+                      const metodo = appState.authMethod || appState.selectedPaymentMethod;
                       const amount = Number(appState.takeAmount || pending);
                       setAppState({
                          showAuthModal: false,
                          authCode: '',
+                         authMethod: '',
                          selectedPaymentMethod: 'Efectivo',
-                         payments: [...appState.payments, { method: metodo, amount }],
+                         // Un cobro de cero no es un cobro: si el documento ya
+                         // está cubierto por otro pago, lo que hay que hacer es
+                         // anular ese, y eso es justo lo que dice el aviso del
+                         // paso de cierre. Crear aquí un RAPPI de S/.0.00 solo
+                         // taparía el problema.
+                         payments: amount > 0 ? [...appState.payments, { method: metodo, amount }] : appState.payments,
                       });
                   }} className="bg-gradient-to-b from-[#666] to-[#444] hover:from-[#777] hover:to-[#555] text-white px-4 py-1.5 border border-black rounded-[5px] shadow-sm text-[12px] font-bold">OK</button>
                 </Interactive>
@@ -419,13 +432,13 @@ export const PaymentScreen = () => {
               <div className="flex space-x-1">
                  <Interactive id="pay-btn-rappi-pedidos" value="RAPPI" className="flex-1">
                      <button onClick={() => {
-                        setAppState({ showAuthModal: true, selectedPaymentMethod: 'RAPPI' });
+                        setAppState({ showAuthModal: true, selectedPaymentMethod: 'RAPPI', authMethod: 'RAPPI' });
                         handleInteract('pay-btn-rappi-pedidos', 'RAPPI');
                      }} className="w-full h-full bg-gradient-to-b from-[#6c86a1] to-[#4a637d] text-white py-1.5 text-[12px] shadow-sm rounded-sm border border-[#4a637d]">RAPPI</button>
                  </Interactive>
                  <Interactive id="pay-btn-rappi-pedidos" value="PEDIDOS YA" className="flex-1">
                      <button onClick={() => {
-                        setAppState({ showAuthModal: true, selectedPaymentMethod: 'PEDIDOS YA' });
+                        setAppState({ showAuthModal: true, selectedPaymentMethod: 'PEDIDOS YA', authMethod: 'PEDIDOS YA' });
                         handleInteract('pay-btn-rappi-pedidos', 'PEDIDOS YA');
                      }} className="w-full h-full bg-gradient-to-b from-[#6c86a1] to-[#4a637d] text-white py-1.5 text-[12px] shadow-sm rounded-sm border border-[#4a637d]">PEDIDOS YA</button>
                  </Interactive>
