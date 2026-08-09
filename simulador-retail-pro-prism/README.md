@@ -146,6 +146,26 @@ lo que asegura que ninguna combinación de clics pueda dejar a un colaborador en
 
 El límite lo hace cumplir el servidor, no el navegador: recargar la página no lo esquiva.
 
+### Cómo se puntúa
+
+Se descuenta por **cualquier acción que se salga del proceso del caso**: entrar a otra pantalla,
+cobrar por donde no toca, imprimir antes de tiempo. No se descuenta por rellenar datos, por
+repetir un paso que ya hizo bien, ni por usar «Reacomodar pantallas».
+
+Y **todo dato que la ficha del caso le muestra se valida**: el código del producto, el documento
+del cliente, el importe, el código de autorización del agregador, los datos del cliente nuevo.
+Si la situación le da un dato, ese dato manda. Los textos se comparan sin distinguir mayúsculas
+ni tildes; los documentos y los importes, exactos.
+
+Un módulo tampoco se cierra si el cobro no se hizo como pide el caso: un pedido de Rappi no
+aprueba cobrado en efectivo. Cuando el cobro está mal, el aviso dice qué falta, y el colaborador
+puede anular el pago y rehacerlo — anular siempre devuelve lo que consumió, incluido el crédito
+de tienda.
+
+Y como repetir algo correcto no suma puntos, tampoco puede costar nada ni estropear nada: volver
+a pasar el mismo artículo no lo mete dos veces en el documento, y volver a contestar la ventana
+del nivel de precio no le vuelve a subir el 5%.
+
 ### El ranking de los diez mejores
 
 Desde el botón **«Ver el ranking»**, junto a su promedio, el colaborador ve la tabla de los diez
@@ -227,6 +247,11 @@ servidor los sube una sola vez para que no se pierda lo ya cargado.
 Necesitan el proyecto compilado (`npm run build`) y Playwright con el Chromium del entorno.
 
 ```bash
+node tests/e2e-guion.mjs          # TODO dato que la ficha muestra se valida de verdad
+node tests/e2e-deshacer.mjs       # anular un cobro y rehacerlo, sin matar el módulo
+node tests/e2e-proceso.mjs        # no se aprueba cobrando por donde no toca
+node tests/e2e-errores.mjs        # qué resta puntos y qué no
+node tests/e2e-repetir.mjs        # repetir un paso correcto no rompe ni encarece nada
 node tests/e2e-iconos.mjs         # los 32 badges son discos, sin agujeros dentro
 node tests/e2e-datos.mjs          # qué es compartido, qué es de cada uno, quién puede tocar Sheets
 node tests/e2e-ranking.mjs        # orden del ranking, top 10 y que no se publique ningún DNI

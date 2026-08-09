@@ -105,7 +105,39 @@ export function valuesMatch(actualRaw: unknown, expectedRaw: unknown): boolean {
   if (actual !== '' && expected !== '' && !isNaN(Number(actual)) && !isNaN(Number(expected))) {
     return Number(actual) === Number(expected);
   }
-  return false;
+
+  // Textos: se comparan sin mayúsculas, sin tildes y sin espacios de sobra.
+  // Lo que se está evaluando es si el colaborador tomó el dato correcto de la
+  // ficha del caso, no su mecanografía: «rosa quispe» vale por «ROSA QUISPE».
+  // Los documentos y los montos son numéricos, así que esto no los afloja.
+  return normalizarTexto(actual) === normalizarTexto(expected);
+}
+
+/**
+ * ¿Este control sirve para RELLENAR un dato, en vez de para ejecutar una acción?
+ *
+ * Rellenar nunca cuesta puntos: ni escribir en un campo, ni elegir una forma de
+ * pago, ni marcar una casilla. El descuento llega cuando CONFIRMA —«Pago»,
+ * «Buscar», «Guardar»— con los datos equivocados, que es cuando el paso valida
+ * lo que hay en pantalla y canta el error.
+ *
+ * Es lo que separa castigar el descuido de castigar el trabajo: elegir «Tarjeta
+ * de Débito» cuando el caso pide crédito no resta al elegirlo, resta al pulsar
+ * «Pago», que es cuando de verdad se equivocó. Contarlo antes penalizaba el
+ * camino CORRECTO: rellenar el voucher del Módulo 4 costaba tres puntos.
+ */
+function esControlDeValor(targetId: string): boolean {
+  return /input|search|select|cust-new-|pay-method-|price-level/.test(targetId);
+}
+
+/** Minúsculas, sin tildes y con los espacios colapsados a uno. */
+export function normalizarTexto(valor: string): string {
+  return valor
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /**
@@ -152,16 +184,23 @@ const ESTADO_ESTORBO: Partial<AppState> = {
   e116: '',
   noAutorizacion: '',
   autorizacionForzada: false,
-  // Los pagos aplicados por error también estorban, y mucho: el mismo hueco de
-  // la pantalla muestra «Pago» o «Vuelto» según si lo cobrado ya cubre el
-  // documento. Un importe disparatado aplicado sin querer convertía el botón
-  // «Pago» en «Vuelto» y el paso que pedía aplicar el pago se volvía imposible.
-  // Se vacían: el colaborador vuelve a cobrar, que es lo que dice su caso.
-  payments: [],
-  vueltoGiven: false,
+  // Los pagos NO se vacían. Un pago aplicado por error estorba —el mismo hueco
+  // de la pantalla muestra «Pago» o «Vuelto» según si lo cobrado ya cubre el
+  // documento—, pero para eso está «Anular», que está a la vista junto al pago,
+  // no cuesta puntos y repone el crédito de tienda que hubiera consumido.
+  // Vaciarlos aquí se llevaba por delante los pagos BUENOS: en el Módulo 5 el
+  // paso final exige efectivo y tarjeta, y borrar el efectivo dejaba un paso
+  // final pidiendo un pago que el paso anterior ya no dejaba rehacer.
+  //
   // La pestaña del punto de venta. Irse a «Devolución» en un módulo de venta
   // normal escondía la búsqueda de artículos y del cliente.
   posTab: 'Venta',
+  // Estado del menú principal que puede tapar la pantalla entera. Vive en
+  // `appState` justamente para que «Reacomodar» pueda cerrarlo: mientras estuvo
+  // en un `useState` de la pantalla, abrir el submenú de desembolso por error
+  // dejaba el menú tapado sin ninguna forma de destaparlo.
+  showRegisterModal: false,
+  showDesembolsoSubMenu: false,
 };
 
 /**
@@ -173,7 +212,13 @@ const ESTADO_ESTORBO: Partial<AppState> = {
  * puede ser justamente una de esas ventanas.
  */
 export function reacomodarParaElPaso(step: Step | null | undefined, appState: AppState): AppState {
-  return reencuadrarPaso(step, { ...appState, ...ESTADO_ESTORBO });
+  // Los pagos se quedan: ver `ESTADO_ESTORBO`. Como ya no se vacían, tampoco
+  // hay crédito de tienda que devolver aquí; de eso se encarga «Anular» en la
+  // pantalla de cobro, que es donde el colaborador ve el pago que le sobra.
+  return reencuadrarPaso(step, {
+    ...appState,
+    ...ESTADO_ESTORBO,
+  });
 }
 
 const formatElapsed = (startTime: number | null) => {
@@ -475,6 +520,9 @@ export const SimulatorProvider = ({
   const currentStepIndexRef = useRef<number>(0);
   const lastStepChangeTimeRef = useRef<number>(Date.now());
   const hintedStepsRef = useRef<Set<string>>(new Set());
+  /** Último error contado, para que un clic no cuente dos veces (ver más abajo). */
+  const ultimoErrorRef = useRef<{ targetId: string; cuando: number }>({ targetId: '', cuando: 0 });
+
   /** Hay un avance de paso en curso: ignora clics repetidos mientras dura. */
   const advancingRef = useRef(false);
 
@@ -549,7 +597,7 @@ export const SimulatorProvider = ({
     return () => clearTimeout(timer);
   }, [state.appState, state.currentStepIndex, state.status, state.currentModuleId]);
 
-  const handleInteract = (targetId: string, value?: string, _isFinalSubmit?: boolean): boolean | void => {
+  const handleInteract = (targetId: string, value?: string, isFinalSubmit?: boolean): boolean | void => {
     const snapshot = stateRef.current;
     if (snapshot.status !== 'running') return;
     // Un avance ya está en curso: cualquier clic extra se ignora en vez de
@@ -571,7 +619,7 @@ export const SimulatorProvider = ({
         // cuando el colaborador confirma con Enter o con el botón de buscar.
         if (value === undefined) return true;
 
-        if (value.trim() !== stepToProcess.targetValue.trim()) {
+        if (!valuesMatch(value, stepToProcess.targetValue)) {
           setFallosSeguidos((f) => f + 1);
           setState((prev) => ({
             ...prev,
@@ -684,44 +732,60 @@ export const SimulatorProvider = ({
         });
       }, 400);
     } else {
-      if (targetId === 'background') return;
-      if (value !== undefined) return;
-      const bypassValidationIds = [
-        'cust-new-name', 'cust-new-lastname', 'cust-new-email', 'cust-new-doctype',
-        'cust-new-doc', 'pos-btn-remove-cust', 'modal-auth-ok', 'ignore-click',
-      ];
-      if (bypassValidationIds.includes(targetId)) return true;
-      // Quitar un artículo del carrito es una corrección legítima. El botón real
-      // lleva el índice de la línea (`pos-btn-remove-0`), así que la lista de
-      // arriba nunca coincidía y quitar un producto mal agregado era imposible.
-      if (targetId.startsWith('pos-btn-remove')) return true;
+      // ------------------------------------------------------------------
+      // NO es el objetivo del paso. Tres grupos, en este orden.
+      //
+      // Grupo 1: NI RESTA NI BLOQUEA. No es equivocarse.
+      // ------------------------------------------------------------------
 
-      // Un paso YA CUMPLIDO se puede repetir. Es la salida de casi todos los
-      // atascos: los botones "No", "Cancelar" y "Cerrar" de los modales no pasan
-      // por aquí y cierran lo que el paso actual necesita, mientras que el botón
-      // que lo reabriría sí pasaba y quedaba bloqueado para siempre. Permitirlo
-      // devuelve el clic a la pantalla, que reabre el modal o el submenú por sí
-      // sola —igual que en el sistema real— sin contar error ni saltarse nada:
-      // el paso en curso sigue exigiendo lo suyo para avanzar.
+      // Desplazarse o hacer zoom sobre el fondo, sobre todo en celular.
+      if (targetId === 'background' || targetId.startsWith('ignore-')) return true;
+
+      // Rellenar un dato: nunca cuesta. Ver `esControlDeValor`.
+      if (esControlDeValor(targetId)) return true;
+      // Escribir en cualquier otro sitio sin llegar a confirmar tampoco.
+      if (!isFinalSubmit && value !== undefined) return true;
+
+      // Repetir un paso YA CUMPLIDO. No suma puntos, así que no hay nada que
+      // premiar ni que castigar, y es la salida de casi todos los atascos: los
+      // "No", "Cancelar" y "Cerrar" de los modales apagan lo que el paso en
+      // curso necesita, y el botón que lo reabre es justamente uno ya cumplido.
       const yaCumplido = mod.steps
         .slice(0, currentStepIndexRef.current)
         .some((paso) => paso.targetId === targetId);
       if (yaCumplido) return true;
+
       // Acciones intermedias que el propio paso pide (aplicar el pago, dar el
-      // vuelto). Sin esto se contaban como error y, peor, el clic quedaba
-      // bloqueado: el Módulo 6 era imposible de terminar porque nunca llegaba a
-      // aplicarse el pago que su instrucción exige.
+      // vuelto): las nombra él mismo en `allowedTargets`.
       if (stepToProcess.allowedTargets?.includes(targetId)) return true;
-      if (stepToProcess.screenId === 'login' && targetId !== 'login-btn-submit') return;
-      // Evita que un doble clic justo después de avanzar cuente como error
-      if (Date.now() - lastStepChangeTimeRef.current < 400) return;
 
-      const isInputError =
-        targetId.includes('input') || targetId.includes('search') || targetId.includes('select') ||
-        (targetId.includes('cust-new-') && targetId !== 'cust-new-save') ||
-        targetId.includes('pay-method') || targetId.includes('pay-select-card-type');
-      if (isInputError) return;
+      // Rebote justo después de avanzar de paso: es el mismo clic, no otro.
+      if (Date.now() - lastStepChangeTimeRef.current < 400) return true;
 
+      // El mismo control pulsado dos veces en un suspiro cuenta UNA.
+      //
+      // Medio centenar de elementos de las pantallas llaman a `handleInteract`
+      // dos veces por clic: una desde el `onClickCapture` del envoltorio
+      // `Interactive` y otra desde el `onClick` del botón de dentro. Antes no se
+      // notaba porque el error BLOQUEABA el clic y el segundo disparo no
+      // llegaba; ahora que se deja pasar, sin esto cada equivocación costaría
+      // dos puntos en vez de uno.
+      const ahora = Date.now();
+      if (ultimoErrorRef.current.targetId === targetId && ahora - ultimoErrorRef.current.cuando < 400) {
+        return true;
+      }
+      ultimoErrorRef.current = { targetId, cuando: ahora };
+
+      // ------------------------------------------------------------------
+      // Grupo 2: RESTA UN PUNTO, pero deja pasar el clic.
+      //
+      // Todo lo que se sale del flujo cuenta como error —elegir mal la forma de
+      // pago, la marca de la tarjeta, irse a otra pestaña—, porque si no, se
+      // puede llegar al final del módulo por un camino que no es el del caso.
+      // Pero NO se bloquea: la pantalla reacciona como el Retail Pro real, y así
+      // el colaborador puede volver por donde vino. Bloquear era lo que dejaba
+      // módulos sin salida.
+      // ------------------------------------------------------------------
       setFallosSeguidos((f) => f + 1);
       setState((prev) => ({
         ...prev,
@@ -734,7 +798,10 @@ export const SimulatorProvider = ({
       setTimeout(() => {
         setState((prev) => (prev.feedback?.status === 'error' ? { ...prev, feedback: null } : prev));
       }, 1000);
-      return false;
+      // Grupo 3, el que sigue bloqueado, no pasa por aquí: son las acciones que
+      // borran avance sin retorno, y las propias pantallas ya las desactivan
+      // cambiando su identificador por `ignore-click`.
+      return true;
     }
     return true;
   };

@@ -16,6 +16,25 @@ export const PaymentScreen = () => {
   // en 'Visa', así que si él cambiaba la marca esperada era imposible elegirla.
   const cardTypes = catalog.cardTypes;
   
+  /**
+   * Quita un pago de la lista y DEVUELVE lo que consumió.
+   *
+   * Aplicar un pago con crédito de tienda descuenta el saldo disponible. El
+   * botón «Anular» solo quitaba el pago y no reponía nada, así que anularlo
+   * evaporaba el crédito: como el producto nuevo cuesta más que la nota de
+   * crédito, el total ya no se podía cubrir, «Imprimir Actualizar» no aparecía
+   * nunca y el Módulo 11 quedaba muerto. Deshacer tiene que deshacerlo todo.
+   */
+  const anularPago = (pago: any) => {
+    const esCreditoDeTienda = String(pago?.method || '').startsWith('Crédito de Tienda');
+    setAppState({
+      payments: appState.payments.filter((otro) => otro !== pago),
+      storeCredit: esCreditoDeTienda
+        ? appState.storeCredit + Math.abs(Number(pago?.amount) || 0)
+        : appState.storeCredit,
+    });
+  };
+
   const showVuelto = (totalPaid - totalDoc > 0.01 && totalDoc > 0);
   const isComplete = totalDoc < 0 
     ? (appState.vueltoGiven || totalPaid <= totalDoc + 0.01) 
@@ -138,9 +157,34 @@ export const PaymentScreen = () => {
                 <button onClick={() => setAppState({ showAuthModal: false, selectedPaymentMethod: 'Efectivo' })} className="bg-gradient-to-b from-[#333] to-[#111] hover:from-[#444] hover:to-[#222] text-white px-4 py-1.5 border border-black rounded-[5px] shadow-sm text-[12px] font-bold">CANCELAR</button>
                 <Interactive id="modal-auth-ok">
                   <button onClick={() => {
-                      if (appState.authCode) {
-                          handleInteract('modal-auth-ok');
-                      }
+                      // Este onClick solo llega a ejecutarse si la validación del
+                      // paso dio por bueno el código: el envoltorio `Interactive`
+                      // valida antes, en la fase de captura, y corta el evento
+                      // cuando el valor no corresponde.
+                      if (!appState.authCode) return;
+
+                      // El pago lo crea la PANTALLA, no el paso.
+                      //
+                      // Antes lo creaba la `action` de m7-s8 / m8-s8, y las
+                      // acciones solo corren cuando el paso AVANZA, nunca al
+                      // repetir uno ya cumplido. Por eso, si el colaborador
+                      // anulaba el pago, no había forma de volver a cobrarle al
+                      // agregador y el módulo quedaba muerto. Aquí, repetir el
+                      // paso lo vuelve a crear.
+                      //
+                      // Y la forma de pago vuelve a Efectivo porque los botones
+                      // RAPPI y PEDIDOS YA solo se dibujan con Efectivo
+                      // seleccionado: dejándola en 'RAPPI' desaparecían de la
+                      // pantalla para siempre. Es lo mismo que ya hace el
+                      // ACEPTAR de la ventana de NC Transferencia.
+                      const metodo = appState.selectedPaymentMethod;
+                      const amount = Number(appState.takeAmount || pending);
+                      setAppState({
+                         showAuthModal: false,
+                         authCode: '',
+                         selectedPaymentMethod: 'Efectivo',
+                         payments: [...appState.payments, { method: metodo, amount }],
+                      });
                   }} className="bg-gradient-to-b from-[#666] to-[#444] hover:from-[#777] hover:to-[#555] text-white px-4 py-1.5 border border-black rounded-[5px] shadow-sm text-[12px] font-bold">OK</button>
                 </Interactive>
              </div>
@@ -413,7 +457,7 @@ export const PaymentScreen = () => {
                  {appState.payments.filter(p => p.amount > 0).map((p, i) => (
                     <div key={i} className="flex justify-between items-center text-[13px] border-b border-gray-200 py-1.5 text-[#333]">
                        <div className="flex items-center space-x-3">
-                          <button onClick={() => { const newPayments = appState.payments.filter(payment => payment !== p); setAppState({ payments: newPayments }); }} className="bg-[#d9534f] text-white text-[11px] px-3 py-1 rounded shadow-sm border border-[#d43f3a]">Anular</button>
+                          <button onClick={() => anularPago(p)} className="bg-[#d9534f] text-white text-[11px] px-3 py-1 rounded shadow-sm border border-[#d43f3a]">Anular</button>
                           <span>{p.method}</span>
                        </div>
                        <span className="text-[#333]">S/.{p.amount.toFixed(2)}</span>
@@ -437,7 +481,7 @@ export const PaymentScreen = () => {
                  {appState.payments.filter(p => p.amount < 0).map((p, i) => (
                     <div key={i} className="flex justify-between items-center text-[13px] border-b border-gray-200 py-1.5 text-[#333]">
                        <div className="flex items-center space-x-3">
-                          <button onClick={() => { const newPayments = appState.payments.filter(payment => payment !== p); setAppState({ payments: newPayments }); }} className="bg-[#d9534f] text-white text-[11px] px-3 py-1 rounded shadow-sm border border-[#d43f3a]">Anular</button>
+                          <button onClick={() => anularPago(p)} className="bg-[#d9534f] text-white text-[11px] px-3 py-1 rounded shadow-sm border border-[#d43f3a]">Anular</button>
                           <span className="whitespace-pre-line">{p.method}</span>
                        </div>
                        <span className="text-[#333]">S/.{Math.abs(p.amount).toFixed(2)}</span>

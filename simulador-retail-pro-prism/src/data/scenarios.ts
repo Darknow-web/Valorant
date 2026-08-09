@@ -148,7 +148,7 @@ export const scenarios: Scenario[] = [
       sku: 'm7-s2|targetValue',
       documento: 'm7-s3|targetValue',
       metodoPago: 'm7-s7|targetValue',
-      codigo: 'm7-s8|data.authCode',
+      codigo: 'm7-s8|expectedState.authCode',
     },
     etiquetas: { sku: 'Código del producto', documento: 'Documento del agregador', metodoPago: 'Forma de pago', codigo: 'Código de autorización' },
     pistas: [
@@ -169,7 +169,7 @@ export const scenarios: Scenario[] = [
       sku: 'm8-s2|targetValue',
       documento: 'm8-s3|targetValue',
       metodoPago: 'm8-s7|targetValue',
-      codigo: 'm8-s8|data.authCode',
+      codigo: 'm8-s8|expectedState.authCode',
     },
     etiquetas: { sku: 'Código del producto', documento: 'Documento del agregador', metodoPago: 'Forma de pago', codigo: 'Código de autorización' },
     pistas: [
@@ -187,11 +187,11 @@ export const scenarios: Scenario[] = [
     contexto:
       'Una clienta que viene por primera vez quiere afiliarse para acumular sus compras. Buscas su documento en el sistema y no aparece: hay que crearla. Ella te dicta sus datos mientras esperas que el sistema responda.',
     datos: {
-      nombre: 'm9-s3|data.nombre',
-      apellido: 'm9-s3|data.apellido',
-      correo: 'm9-s3|data.correo',
-      documento: 'm9-s3|data.documento',
-      tipoDocumento: 'm9-s3|data.tipoDocumento',
+      nombre: 'm9-s3|expectedState.newCustomerName',
+      apellido: 'm9-s3|expectedState.newCustomerLastName',
+      correo: 'm9-s3|expectedState.newCustomerEmail',
+      documento: 'm9-s3|expectedState.newCustomerDoc',
+      tipoDocumento: 'm9-s3|expectedState.newCustomerDocType',
     },
     etiquetas: { nombre: 'Nombre', apellido: 'Apellido', correo: 'Correo', documento: 'N.º de documento', tipoDocumento: 'Tipo de documento' },
     pistas: [
@@ -267,7 +267,7 @@ export const scenarios: Scenario[] = [
       'Con las ventas del día se juntó demasiado efectivo en la gaveta y la política de la tienda no permite tener tanto acumulado. El jefe de tienda cuenta el dinero contigo, lo mete en la bolsa de seguridad y te pide que registres el retiro antes del cierre.',
     datos: {
       monto: 'm13-s5|targetValue',
-      nota: 'm13-s3|data.nota',
+      nota: 'm13-s3|targetValue',
     },
     etiquetas: { monto: 'Monto del retiro', nota: 'Nota del desembolso' },
     pistas: [

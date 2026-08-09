@@ -144,6 +144,19 @@ async function terminaIgual(page, moduleId) {
     await cerrarAviso(page);
   }
 
+  // Y después «Anular» sobre los pagos que hayan quedado sueltos. Es la otra
+  // salida gratuita y a la vista que tiene el colaborador, y desde que
+  // «Reacomodar» ya no vacía los pagos —vaciarlos se llevaba por delante los
+  // buenos— es la que corresponde para deshacer un cobro equivocado. El guion
+  // tiene que usar las mismas salidas que la persona, o mide algo que no existe.
+  for (let intento = 0; intento < 4; intento++) {
+    const anular = page.getByRole('button', { name: 'Anular', exact: true }).first();
+    if (!(await visible(anular, 800))) break;
+    await anular.click().catch(() => {});
+    await page.waitForTimeout(300);
+    await cerrarAviso(page);
+  }
+
   // Dos vueltas al camino. Una persona que sabe lo que hace reintenta lo que no
   // le salió a la primera; el guion tiene que poder hacer lo mismo, o acusaría
   // de atasco a pantallas perfectamente utilizables. Los desplegables llevan la

@@ -41,9 +41,19 @@ try {
         await cerrarAviso(page);
       }
 
+      // El contador de errores se lee ANTES de que salga la pantalla de
+      // resumen. Hacer el módulo bien tiene que costar cero: si el conteo
+      // estricto marca errores en el camino correcto, es que se pasó de frenada
+      // y estaría bajando notas por hacer las cosas bien.
+      const cabecera = await page.locator('text=/Errores \\d+/').first().textContent().catch(() => '');
+      const erroresEnElCamino = Number(cabecera?.match(/Errores (\d+)/)?.[1] ?? 0);
+
       const listo = await estaCompletado(page);
-      if (listo) {
-        console.log(`  ok   ${moduleId}`);
+      if (listo && erroresEnElCamino > 0) {
+        fallos++;
+        console.log(`  FALLA ${moduleId} — se completó, pero el camino correcto marcó ${erroresEnElCamino} error(es)`);
+      } else if (listo) {
+        console.log(`  ok   ${moduleId} — 0 errores`);
       } else {
         fallos++;
         console.log(`  FALLA ${moduleId} — no llegó a completarse`);

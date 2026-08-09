@@ -270,11 +270,21 @@ export const ReturnsMainScreen: React.FC = () => {
                   }
 
                   const txn = transactions.find(t => t.id === selectedTransaction);
-                  setAppState({ 
+                  // Rehacer la devolución tiene que dejar el documento IGUAL, no
+                  // doble. Volver aquí y repetir el proceso son todos pasos ya
+                  // cumplidos —o sea, correctos y sin penalización—, así que es
+                  // un camino que el colaborador puede tomar sin darse cuenta; y
+                  // una línea de devolución no se puede remover del documento
+                  // (ver `PosScreen`), de modo que lo duplicado no había forma de
+                  // quitarlo. En el Módulo 11 eso doblaba el crédito de tienda y
+                  // dejaba el módulo imposible de terminar.
+                  const devueltos = itemsToReturn.map(i => ({ desc: i.desc, ean: i.ean, price: -i.price, type: 'Devolución' }));
+                  const yaEstaba = (item: any) => devueltos.some((d) => d.ean === item.ean && item.price < 0);
+                  setAppState({
                      ...appState,
                      returnReason: returnMotivo !== 'Select...' ? returnMotivo : returnReason,
                      returnItems: itemsToReturn.map(i => ({ desc: i.desc, ean: i.ean, price: -i.price })),
-                     cart: [...appState.cart, ...itemsToReturn.map(i => ({ desc: i.desc, ean: i.ean, price: -i.price, type: 'Devolución' }))],
+                     cart: [...appState.cart.filter((item) => !yaEstaba(item)), ...devueltos],
                      currentCustomer: txn ? {
                         rut: '',
                         doc: txn.doc,

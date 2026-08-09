@@ -108,6 +108,21 @@ export interface AppState {
    * cumplirse.
    */
   posTab?: string;
+  /**
+   * Ventana «Registradora No esta Abierto» del menú principal.
+   *
+   * Por el mismo motivo que `posTab`: tapa el menú entero, así que «Reacomodar
+   * pantallas» tiene que poder cerrarla.
+   */
+  showRegisterModal?: boolean;
+  /**
+   * Submenú «Desembolsos» del menú principal.
+   *
+   * Igual: tapa el menú entero. Mientras vivió dentro de la pantalla, abrirlo
+   * por error dejaba el menú tapado sin ninguna forma de destaparlo, porque
+   * «Reacomodar» solo alcanza a `appState`.
+   */
+  showDesembolsoSubMenu?: boolean;
 }
 
 export interface MistakeDetail {

@@ -26,6 +26,16 @@ export const PosMainScreen = () => {
       triggerCustomError(`No se encontró ningún artículo con el código ${code.trim()}.`);
       return false;
     }
+    // Buscar dos veces el mismo artículo no puede meterlo dos veces. Repetir un
+    // paso ya cumplido es gratis a propósito, así que el colaborador lo hace sin
+    // miedo; y una vez en la pantalla de cobro ya no hay forma de quitar la
+    // línea de más, con lo que el documento podía pasar del importe que la ficha
+    // le dice que reciba y quedarse sin poder cubrirse.
+    // Se queda en silencio y da la búsqueda por buena: el artículo está donde
+    // tiene que estar, que es lo que el paso pide. Avisar costaría un error, y
+    // repetir algo correcto no puede costar puntos.
+    const yaEnElDocumento = appState.cart.some((item) => item.ean === prod.ean && item.price > 0);
+    if (yaEnElDocumento) return true;
     const newProd = { ...prod };
     if (appState.priceLevelActive) newProd.price = newProd.price * 1.05;
     setAppState({ cart: [...appState.cart, newProd] });
@@ -143,8 +153,13 @@ export const PosMainScreen = () => {
              <div className="bg-white px-5 pb-3 flex justify-end space-x-2">
                 <Interactive id="modal-price-level-yes">
                   <button onClick={() => {
+                      // El 5% se aplica UNA vez. Volver a buscar al cliente del
+                      // agregador y contestar otra vez esta ventana son pasos ya
+                      // cumplidos —gratis, como debe ser—, pero sin esta guarda
+                      // volvían a subir el precio y descuadraban los importes del
+                      // caso sin ninguna forma de deshacerlo.
                       let updatedCart = appState.cart;
-                      if (appState.applyPriceLevelToExisting) {
+                      if (appState.applyPriceLevelToExisting && !appState.priceLevelActive) {
                           updatedCart = appState.cart.map(c => ({...c, price: c.price * 1.05}));
                       }
                       setAppState({ 

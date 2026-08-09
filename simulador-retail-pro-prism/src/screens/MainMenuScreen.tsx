@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { PrismHeader } from '../components/prism/PrismHeader';
 import { PrismMenuButton } from '../components/prism/PrismButton';
 import { PrismTabs } from '../components/prism/PrismTabs';
@@ -7,30 +7,33 @@ import { useSimulator } from '../store/SimulatorContext';
 import { Icons } from '../config/icons';
 
 export const MainMenuScreen = ({ activeSection = 'pos' }: { activeSection?: 'pos' | 'customers' | 'xz' | '' }) => {
-  const { appState, handleInteract, currentModuleId } = useSimulator();
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [showDesembolsoSubMenu, setShowDesembolsoSubMenu] = useState(false);
+  const { appState, setAppState, handleInteract, currentModuleId } = useSimulator();
+  // Las dos ventanas de este menú tapan la pantalla entera, así que su estado
+  // vive en `appState` y no aquí dentro: es la única forma de que «Reacomodar
+  // pantallas» pueda cerrarlas. Mismo patrón que `posTab`.
+  const showRegisterModal = !!appState.showRegisterModal;
+  const showDesembolsoSubMenu = !!appState.showDesembolsoSubMenu;
 
   const handleNewTransaction = () => {
     if (!appState.registerOpen) {
-      setShowRegisterModal(true);
+      setAppState({ showRegisterModal: true });
     }
   };
 
   const handleNuevoDesembolso = () => {
     const result = handleInteract('pos-menu-new-desembolso');
     if (result !== false) {
-      setShowDesembolsoSubMenu(true);
+      setAppState({ showDesembolsoSubMenu: true });
     }
   };
 
 
   const handleModalYes = () => {
-    setShowRegisterModal(false);
+    setAppState({ showRegisterModal: false });
   };
 
   const handleModalNo = () => {
-    setShowRegisterModal(false);
+    setAppState({ showRegisterModal: false });
   };
 
   const tabs = [
@@ -72,13 +75,17 @@ export const MainMenuScreen = ({ activeSection = 'pos' }: { activeSection?: 'pos
              </div>
              <div className="px-5 pt-4 pb-4 bg-white flex flex-col">
                 <div className="grid grid-cols-4 gap-[10px] w-[80%] mx-auto mt-2 mb-8">
-                  <PrismMenuButton id="desembolso-retiro-dinero" text="Retiro de Dinero" onClick={() => handleInteract('desembolso-retiro-dinero')} iconSrc={Icons.nuevoDesembolso} />
+                  {/* Al entrar al retiro se cierra el submenú: la pantalla de
+                      desembolso dibuja este menú por debajo, y antes el submenú
+                      vivía en un estado local que se perdía al remontarse. Ahora
+                      que vive en `appState` hay que cerrarlo a mano. */}
+                  <PrismMenuButton id="desembolso-retiro-dinero" text="Retiro de Dinero" onClick={() => { if (handleInteract('desembolso-retiro-dinero') !== false) setAppState({ showDesembolsoSubMenu: false }); }} iconSrc={Icons.nuevoDesembolso} />
                   <PrismMenuButton id="desembolso-egreso" text="Egreso" onClick={() => handleInteract('desembolso-egreso')} iconSrc={Icons.abrirGaveta} />
                   <PrismMenuButton id="desembolso-ingreso" text="Ingreso" onClick={() => handleInteract('desembolso-ingreso')} iconSrc={Icons.nuevoDesembolso} />
                   <PrismMenuButton id="desembolso-abrir-gaveta" text="Abrir Gaveta" onClick={() => handleInteract('desembolso-abrir-gaveta')} iconSrc={Icons.abrirGaveta} />
                 </div>
                 <div className="flex justify-end pt-2">
-                  <button onClick={() => setShowDesembolsoSubMenu(false)} className="bg-gradient-to-b from-[#333] to-[#111] hover:from-[#444] hover:to-[#222] text-white px-6 py-1.5 border border-black rounded-[5px] shadow-sm text-[14px]">
+                  <button onClick={() => setAppState({ showDesembolsoSubMenu: false })} className="bg-gradient-to-b from-[#333] to-[#111] hover:from-[#444] hover:to-[#222] text-white px-6 py-1.5 border border-black rounded-[5px] shadow-sm text-[14px]">
                     Cerrar
                   </button>
                 </div>

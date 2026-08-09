@@ -11,7 +11,11 @@ export const DesembolsoScreen: React.FC = () => {
   const [pagoAgregado, setPagoAgregado] = useState(false);
 
   const handleAgregarPago = () => {
-    handleInteract('desembolso-add-payment');
+    // La nota viaja con el clic. Es un dato que la ficha del caso le da al
+    // colaborador, así que tiene que validarse; vive en un estado local de esta
+    // pantalla, de modo que la única forma de que el paso lo vea es mandárselo,
+    // igual que ya hace la cantidad con el botón «Sólo Actualizar».
+    if (handleInteract('desembolso-add-payment', nota, true) === false) return;
     setPagoAgregado(true);
   };
 
@@ -106,6 +110,13 @@ export const DesembolsoScreen: React.FC = () => {
                            type="text" 
                            className="w-full border border-[#00a2e8] p-1 text-[11px] outline-none shadow-[0_0_2px_#00a2e8]" 
                            value={cantidad}
+                           // Al entrar a la celda se selecciona lo que ya hay,
+                           // como en la grilla de verdad. Sin esto, volver a
+                           // escribir la cantidad la pegaba detrás de la
+                           // anterior («774.41774.41») y no había forma de
+                           // dejarla en blanco: la celda solo se vacía sola
+                           // cuando vale 0.00.
+                           onFocus={(e) => e.currentTarget.select()}
                            onChange={(e) => {
                              setCantidad(e.target.value);
                            }}

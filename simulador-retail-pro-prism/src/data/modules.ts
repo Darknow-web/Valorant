@@ -1,5 +1,27 @@
 import { AppState, ModuleData } from '../types';
 
+/**
+ * Comprobaciones de COBRO para el paso de «Imprimir Actualizar».
+ *
+ * Sin esto, un módulo se puede cerrar cobrando de una forma que el caso no pide:
+ * los pedidos de Rappi y Pedidos Ya se aprobaban cobrando en efectivo, sin
+ * haberle cobrado nunca al agregador. Se valida al final y no antes, para que el
+ * colaborador pueda equivocarse, anular el pago y rehacerlo — que es justo lo
+ * que se hace en una caja real.
+ */
+const cobradoCon = (state: AppState, metodo: string) =>
+  state.payments.some((p) => String(p?.method || '').startsWith(metodo));
+
+const totalDelDocumento = (state: AppState) => state.cart.reduce((suma, item) => suma + item.price, 0);
+
+/** ¿Se cobró con `metodo` y ese cobro cubre el documento entero? */
+const cubiertoCon = (state: AppState, metodo: string) => {
+  const conEseMetodo = state.payments
+    .filter((p) => String(p?.method || '').startsWith(metodo))
+    .reduce((suma, p) => suma + (Number(p?.amount) || 0), 0);
+  return conEseMetodo + 0.01 >= totalDelDocumento(state);
+};
+
 // Helper to update app state cleanly
 const updateState = (update: Partial<AppState>) => (state: AppState) => {
   Object.assign(state, update);
@@ -20,7 +42,7 @@ export const modulesData: ModuleData[] = [
     steps: [
       { id: 'm2-s1', instruction: 'Haz clic en la pestaña "Punto de Venta".', targetId: 'menu-btn-pos', screenId: 'main-menu' },
       { id: 'm2-s2', instruction: 'Inicia una nueva transacción.', targetId: 'pos-menu-new-trans', screenId: 'pos-menu' },
-      { id: 'm2-s3', instruction: 'La registradora no está abierta. Haz clic en "Sí" para abrirla.', targetId: 'modal-register-yes', screenId: 'pos-menu' },
+      { id: 'm2-s3', instruction: 'La registradora no está abierta. Haz clic en "Sí" para abrirla.', keepState: { showRegisterModal: true }, targetId: 'modal-register-yes', screenId: 'pos-menu' },
       { id: 'm2-s3-1', instruction: 'En la pantalla de criterios de la registradora, haz clic en "Abrir Caja" (el botón celeste).', targetId: 'zout-btn-abrir', screenId: 'z-out-close' },
       { id: 'm2-s4', instruction: 'Ingresa el Fondo de Caja (150.00) en la sección "Total Nuevo Sol" y haz clic en Siguiente.', targetId: 'btn-siguiente', screenId: 'registro', expectedState: { fondoCaja: '150.00' }, action: (s) => { s.registerOpen = true; } },
       { id: 'm2-s7', instruction: 'Revisa que la registradora se ha abierto.', targetId: 'auto', screenId: 'pos-menu' }
@@ -49,7 +71,7 @@ export const modulesData: ModuleData[] = [
       { id: 'm4-s3', instruction: 'Busca y selecciona un cliente ingresando su DNI y presionando Enter.', targetId: 'pos-search-customer', screenId: 'pos-main', targetValue: '76543210' },
       { id: 'm4-s4', instruction: 'Procede a pagar la transacción.', targetId: 'pos-btn-pay', screenId: 'pos-main' },
       { id: 'm4-s5', instruction: 'Selecciona "Tarjeta de Crédito", elige "Visa" en Tipo de Tarjeta, llena los datos del voucher (E-115: 1234, No. Autorización: 098765) y haz clic en "Pago".', targetId: 'pay-btn-apply', screenId: 'payment', expectedState: { selectedPaymentMethod: 'Tarjeta de Crédito', cardType: 'Visa', tipoProcesamiento: 'Manual', e115: '1234', noAutorizacion: '098765', autorizacionForzada: '', e116: '' } },
-      { id: 'm4-s6', allowedTargets: ['pay-btn-apply', 'pay-btn-vuelto'], instruction: 'Imprime y actualiza el documento para finalizar.', targetId: 'pay-btn-print-update', screenId: 'payment', action: (s) => { s.cart = []; s.currentCustomer = null; s.payments = []; s.takeAmount = ''; s.cardType = ''; s.tipoProcesamiento = 'Manual'; s.e115 = ''; s.noAutorizacion = ''; s.selectedPaymentMethod = 'Efectivo'; } },
+      { id: 'm4-s6', allowedTargets: ['pay-btn-apply', 'pay-btn-vuelto'], instruction: 'Imprime y actualiza el documento para finalizar.', targetId: 'pay-btn-print-update', screenId: 'payment', validator: (s) => cobradoCon(s, 'Tarjeta de Crédito') ? true : 'El cliente paga con tarjeta de crédito: el cobro no puede quedar en efectivo.', action: (s) => { s.cart = []; s.currentCustomer = null; s.payments = []; s.takeAmount = ''; s.cardType = ''; s.tipoProcesamiento = 'Manual'; s.e115 = ''; s.noAutorizacion = ''; s.selectedPaymentMethod = 'Efectivo'; } },
       { id: 'm4-s7', instruction: 'Revisa que la transacción se ha completado.', targetId: 'auto', screenId: 'payment' }
     ]
   },
@@ -63,7 +85,7 @@ export const modulesData: ModuleData[] = [
       { id: 'm5-s4', instruction: 'Procede a pagar la transacción.', targetId: 'pos-btn-pay', screenId: 'pos-main' },
       { id: 'm5-s5', instruction: 'Ingresa un pago parcial de 50.00 en Efectivo y haz clic en "Pago".', targetId: 'pay-btn-apply', screenId: 'payment', expectedState: { selectedPaymentMethod: 'Efectivo', takeAmount: '50.00' } },
       { id: 'm5-s6', instruction: 'Selecciona "Tarjeta de Crédito", elige "Visa" en Tipo de Tarjeta, llena los datos del voucher (E-115: 1234, No. Autorización: 098765) y haz clic en "Pago" para el saldo restante.', targetId: 'pay-btn-apply', screenId: 'payment', expectedState: { selectedPaymentMethod: 'Tarjeta de Crédito', cardType: 'Visa', tipoProcesamiento: 'Manual', e115: '1234', noAutorizacion: '098765', autorizacionForzada: '', e116: '' } },
-      { id: 'm5-s7', allowedTargets: ['pay-btn-apply', 'pay-btn-vuelto'], instruction: 'Imprime y actualiza el documento para finalizar.', targetId: 'pay-btn-print-update', screenId: 'payment', action: (s) => { s.cart = []; s.currentCustomer = null; s.payments = []; s.takeAmount = ''; s.cardType = ''; s.tipoProcesamiento = 'Manual'; s.e115 = ''; s.noAutorizacion = ''; s.selectedPaymentMethod = 'Efectivo'; } },
+      { id: 'm5-s7', allowedTargets: ['pay-btn-apply', 'pay-btn-vuelto'], instruction: 'Imprime y actualiza el documento para finalizar.', targetId: 'pay-btn-print-update', screenId: 'payment', validator: (s) => !cobradoCon(s, 'Efectivo') ? 'Falta la parte que la clienta paga en efectivo.' : !cobradoCon(s, 'Tarjeta de Crédito') ? 'El saldo va con la tarjeta de crédito.' : true, action: (s) => { s.cart = []; s.currentCustomer = null; s.payments = []; s.takeAmount = ''; s.cardType = ''; s.tipoProcesamiento = 'Manual'; s.e115 = ''; s.noAutorizacion = ''; s.selectedPaymentMethod = 'Efectivo'; } },
       { id: 'm5-s8', instruction: 'Revisa que la transacción se ha completado.', targetId: 'auto', screenId: 'payment' }
     ]
   },
@@ -86,10 +108,22 @@ export const modulesData: ModuleData[] = [
         // El paso pide expresamente aplicar el pago y dar el vuelto antes de
         // imprimir: esas acciones no son un error.
         allowedTargets: ['pay-btn-apply', 'pay-btn-vuelto'],
-        validator: (state) => {
+        validator: (state, ctx) => {
             const totalDoc = state.cart.reduce((sum, item) => sum + item.price, 0);
             const totalPaid = state.payments.reduce((sum, p) => sum + p.amount, 0);
             if (totalPaid + 0.01 < totalDoc) return 'Debes cubrir el total del documento antes de finalizar. Primero haz clic en el botón "Pago" para aplicarlo.';
+            // El importe con el que paga la empresa es un dato de la ficha del
+            // caso, así que tiene que cobrarse ESE, no uno cualquiera que cubra
+            // el total: si no, el dato que se le da al colaborador no manda.
+            const esperado = Number(ctx.step.data?.efectivoEntregado || 0);
+            if (esperado > 0) {
+              const enEfectivo = state.payments
+                .filter((p) => String(p?.method || '').startsWith('Efectivo'))
+                .reduce((suma, p) => suma + (Number(p?.amount) || 0), 0);
+              if (Math.abs(enEfectivo - esperado) > 0.01) {
+                return `La empresa paga con S/ ${esperado.toFixed(2)} en efectivo. Cobra ese importe exacto.`;
+              }
+            }
             const vuelto = totalPaid - totalDoc;
             if (vuelto > 0.01 && !state.vueltoGiven) return 'El pago es mayor al total. Debes entregar vuelto haciendo clic en el botón "Vuelto" antes de finalizar.';
             return true;
@@ -109,13 +143,19 @@ export const modulesData: ModuleData[] = [
       { id: 'm7-s4', instruction: 'En la ventana emergente, marca la casilla "Change price level for existing items" y haz clic en "Sí".', targetId: 'modal-price-level-yes', screenId: 'pos-main', expectedState: { applyPriceLevelToExisting: true } },
       { id: 'm7-s6', instruction: 'Procede a pagar la transacción.', targetId: 'pos-btn-pay', screenId: 'pos-main', validator: (s) => s.priceLevelActive ? true : 'El precio incrementado no se ha aplicado' },
       { id: 'm7-s7', instruction: 'Selecciona RAPPI como método de pago.', targetId: 'pay-btn-rappi-pedidos', screenId: 'payment', targetValue: 'RAPPI', action: (s) => { s.showAuthModal = true; s.selectedPaymentMethod = 'RAPPI'; } },
-      { id: 'm7-s8', instruction: 'Ingresa el código de autorización en la ventana emergente y haz clic en OK.', data: { authCode: '884512' }, dataLabels: { authCode: 'Código de autorización de Rappi' }, keepState: { showAuthModal: true }, targetId: 'modal-auth-ok', screenId: 'payment', action: (s) => { 
-          const amount = Number(s.takeAmount || s.cart.reduce((sum, item) => sum + item.price, 0));
-          s.payments = [...s.payments, { method: s.selectedPaymentMethod, amount }];
-          s.showAuthModal = false;
-          s.authCode = '';
-      } },
-      { id: 'm7-s9', allowedTargets: ['pay-btn-apply', 'pay-btn-vuelto'], instruction: 'Imprime y actualiza el documento para finalizar.', targetId: 'pay-btn-print-update', screenId: 'payment', action: (s) => { s.cart = []; s.currentCustomer = null; s.payments = []; s.priceLevelActive = false; s.takeAmount = ''; s.selectedPaymentMethod = 'Efectivo'; } },
+      {
+        id: 'm7-s8',
+        instruction: 'Ingresa el código de autorización en la ventana emergente y haz clic en OK.',
+        // El código SÍ se valida: es un dato que la ficha del caso le da al
+        // colaborador, así que escribir cualquier cosa no puede darse por bueno.
+        expectedState: { authCode: '884512' },
+        keepState: { showAuthModal: true },
+        targetId: 'modal-auth-ok',
+        screenId: 'payment',
+        // Sin `action`: el pago y el cierre de la ventana los hace la pantalla,
+        // para que anular el cobro y rehacerlo sea posible.
+      },
+      { id: 'm7-s9', instruction: 'Imprime y actualiza el documento para finalizar.', targetId: 'pay-btn-print-update', screenId: 'payment', validator: (s) => cubiertoCon(s, 'RAPPI') ? true : 'Este pedido se le cobra a RAPPI, no en efectivo. Anula el pago y vuelve a cobrarlo con el botón de RAPPI.', action: (s) => { s.cart = []; s.currentCustomer = null; s.payments = []; s.priceLevelActive = false; s.takeAmount = ''; s.selectedPaymentMethod = 'Efectivo'; } },
       { id: 'm7-s10', instruction: 'Revisa que la transacción se ha completado.', targetId: 'auto', screenId: 'payment' }
     ]
   },
@@ -129,13 +169,19 @@ export const modulesData: ModuleData[] = [
       { id: 'm8-s4', instruction: 'En la ventana emergente, marca la casilla "Change price level for existing items" y haz clic en "Sí".', targetId: 'modal-price-level-yes', screenId: 'pos-main', expectedState: { applyPriceLevelToExisting: true } },
       { id: 'm8-s6', instruction: 'Procede a pagar la transacción.', targetId: 'pos-btn-pay', screenId: 'pos-main', validator: (s) => s.priceLevelActive ? true : 'El precio incrementado no se ha aplicado' },
       { id: 'm8-s7', instruction: 'Selecciona PEDIDOS YA como método de pago.', targetId: 'pay-btn-rappi-pedidos', screenId: 'payment', targetValue: 'PEDIDOS YA', action: (s) => { s.showAuthModal = true; s.selectedPaymentMethod = 'PEDIDOS YA'; } },
-      { id: 'm8-s8', instruction: 'Ingresa el código de autorización en la ventana emergente y haz clic en OK.', data: { authCode: '773190' }, dataLabels: { authCode: 'Código de autorización de Pedidos Ya' }, keepState: { showAuthModal: true }, targetId: 'modal-auth-ok', screenId: 'payment', action: (s) => { 
-          const amount = Number(s.takeAmount || s.cart.reduce((sum, item) => sum + item.price, 0));
-          s.payments = [...s.payments, { method: s.selectedPaymentMethod, amount }];
-          s.showAuthModal = false;
-          s.authCode = '';
-      } },
-      { id: 'm8-s9', allowedTargets: ['pay-btn-apply', 'pay-btn-vuelto'], instruction: 'Imprime y actualiza el documento para finalizar.', targetId: 'pay-btn-print-update', screenId: 'payment', action: (s) => { s.cart = []; s.currentCustomer = null; s.payments = []; s.priceLevelActive = false; s.takeAmount = ''; s.selectedPaymentMethod = 'Efectivo'; } },
+      {
+        id: 'm8-s8',
+        instruction: 'Ingresa el código de autorización en la ventana emergente y haz clic en OK.',
+        // El código SÍ se valida: es un dato que la ficha del caso le da al
+        // colaborador, así que escribir cualquier cosa no puede darse por bueno.
+        expectedState: { authCode: '773190' },
+        keepState: { showAuthModal: true },
+        targetId: 'modal-auth-ok',
+        screenId: 'payment',
+        // Sin `action`: el pago y el cierre de la ventana los hace la pantalla,
+        // para que anular el cobro y rehacerlo sea posible.
+      },
+      { id: 'm8-s9', instruction: 'Imprime y actualiza el documento para finalizar.', targetId: 'pay-btn-print-update', screenId: 'payment', validator: (s) => cubiertoCon(s, 'PEDIDOS YA') ? true : 'Este pedido se le cobra a PEDIDOS YA, no en efectivo. Anula el pago y vuelve a cobrarlo con el botón de PEDIDOS YA.', action: (s) => { s.cart = []; s.currentCustomer = null; s.payments = []; s.priceLevelActive = false; s.takeAmount = ''; s.selectedPaymentMethod = 'Efectivo'; } },
       { id: 'm8-s10', instruction: 'Revisa que la transacción se ha completado.', targetId: 'auto', screenId: 'payment' }
     ]
   },
@@ -145,7 +191,7 @@ export const modulesData: ModuleData[] = [
     steps: [
       { id: 'm9-s1', instruction: 'Inicia una nueva transacción.', targetId: 'pos-menu-new-trans', screenId: 'pos-menu', action: (s) => { s.registerOpen = true; } },
       { id: 'm9-s2', instruction: 'Haz clic en el botón "Nuevo" debajo de la búsqueda de clientes.', targetId: 'pos-btn-new-cust', screenId: 'pos-main', action: (s) => { s.showNewCustomerModal = true; } },
-      { id: 'm9-s3', instruction: 'Llena los datos obligatorios (Nombre, Apellido, Email, DNI/Tipo) y haz clic en Guardar.', data: { nombre: 'ROSA', apellido: 'QUISPE', correo: 'rosa.quispe@correo.com', documento: '70418823', tipoDocumento: 'DNI' }, dataLabels: { nombre: 'Nombre del cliente nuevo', apellido: 'Apellido del cliente nuevo', correo: 'Correo del cliente nuevo', documento: 'Documento del cliente nuevo', tipoDocumento: 'Tipo de documento del cliente nuevo' }, keepState: { showNewCustomerModal: true }, targetId: 'cust-new-save', screenId: 'pos-main', action: (s) => {
+      { id: 'm9-s3', instruction: 'Llena los datos obligatorios (Nombre, Apellido, Email, DNI/Tipo) y haz clic en Guardar.', keepState: { showNewCustomerModal: true }, expectedState: { newCustomerName: 'ROSA', newCustomerLastName: 'QUISPE', newCustomerEmail: 'rosa.quispe@correo.com', newCustomerDoc: '70418823', newCustomerDocType: 'DNI' }, targetId: 'cust-new-save', screenId: 'pos-main', action: (s) => {
           s.currentCustomer = { name: s.newCustomerName + ' ' + s.newCustomerLastName, doc: s.newCustomerDoc };
           s.showNewCustomerModal = false;
           s.newCustomerName = '';
@@ -173,7 +219,7 @@ export const modulesData: ModuleData[] = [
       { id: 'm10-s11', instruction: 'Procede a pagar la transacción.', targetId: 'pos-btn-pay', screenId: 'pos-main', validator: (s) => s.cart.length > 0 && s.cart[0].price < 0 ? true : 'No hay artículos en devolución' },
       { id: 'm10-s12', instruction: 'Selecciona "NC TRANSFERENCIA" como método de pago.', targetId: 'pay-btn-nc-transferencia', screenId: 'payment' },
       { id: 'm10-s13', instruction: 'Acepta el modal de datos bancarios.', keepState: { showNCTransferenciaModal: true }, targetId: 'modal-nctransf-ok', screenId: 'payment' },
-      { id: 'm10-s14', allowedTargets: ['pay-btn-apply', 'pay-btn-vuelto'], instruction: 'Haz clic en Imprimir Actualizar.', targetId: 'pay-btn-print-update', screenId: 'payment', action: (s) => { s.cart = []; s.currentCustomer = null; s.payments = []; s.takeAmount = ''; s.selectedPaymentMethod = 'Efectivo'; s.returnReason = ''; s.returnItems = []; s.comprobanteType = '03-BOL ELECT'; } },
+      { id: 'm10-s14', allowedTargets: ['pay-btn-apply', 'pay-btn-vuelto'], instruction: 'Haz clic en Imprimir Actualizar.', targetId: 'pay-btn-print-update', screenId: 'payment', validator: (s) => cobradoCon(s, 'NCTRANSF') ? true : 'El dinero se le devuelve a su cuenta: usa «NC TRANSFERENCIA».', action: (s) => { s.cart = []; s.currentCustomer = null; s.payments = []; s.takeAmount = ''; s.selectedPaymentMethod = 'Efectivo'; s.returnReason = ''; s.returnItems = []; s.comprobanteType = '03-BOL ELECT'; } },
       { id: 'm10-s15', instruction: 'Revisa que la transacción se ha completado.', targetId: 'auto', screenId: 'pos-main' }
     ]
   },
@@ -216,8 +262,21 @@ export const modulesData: ModuleData[] = [
       },
       { id: 'm11-s18', instruction: 'Haz clic en "Sí" en la ventana de crédito de tienda.', keepState: { showStoreCreditModal: true }, targetId: 'modal-store-credit-yes', screenId: 'payment' },
       { id: 'm11-s19', instruction: 'Haz clic en Pago para aplicar el crédito de tienda.', targetId: 'pay-btn-apply', screenId: 'payment', validator: (s) => s.selectedPaymentMethod === 'Crédito de Tienda' ? true : 'Debes usar el Crédito de Tienda primero.' },
-      { id: 'm11-s19-2', instruction: 'Haz clic en Pago para completar el monto restante con Efectivo.', targetId: 'pay-btn-apply', screenId: 'payment', validator: (s) => s.selectedPaymentMethod === 'Efectivo' ? true : 'Debes completar el pago con Efectivo.' },
-      { id: 'm11-s20', allowedTargets: ['pay-btn-apply', 'pay-btn-vuelto'], instruction: 'Haz clic en Imprimir Actualizar.', targetId: 'pay-btn-print-update', screenId: 'payment', action: (s) => { s.storeCredit = 0; s.cart = []; s.currentCustomer = null; s.payments = []; s.takeAmount = ''; s.selectedPaymentMethod = 'Efectivo'; } },
+      {
+        id: 'm11-s19-2',
+        instruction: 'Haz clic en Pago para completar el monto restante con Efectivo.',
+        targetId: 'pay-btn-apply',
+        screenId: 'payment',
+        validator: (s) => {
+          // Si anuló el crédito de tienda, este paso tiene que dejarle volver a
+          // aplicarlo. Si no, quedaba encerrado: el paso exige Efectivo, y con
+          // Efectivo nunca vuelve a existir el crédito que el paso final pide.
+          const tieneCredito = s.payments.some((p) => String(p?.method || '').startsWith('Crédito de Tienda'));
+          if (!tieneCredito && s.selectedPaymentMethod === 'Crédito de Tienda') return true;
+          return s.selectedPaymentMethod === 'Efectivo' ? true : 'Debes completar el pago con Efectivo.';
+        },
+      },
+      { id: 'm11-s20', allowedTargets: ['pay-btn-apply', 'pay-btn-vuelto'], instruction: 'Haz clic en Imprimir Actualizar.', targetId: 'pay-btn-print-update', screenId: 'payment', validator: (s) => !cobradoCon(s, 'Crédito de Tienda') ? 'Primero se aplica todo el crédito de tienda que tiene a favor.' : !cobradoCon(s, 'Efectivo') ? 'Falta cobrar en efectivo lo que el crédito no alcanza a cubrir.' : true, action: (s) => { s.storeCredit = 0; s.cart = []; s.currentCustomer = null; s.payments = []; s.takeAmount = ''; s.selectedPaymentMethod = 'Efectivo'; } },
       { id: 'm11-s21', instruction: 'Revisa que la transacción se ha completado.', targetId: 'auto', screenId: 'pos-main' }
     ]
   },
@@ -235,8 +294,8 @@ export const modulesData: ModuleData[] = [
     title: 'Módulo 13 — Depósito de efectivo',
     steps: [
       { id: 'm13-s1', instruction: 'En Punto de Venta, haz clic en Nuevo Desembolso.', targetId: 'pos-menu-new-desembolso', screenId: 'main-menu' },
-      { id: 'm13-s2', instruction: 'En el submenú, haz clic en Retiro de Dinero.', targetId: 'desembolso-retiro-dinero', screenId: 'main-menu' },
-      { id: 'm13-s3', instruction: 'Verifica la tienda asociada, en Nota escribe la referencia del cierre y haz clic en Agregar Pago.', targetId: 'desembolso-add-payment', screenId: 'desembolso', data: { nota: 'Cierre 12/08/2026' }, dataLabels: { nota: 'Texto de la nota del desembolso' } },
+      { id: 'm13-s2', instruction: 'En el submenú, haz clic en Retiro de Dinero.', keepState: { showDesembolsoSubMenu: true }, targetId: 'desembolso-retiro-dinero', screenId: 'main-menu' },
+      { id: 'm13-s3', instruction: 'Verifica la tienda asociada, en Nota escribe la referencia del cierre y haz clic en Agregar Pago.', targetId: 'desembolso-add-payment', targetValue: 'Cierre 12/08/2026', screenId: 'desembolso', },
       { id: 'm13-s4', instruction: 'Haz clic en el apartado de Cantidad.', targetId: 'desembolso-click-cantidad', screenId: 'desembolso' },
       { id: 'm13-s5', instruction: 'Ingresa el monto del retiro y haz clic en Sólo Actualizar.', allowedTargets: ['desembolso-click-cantidad', 'desembolso-add-payment'], targetId: 'desembolso-update', targetValue: '774.41', screenId: 'desembolso' }
     ]

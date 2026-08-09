@@ -13,6 +13,10 @@ local_data.json
 # Capturas que dejan las pruebas cuando algo falla
 tests/fallo-*.png
 tests/atasco-*.png
+tests/proceso-*.png
+tests/repetir-*.png
+tests/deshacer-*.png
+tests/guion-*.png
 
 # Hojas de contacto del script de iconos
 scripts/revision/

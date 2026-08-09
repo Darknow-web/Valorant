@@ -138,6 +138,13 @@ export const GradingConfigPanel = () => {
         con su mejor nota. Salir del módulo a medias no le gasta un intento: su avance se guarda y retoma donde lo
         dejó.
       </Card>
+
+      <Notice tone="brand">
+        <strong>El conteo de errores es más estricto que antes.</strong> Ahora descuenta cualquier acción que se salga
+        del proceso del caso —entrar a otra pantalla, cobrar por donde no toca, imprimir antes de tiempo—, no solo los
+        clics sobre el botón equivocado. Rellenar datos, repetir un paso ya hecho o reacomodar la pantalla siguen sin
+        costar nada. Si las notas de tu equipo salen más bajas de lo que esperabas, baja «Puntos por error» a 0,5.
+      </Notice>
     </div>
   );
 };
