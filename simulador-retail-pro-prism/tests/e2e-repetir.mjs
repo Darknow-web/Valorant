@@ -79,6 +79,26 @@ async function totalDelDocumento(page) {
     .catch(() => null);
 }
 
+/**
+ * ¿Volver a hacer esta acción es de verdad "repetir un paso correcto"?
+ *
+ * Dos casos en los que no lo es, y por eso no se prueban:
+ *
+ *  - Abrir un desplegable y elegir la opción son dos tiempos de un mismo gesto.
+ *    Repetir solo el primero lo CIERRA, que es justo lo que debe hacer, y
+ *    repetir solo el segundo busca una opción que ya no está en pantalla.
+ *  - Un control que un paso POSTERIOR también usa. El botón «Pago» del Módulo 5
+ *    aplica primero el efectivo y después la tarjeta: volver a pulsarlo no es
+ *    repetir el cobro en efectivo, es hacer mal el cobro con tarjeta. Que eso
+ *    cueste un punto está bien.
+ */
+function sePuedeRepetir(camino, i) {
+  const accion = camino[i];
+  if (accion.tipo === 'abrirDesplegable' || accion.tipo === 'elegirOpcion') return false;
+  if (accion.id && camino.slice(i + 1).some((otra) => otra.id === accion.id)) return false;
+  return true;
+}
+
 /** Ejecuta una acción sin exigir que exista. Devuelve si llegó a hacerse. */
 async function intentar(page, accion, paciencia = PACIENCIA_REPETICION) {
   try {
@@ -113,15 +133,13 @@ try {
       // El contador se lee sobre la marcha: cuando el módulo se completa la
       // barra desaparece y leerlo al final daría siempre cero, que es como no
       // comprobar nada.
+      const camino = CAMINOS[moduleId];
       let ultimoContador = 0;
-      for (const accion of CAMINOS[moduleId]) {
+      for (let i = 0; i < camino.length; i++) {
+        const accion = camino[i];
         await ejecutar(page, accion);
         await cerrarAviso(page);
-        // Abrir un desplegable y elegir la opción son dos tiempos de un mismo
-        // gesto: repetir solo el primero lo CIERRA, que es lo que debe hacer, y
-        // repetir solo el segundo busca una opción que ya no está en pantalla.
-        // Ninguna de las dos cosas es "repetir un paso correcto".
-        if (accion.tipo !== 'abrirDesplegable' && accion.tipo !== 'elegirOpcion') {
+        if (sePuedeRepetir(camino, i)) {
           await intentar(page, accion);
           await cerrarAviso(page);
         }
@@ -188,12 +206,30 @@ try {
       const lineasAntes = await lineasDelDocumento(page);
       const totalAntes = await totalDelDocumento(page);
 
-      // Dos veces más el mismo artículo, y otra vez el cliente. Si es un
-      // agregador, eso vuelve a abrir la ventana del nivel de precio y se
-      // contesta igual que la primera vez.
+      // Dos veces más el mismo artículo. Es lo que hace quien no está seguro de
+      // que le haya entrado: antes cada pasada añadía otra línea, y en la
+      // pantalla de cobro ya no hay forma de quitarla.
       await ejecutar(page, buscarArticulo);
       await cerrarAviso(page);
       await ejecutar(page, buscarArticulo);
+      await cerrarAviso(page);
+
+      comprobar(
+        `${moduleId}: pasar el artículo tres veces no agrega líneas`,
+        (await lineasDelDocumento(page)) === lineasAntes,
+        `${lineasAntes} antes, ${await lineasDelDocumento(page)} después`
+      );
+      const contadorTrasInsistir = await errores(page);
+      comprobar(`${moduleId}: pasarlo tres veces no costó errores`, contadorTrasInsistir === 0, `contó ${contadorTrasInsistir}`);
+
+      // Y ahora el cliente. Buscarlo otra vez exige quitarlo primero —mientras
+      // está asociado, el buscador no existe—, y eso sí es salirse del proceso,
+      // así que aquí el contador no tiene por qué quedarse en cero. Lo que se
+      // comprueba es el importe: en los módulos de agregador, volver a asociarlo
+      // vuelve a abrir la ventana del nivel de precio, y contestarla otra vez no
+      // puede volver a subir el 5%.
+      await page.locator('#pos-btn-remove-cust').first().click();
+      await page.waitForTimeout(600);
       await cerrarAviso(page);
       await ejecutar(page, buscarCliente);
       await cerrarAviso(page);
@@ -203,17 +239,10 @@ try {
       }
 
       comprobar(
-        `${moduleId}: insistir no agrega líneas al documento`,
-        (await lineasDelDocumento(page)) === lineasAntes,
-        `${lineasAntes} antes, ${await lineasDelDocumento(page)} después`
-      );
-      comprobar(
-        `${moduleId}: insistir no cambia el importe`,
+        `${moduleId}: volver a asociar al cliente no cambia el importe`,
         (await totalDelDocumento(page)) === totalAntes,
         `${totalAntes} antes, ${await totalDelDocumento(page)} después`
       );
-      const contadorTrasInsistir = await errores(page);
-      comprobar(`${moduleId}: insistir no costó errores`, contadorTrasInsistir === 0, `contó ${contadorTrasInsistir}`);
 
       for (const accion of restoDelCamino.slice(cerrarVentana.length)) {
         await ejecutar(page, accion);
