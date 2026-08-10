@@ -77,7 +77,10 @@ export const Button = ({
     whileTap={props.disabled ? undefined : { scale: 0.97 }}
     transition={resorte}
     className={cn(
-      'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed',
+      // `min-h-11` son 44 px, la medida táctil recomendada. Con solo el
+      // relleno quedaba en 40,5 px, justo en el límite: cualquier animación
+      // de entrada que lo escale un 4% lo dejaba por debajo del mínimo.
+      'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed',
       BUTTON_STYLES[variant],
       className
     )}

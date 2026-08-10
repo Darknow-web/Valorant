@@ -128,11 +128,18 @@ try {
     await page.getByPlaceholder('Ej: Torres').fill('Córdova');
     await page.getByPlaceholder('Ej: 71234567').fill(dni);
     await page.getByPlaceholder('Ej: SP15 Mayolo').fill('SP15 Mayolo');
+    // La ventana entra escalando desde 0.96: medir a media animación devolvía
+    // botones un 4% más pequeños de lo que son en reposo.
+    await page.waitForTimeout(700);
     await revisar(page, telefono.nombre, 'identificarse');
     await page.getByRole('button', { name: 'Continuar' }).click();
 
     // --- Elección de personaje ---
     await visible(page.locator('[data-personaje]').first(), 6000);
+    // La pantalla entra en cascada desde opacidad cero, y para Playwright un
+    // elemento transparente ya está «visible»: sin esta espera la revisión corría
+    // sobre una pantalla en blanco y no comprobaba nada.
+    await page.waitForTimeout(900);
     await revisar(page, telefono.nombre, 'elegir-personaje');
     await page.locator('[data-personaje="base-1"]').click();
     await page.getByRole('button', { name: 'Continuar' }).click();
