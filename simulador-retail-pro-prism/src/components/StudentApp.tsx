@@ -460,6 +460,21 @@ const TelonFinal = ({
           </motion.div>
         )}
 
+        {/* La tienda cerrada de noche: el turno terminó. Cierra el relato que
+            abrió el preámbulo con la tienda amaneciendo, y es lo último que ve
+            el colaborador antes de salir. */}
+        {ilustracion && (
+          <motion.img
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.95, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            src={ilustracion}
+            alt=""
+            aria-hidden
+            className="mx-auto mt-9 max-h-[32vh] w-auto max-w-full rounded-2xl object-contain drop-shadow-[0_18px_40px_rgba(0,0,0,0.35)]"
+          />
+        )}
+
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

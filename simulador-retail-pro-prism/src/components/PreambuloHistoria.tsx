@@ -47,7 +47,10 @@ export const PreambuloHistoria = ({
               src={ilustracion}
               alt=""
               aria-hidden
-              className="mx-auto mb-8 max-h-[38vh] w-auto max-w-full object-contain drop-shadow-[0_18px_40px_rgba(0,0,0,0.35)]"
+              // Redondeada: la ilustración es un rectángulo de fondo claro
+              // sobre el azul marino de la pantalla, y a canto vivo se ve como
+              // un recorte pegado encima.
+              className="mx-auto mb-8 max-h-[38vh] w-auto max-w-full rounded-2xl object-contain drop-shadow-[0_18px_40px_rgba(0,0,0,0.35)]"
             />
           )}
 
