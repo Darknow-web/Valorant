@@ -42,6 +42,19 @@ const erroresRaw = import.meta.glob('./errores/*.{webp,png,jpg,jpeg,svg}', {
 }) as Mapa;
 
 /**
+ * Avatares que el colaborador elige como su personaje.
+ *
+ * Estos son los que vienen de fábrica. El administrador puede subir más desde su
+ * panel, y esos viajan con la configuración en vez de vivir aquí: ver
+ * `personajesDelServidor` en `src/lib/personajes.ts`.
+ */
+const personajesRaw = import.meta.glob('./personajes/*.{webp,png,jpg,jpeg,svg}', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+}) as Mapa;
+
+/**
  * Ilustraciones del relato: la apertura y el cierre del turno.
  *
  * Se buscan por NOMBRE, no por número, y son opcionales: mientras no existan,
@@ -69,6 +82,18 @@ function ordenados(mapa: Mapa): { numero: number; url: string }[] {
 const portadas = ordenados(portadasRaw);
 const celebraciones = ordenados(celebracionesRaw);
 const errores = ordenados(erroresRaw);
+
+/**
+ * Los personajes de fábrica, con un identificador estable.
+ *
+ * El identificador lleva el prefijo `base-` para no chocar nunca con los que
+ * sube el administrador: lo que se guarda del colaborador es ese identificador,
+ * no la imagen, así que tiene que seguir significando lo mismo con el tiempo.
+ */
+export const PERSONAJES_BASE = ordenados(personajesRaw).map((p) => ({
+  id: `base-${p.numero}`,
+  url: p.url,
+}));
 
 /**
  * El icono de la celebración final: el que tiene al gato y al perro juntos.

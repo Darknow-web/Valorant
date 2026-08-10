@@ -90,13 +90,28 @@ export async function abrirNavegador() {
  * Cada colaborador se distingue por su DNI, así que usar uno distinto en cada
  * prueba equivale a empezar de cero sin tener que reiniciar el servidor.
  */
-export async function entrarComoColaborador(page, { dni, nombre = 'Ana Torres', tienda = 'SP15 Mayolo' }) {
+export async function entrarComoColaborador(
+  page,
+  { dni, nombre = 'Ana', apellido = 'Torres', tienda = 'SP15 Mayolo', tipoDocumento = 'DNI', personaje = 'base-1' }
+) {
   await page.goto(`${BASE}/?teacher=entrenador`, { waitUntil: 'domcontentloaded' });
 
-  await page.getByPlaceholder('Ej: Ana Torres').fill(nombre);
-  await page.getByPlaceholder('Ej: 71234567').fill(dni);
+  await page.getByPlaceholder('Ej: Ana').fill(nombre);
+  await page.getByPlaceholder('Ej: Torres').fill(apellido);
+  if (tipoDocumento !== 'DNI') {
+    await page.locator('select').first().selectOption('CE');
+  }
+  await page.getByPlaceholder(/^Ej: (71234567|001234567)$/).fill(dni);
   await page.getByPlaceholder('Ej: SP15 Mayolo').fill(tienda);
   await page.getByRole('button', { name: 'Continuar' }).click();
+
+  // Elegir personaje: sale antes del preámbulo y solo la primera vez, porque a
+  // partir de ahí el avatar ya está guardado.
+  const avatar = page.locator(`[data-personaje="${personaje}"]`);
+  if (await visible(avatar, 6000)) {
+    await avatar.click();
+    await page.getByRole('button', { name: 'Continuar' }).click();
+  }
 
   // El preámbulo de la historia sale una sola vez por colaborador.
   const empezar = page.getByRole('button', { name: 'Empezar el turno' });

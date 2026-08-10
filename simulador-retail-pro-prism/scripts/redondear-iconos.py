@@ -41,7 +41,19 @@ ICONOS = RAIZ / "src" / "assets" / "iconos"
 # Solo los badges circulares. `portadas/` queda fuera a propósito: son
 # ilustraciones de línea sobre transparente, ya se ven homogéneas entre sí y
 # recortarlas en círculo les cortaría las patas y los detalles que salen del marco.
+# `historia/` también queda fuera: son escenas apaisadas, no discos.
 GRUPOS = {"modulos": 320, "errores": 512}
+
+# Los personajes van por su cuenta. Ya vienen dibujados como un círculo sobre un
+# cuadrado blanco, así que no hay que encogerlos como a un badge cuadrado; lo que
+# hay que hacer es lo contrario, quitarles el margen blanco. Y cada uno traía el
+# suyo —del 4% al 10%—, con lo que en la rejilla de elección se veían de tamaños
+# distintos aunque el dibujo fuera del mismo tamaño.
+PERSONAJES = {"personajes": 512}
+
+# Margen que se les deja alrededor del dibujo, ya normalizados. Un pelo de aire
+# para que el borde del círculo no quede pegado al filo del recorte.
+MARGEN_PERSONAJE = 0.02
 
 # Con cuánta resolución extra se trabaja antes de volver al tamaño final. El
 # borde del círculo se dibuja aquí y se reduce después: así queda suave sin
@@ -116,6 +128,15 @@ def redondear(ruta: Path, lado: int) -> str:
     original = Image.open(ruta).convert("RGBA")
     lleno = es_fondo_lleno(original)
 
+    # Un icono que YA es un disco que llena su lienzo se deja en paz.
+    #
+    # Sin esto el script no era idempotente: al no quedar fondo cuadrado, el
+    # cálculo de abajo le aplicaba otra vez el ×0.98 de margen, así que cada
+    # pasada encogía todos los badges un 2% más. Se descubrió al añadir los
+    # personajes, cuando una pasada de rutina retocó los 32 iconos ya buenos.
+    if not lleno and radio_del_contenido(original) >= (original.size[0] / 2) * 0.97:
+        return "ya normalizado (sin tocar)"
+
     if lleno:
         # Fondo cuadrado: el disco se pinta con el color del propio fondo y el
         # dibujo se encoge un poco, para que al recortar el círculo no se pierda
@@ -149,6 +170,71 @@ def redondear(ruta: Path, lado: int) -> str:
     return f"{nota} ×{escala:.2f}"
 
 
+def recortar_al_contenido(im: Image.Image, fondo: tuple[int, int, int, int]) -> Image.Image:
+    """
+    Quita el marco de fondo y deja el dibujo centrado en un cuadrado.
+
+    Los personajes vienen como un círculo dibujado sobre un cuadrado blanco, pero
+    con márgenes distintos entre sí. Sin esto, en la rejilla de elección unos se
+    ven claramente más grandes que otros.
+    """
+    lado_original = im.size[0]
+    # Máscara de "esto no es fondo", con tolerancia: el blanco del archivo no es
+    # exactamente 255 en todos los píxeles por la compresión del original.
+    base = Image.new("RGBA", im.size, fondo)
+    diferencia = Image.new("L", im.size, 0)
+    px_im, px_base, px_dif = im.load(), base.load(), diferencia.load()
+    for y in range(lado_original):
+        for x in range(lado_original):
+            r, g, b, a = px_im[x, y]
+            R, G, B, _ = px_base[x, y]
+            if a > UMBRAL_ALFA and abs(r - R) + abs(g - G) + abs(b - B) > 24:
+                px_dif[x, y] = 255
+
+    caja = diferencia.getbbox()
+    if not caja:
+        return im
+
+    # Cuadrado centrado en el contenido: recortar por la caja a secas deformaría
+    # a los que no están perfectamente centrados en su lienzo.
+    x0, y0, x1, y1 = caja
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    medio = max(x1 - x0, y1 - y0) / 2
+    medio = medio / (1 - 2 * MARGEN_PERSONAJE)
+    izq, arr = int(round(cx - medio)), int(round(cy - medio))
+    lado = int(round(medio * 2))
+
+    recorte = Image.new("RGBA", (lado, lado), fondo)
+    recorte.alpha_composite(im, (-izq, -arr))
+    return recorte
+
+
+def redondear_personaje(ruta: Path, lado: int) -> str:
+    """
+    Un avatar: se le quita el marco blanco y se recorta en círculo.
+
+    Es idempotente a propósito: volver a pasar el script no encoge el dibujo un
+    poco más cada vez. Un personaje ya procesado tiene las esquinas
+    transparentes, y en ese caso solo se le vuelve a aplicar la máscara.
+    """
+    original = Image.open(ruta).convert("RGBA")
+    if es_fondo_lleno(original):
+        original = recortar_al_contenido(original, color_de_fondo(original))
+        nota = "recortado al dibujo"
+    else:
+        nota = "ya normalizado"
+
+    grande = lado * SUPERMUESTREO
+    mascara = Image.new("L", (grande, grande), 0)
+    ImageDraw.Draw(mascara).ellipse([0, 0, grande - 1, grande - 1], fill=255)
+
+    lienzo = Image.new("RGBA", (grande, grande), (0, 0, 0, 0))
+    lienzo.alpha_composite(original.resize((grande, grande), Image.LANCZOS))
+    lienzo.putalpha(mascara)
+    lienzo.resize((lado, lado), Image.LANCZOS).save(ruta, "WEBP", quality=86, method=6)
+    return nota
+
+
 def hoja_de_contacto(grupo: str, destino: Path, fondo: tuple[int, int, int]) -> None:
     archivos = sorted(
         (ICONOS / grupo).glob("*.webp"),
@@ -179,10 +265,19 @@ def main() -> int:
         for archivo in archivos:
             print(f"  {archivo.name:<10} {redondear(archivo, lado)}")
 
+    for grupo, lado in PERSONAJES.items():
+        carpeta = ICONOS / grupo
+        if not carpeta.is_dir():
+            continue
+        archivos = sorted(carpeta.glob("*.webp"), key=lambda p: p.name)
+        print(f"\n{grupo}/ ({len(archivos)} avatares)")
+        for archivo in archivos:
+            print(f"  {archivo.name:<10} {redondear_personaje(archivo, lado)}")
+
     if "--revisar" in sys.argv:
         salida = RAIZ / "scripts" / "revision"
         salida.mkdir(exist_ok=True)
-        for grupo in GRUPOS:
+        for grupo in {**GRUPOS, **PERSONAJES}:
             hoja_de_contacto(grupo, salida / f"{grupo}-oscuro.png", (6, 6, 67))
             hoja_de_contacto(grupo, salida / f"{grupo}-claro.png", (247, 247, 250))
         print(f"\nHojas de contacto en {salida}")

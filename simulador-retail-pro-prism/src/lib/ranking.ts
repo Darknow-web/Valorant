@@ -12,6 +12,8 @@ export interface FilaRanking {
   puesto: number;
   nombre: string;
   tienda: string;
+  /** Identificador de su avatar. La imagen la resuelve `urlDePersonaje`. */
+  personaje: string;
   /** Cuántos módulos tiene completados. */
   modulos: number;
   promedio: number;

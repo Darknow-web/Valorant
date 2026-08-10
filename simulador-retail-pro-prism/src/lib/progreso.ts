@@ -34,6 +34,8 @@ export interface Progreso {
   finalizado: boolean;
   /** Ya vio el preámbulo de la historia. */
   preambuloVisto: boolean;
+  /** El avatar que eligió, guardado en el servidor. Vacío si todavía no eligió. */
+  personaje: string;
 }
 
 export const PROGRESO_VACIO: Progreso = {
@@ -47,6 +49,7 @@ export const PROGRESO_VACIO: Progreso = {
   limiteIntentos: 2,
   finalizado: false,
   preambuloVisto: false,
+  personaje: '',
 };
 
 export async function obtenerProgreso(teacher: string, dni: string): Promise<Progreso> {

@@ -11,6 +11,18 @@ import {
   guardarEstadoModulo,
 } from '../lib/estadoModulo';
 
+/**
+ * Lo que se guarda del colaborador además del nombre completo.
+ *
+ * El nombre viaja junto («Ana Torres») porque así lo esperan la hoja de cálculo
+ * y el ranking; estas piezas sueltas solo sirven para volver a mostrarlas.
+ */
+export interface DatosDelOperador {
+  nombre: string;
+  apellido: string;
+  tipoDocumento: 'DNI' | 'CE';
+}
+
 interface SimulatorContextType extends SimulationState {
   /** Empieza el módulo, o lo retoma donde quedó si se le pasa lo guardado. */
   startModule: (moduleId: string, reanudar?: EstadoModuloGuardado | null) => void;
@@ -29,8 +41,11 @@ interface SimulatorContextType extends SimulationState {
   triggerCustomError: (message: string, points?: number) => void;
   triggerHint: () => void;
   setAppState: (update: Partial<AppState>) => void;
-  setOperator: (name: string, dni: string, store: string) => void;
+  setOperator: (name: string, dni: string, store: string, extra?: DatosDelOperador) => void;
   clearOperator: () => void;
+  /** El avatar elegido. Cadena vacía mientras todavía no ha elegido ninguno. */
+  operatorPersonaje: string;
+  setOperatorPersonaje: (id: string) => void;
   submitScore: () => Promise<void>;
   currentStep: Step | null;
   moduleTitle: string;
@@ -38,6 +53,8 @@ interface SimulatorContextType extends SimulationState {
   teacherUsername: string;
   /** Catálogo simulado ya con la configuración del entrenador aplicada. */
   catalog: Catalog;
+  /** Personajes que subió el administrador, además de los que vienen de fábrica. */
+  personajesSubidos: { id: string; url: string }[];
   /** Mientras es true no se debe empezar ningún módulo: faltan datos del entrenador. */
   configLoading: boolean;
   /** El enlace apunta a un entrenador que no existe. */
@@ -238,6 +255,9 @@ export const SimulatorProvider = ({
 }) => {
   const [modulesData, setModules] = useState<ModuleData[]>(defaultModulesData);
   const [catalog, setCatalog] = useState<Catalog>(cloneDefaultCatalog);
+  // Los personajes que subió el administrador. Los de fábrica van compilados y
+  // no hacen falta aquí: ver `src/lib/personajes.ts`.
+  const [personajesSubidos, setPersonajesSubidos] = useState<{ id: string; url: string }[]>([]);
   const [configLoading, setConfigLoading] = useState(!!teacherUsername);
   const [teacherMissing, setTeacherMissing] = useState(false);
   const [configVersion, setConfigVersion] = useState(0);
@@ -267,6 +287,7 @@ export const SimulatorProvider = ({
         const overrides: StepDataMap = data?.stepData || {};
         setModules(applyStepData(defaultModulesData, overrides));
         setCatalog(normalizeCatalog(data?.catalog));
+        setPersonajesSubidos(Array.isArray(data?.personajes) ? data.personajes : []);
         setTeacherMissing(data ? data.teacherExists === false : false);
       })
       .catch(() => {
@@ -296,6 +317,7 @@ export const SimulatorProvider = ({
     operatorName: typeof window !== 'undefined' ? localStorage.getItem('operatorName') || '' : '',
     operatorDni: typeof window !== 'undefined' ? localStorage.getItem('operatorDni') || '' : '',
     operatorStore: typeof window !== 'undefined' ? localStorage.getItem('operatorStore') || '' : '',
+    operatorPersonaje: typeof window !== 'undefined' ? localStorage.getItem('operatorPersonaje') || '' : '',
     attemptId: null,
     mistakeLog: [],
     processSteps: [],
@@ -319,22 +341,54 @@ export const SimulatorProvider = ({
   const currentModule = modulesData.find((m) => m.id === state.currentModuleId);
   const currentStep = currentModule ? currentModule.steps[state.currentStepIndex] : null;
 
-  const setOperator = (name: string, dni: string, store: string) => {
+  const setOperator = (name: string, dni: string, store: string, extra?: DatosDelOperador) => {
     localStorage.setItem('operatorName', name);
     localStorage.setItem('operatorDni', dni);
     localStorage.setItem('operatorStore', store);
+    // Nombre y apellido por separado, y el tipo de documento, se guardan solo
+    // para poder volver a mostrarlos: lo que viaja al servidor y a la hoja sigue
+    // siendo el nombre completo en un campo, que es como estaba.
+    if (extra?.nombre) localStorage.setItem('operatorFirstName', extra.nombre);
+    if (extra?.apellido) localStorage.setItem('operatorLastName', extra.apellido);
+    if (extra?.tipoDocumento) localStorage.setItem('operatorDocType', extra.tipoDocumento);
     setState((prev) => ({ ...prev, operatorName: name, operatorDni: dni, operatorStore: store }));
+  };
+
+  /**
+   * El avatar elegido.
+   *
+   * Se guarda en el navegador para que la pantalla no parpadee al entrar, y en
+   * el servidor (`/api/student-flag`) para que siga siendo el suyo si entra
+   * desde otro equipo. Manda el del servidor cuando los dos difieren.
+   */
+  const setOperatorPersonaje = (id: string) => {
+    localStorage.setItem('operatorPersonaje', id);
+    setState((prev) => ({ ...prev, operatorPersonaje: id }));
+    const dni = stateRef.current.operatorDni;
+    if (!teacherUsername || !dni) return;
+    fetch('/api/student-flag', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ teacher: teacherUsername, dni, personaje: id }),
+    }).catch(() => {
+      /* Sin red se queda el del navegador; se reintenta al volver a elegir. */
+    });
   };
 
   const clearOperator = () => {
     localStorage.removeItem('operatorName');
     localStorage.removeItem('operatorDni');
     localStorage.removeItem('operatorStore');
+    localStorage.removeItem('operatorFirstName');
+    localStorage.removeItem('operatorLastName');
+    localStorage.removeItem('operatorDocType');
+    localStorage.removeItem('operatorPersonaje');
     setState((prev) => ({
       ...prev,
       operatorName: '',
       operatorDni: '',
       operatorStore: '',
+      operatorPersonaje: '',
       status: 'menu',
       currentModuleId: null,
       completedModules: [],
@@ -887,6 +941,9 @@ export const SimulatorProvider = ({
           studentName: operatorName.trim(),
           studentDni: operatorDni.trim(),
           storeName: operatorStore.trim(),
+          // El avatar viaja con el intento, igual que el nombre y la tienda: el
+          // ranking se arma con los intentos, así que es de ahí de donde lo saca.
+          personaje: snapshot.operatorPersonaje || '',
           moduleId: mod.id,
           moduleTitle: mod.title,
           teacherUsername,
@@ -939,7 +996,9 @@ export const SimulatorProvider = ({
         triggerCustomError,
         triggerHint,
         setAppState,
+        personajesSubidos,
         setOperator,
+        setOperatorPersonaje,
         clearOperator,
         submitScore,
         currentStep,

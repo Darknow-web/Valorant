@@ -223,6 +223,13 @@ export interface SimulationState {
   operatorName: string;
   operatorDni: string;
   operatorStore: string;
+  /**
+   * Identificador del avatar que eligió, no la imagen.
+   *
+   * Guardar el identificador y no la imagen es lo que permite cambiar el dibujo
+   * de un personaje sin que quien lo tenía elegido se quede con el viejo.
+   */
+  operatorPersonaje: string;
   /** Identificador único del intento en curso; evita filas duplicadas en Sheets. */
   attemptId: string | null;
   mistakeLog: MistakeDetail[];

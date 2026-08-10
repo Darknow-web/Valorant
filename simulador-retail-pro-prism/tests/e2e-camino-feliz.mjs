@@ -33,7 +33,7 @@ try {
 
     try {
       // Un DNI distinto por módulo: cada uno empieza con sus dos intentos intactos.
-      await entrarComoColaborador(page, { dni: `9000${moduleId.replace('m', '').padStart(2, '0')}` });
+      await entrarComoColaborador(page, { dni: `900000${moduleId.replace('m', '').padStart(2, '0')}` });
       await entrarAlModulo(page, moduleId);
 
       for (const accion of CAMINOS[moduleId]) {

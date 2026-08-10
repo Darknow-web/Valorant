@@ -6,10 +6,11 @@ import { ShareLinkPanel } from './ShareLinkPanel';
 import { StepDataEditor } from './StepDataEditor';
 import { CatalogEditor } from './CatalogEditor';
 import { GradingConfigPanel, SheetConfigPanel } from './SyncConfigPanel';
+import { PersonajesPanel } from './PersonajesPanel';
 import { ResultsPanel } from './ResultsPanel';
 import { UsersPanel } from './UsersPanel';
 
-type TabId = 'compartir' | 'datos' | 'catalogo' | 'nota' | 'sheets' | 'resultados' | 'usuarios';
+type TabId = 'compartir' | 'datos' | 'catalogo' | 'nota' | 'personajes' | 'sheets' | 'resultados' | 'usuarios';
 
 const TABS: { id: TabId; label: string; adminOnly?: boolean }[] = [
   { id: 'compartir', label: 'Compartir' },
@@ -18,6 +19,9 @@ const TABS: { id: TabId; label: string; adminOnly?: boolean }[] = [
   { id: 'nota', label: 'Nota y calificación' },
   // La hoja es una sola para toda la organización, así que la conecta el
   // administrador. Un entrenador que la cambiara desviaría las notas de todos.
+  // Los personajes son globales: los ve todo el mundo y salen en el mismo
+  // ranking, así que los sube el administrador y no cada entrenador.
+  { id: 'personajes', label: 'Personajes', adminOnly: true },
   { id: 'sheets', label: 'Google Sheets', adminOnly: true },
   { id: 'resultados', label: 'Resultados' },
   { id: 'usuarios', label: 'Entrenadores', adminOnly: true },
@@ -126,6 +130,7 @@ export const TeacherPanel = ({ user, onLogout }: { user: AuthUser; onLogout: () 
         {tab === 'datos' && <StepDataEditor key={`datos-${catalogVersion}`} />}
         {tab === 'catalogo' && <CatalogEditor onSaved={() => setCatalogVersion((v) => v + 1)} />}
         {tab === 'nota' && <GradingConfigPanel />}
+        {tab === 'personajes' && isAdmin && <PersonajesPanel />}
         {tab === 'sheets' && isAdmin && <SheetConfigPanel />}
         {tab === 'resultados' && <ResultsPanel isAdmin={isAdmin} />}
         {tab === 'usuarios' && isAdmin && <UsersPanel currentUsername={user.username} />}

@@ -124,10 +124,17 @@ try {
 
     // --- Identificarse ---
     await page.goto(`${BASE}/?teacher=entrenador`, { waitUntil: 'domcontentloaded' });
-    await page.getByPlaceholder('Ej: Ana Torres').fill('Carlos Córdova');
+    await page.getByPlaceholder('Ej: Ana').fill('Carlos');
+    await page.getByPlaceholder('Ej: Torres').fill('Córdova');
     await page.getByPlaceholder('Ej: 71234567').fill(dni);
     await page.getByPlaceholder('Ej: SP15 Mayolo').fill('SP15 Mayolo');
     await revisar(page, telefono.nombre, 'identificarse');
+    await page.getByRole('button', { name: 'Continuar' }).click();
+
+    // --- Elección de personaje ---
+    await visible(page.locator('[data-personaje]').first(), 6000);
+    await revisar(page, telefono.nombre, 'elegir-personaje');
+    await page.locator('[data-personaje="base-1"]').click();
     await page.getByRole('button', { name: 'Continuar' }).click();
 
     // --- Preámbulo del relato ---

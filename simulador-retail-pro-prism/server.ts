@@ -17,8 +17,17 @@ let almacenProyecto = '';
 let almacenMotivo = 'No se encontró configuración de Firebase.';
 
 try {
+  // El ARCHIVO manda sobre la variable de entorno, y no al revés.
+  //
+  // Es el orden que hace falta en AI Studio: allí la herramienta genera
+  // `firebase-applet-config.json` con la configuración buena, y una variable de
+  // entorno a medio poner se imponía sobre él y dejaba la aplicación guardando
+  // en local sin que nadie se enterara. La variable sigue existiendo para los
+  // despliegues que no pueden dejar un archivo con credenciales en el disco, y
+  // para que las pruebas puedan forzar el almacén local.
   const configPath = process.env.FIREBASE_CONFIG_PATH || './firebase-applet-config.json';
-  const rawConfig = process.env.FIREBASE_CONFIG || (fs.existsSync(configPath) ? fs.readFileSync(configPath, 'utf8') : '');
+  const desdeArchivo = fs.existsSync(configPath) ? fs.readFileSync(configPath, 'utf8') : '';
+  const rawConfig = desdeArchivo || process.env.FIREBASE_CONFIG || '';
   if (rawConfig) {
     const firebaseConfig = JSON.parse(rawConfig);
     if (typeof firebaseConfig === 'object' && firebaseConfig !== null && firebaseConfig.projectId) {
@@ -150,10 +159,42 @@ let mockLogs: Record<string, any[]> = {};
 let mockCatalog: any = null;
 /** Conexión a la hoja de cálculo: una sola, y solo el administrador la toca. */
 let mockSheet: any = null;
+
+/** Personajes subidos por el administrador (ver readPersonajesGlobal). */
+let mockPersonajes: { id: string; url: string }[] = [];
 /** Avance de cada colaborador, con clave `entrenador__dni`. */
 let mockEstados: Record<string, any> = {};
 
 // --- Firestore helpers ---
+
+/**
+ * Lectura y escritura de Firestore que no tumban la petición.
+ *
+ * Un tropiezo de red o un permiso mal puesto en las reglas hacía que la promesa
+ * se rechazara y la petición entera acabara en un 500 sin explicación: al
+ * colaborador se le quedaba la pantalla colgada en mitad de un módulo. Ahora el
+ * fallo se escribe en el log del servidor —que es donde se puede diagnosticar— y
+ * quien llama recibe `null`, que ya sabe tratar como "no hay nada guardado".
+ */
+async function leerDoc(ruta: string): Promise<any | null> {
+  try {
+    return await getDoc(doc(db, 'app', ruta));
+  } catch (e: any) {
+    console.error(`[prism] Error leyendo app/${ruta} en Firestore:`, e?.message || e);
+    return null;
+  }
+}
+
+async function escribirDoc(ruta: string, datos: any): Promise<boolean> {
+  try {
+    await setDoc(doc(db, 'app', ruta), datos);
+    return true;
+  } catch (e: any) {
+    console.error(`[prism] Error escribiendo app/${ruta} en Firestore:`, e?.message || e);
+    return false;
+  }
+}
+
 async function readUsers() {
   if (!db) {
     if (!mockUsers.length) {
@@ -162,8 +203,8 @@ async function readUsers() {
     }
     return mockUsers;
   }
-  const d = await getDoc(doc(db, 'app', 'users'));
-  let users = d.exists() ? d.data().users : [];
+  const d = await leerDoc('users');
+  let users = d?.exists() ? d.data().users : [];
   let needsSave = false;
   if (!users.length) {
     users = seedUsers();
@@ -187,7 +228,7 @@ async function readUsers() {
 
 async function writeUsers(users: any[]) {
   if (db) {
-    await setDoc(doc(db, 'app', 'users'), { users });
+    await escribirDoc('users', { users });
   } else {
     mockUsers = users;
     saveLocalDB();
@@ -217,8 +258,8 @@ async function readConfig(username: string) {
   let conf: any;
   if (username) {
     if (db) {
-      const d = await getDoc(doc(db, 'app', 'configs_' + username));
-      if (d.exists()) conf = d.data();
+      const d = await leerDoc('configs_' + username);
+      if (d?.exists()) conf = d.data();
     } else {
       conf = mockConfigs[username];
     }
@@ -230,7 +271,7 @@ async function writeConfig(username: string, config: any) {
   const clean: any = {};
   for (const k in config) if (config[k] !== undefined) clean[k] = config[k];
   if (db) {
-    await setDoc(doc(db, 'app', 'configs_' + username), clean);
+    await escribirDoc('configs_' + username, clean);
   } else {
     mockConfigs[username] = clean;
     saveLocalDB();
@@ -247,17 +288,71 @@ async function writeConfig(username: string, config: any) {
  */
 async function readCatalogGlobal() {
   if (!db) return mockCatalog;
-  const d = await getDoc(doc(db, 'app', 'catalog_global'));
-  return d.exists() ? d.data().catalog ?? null : null;
+  const d = await leerDoc('catalog_global');
+  return d?.exists() ? d.data().catalog ?? null : null;
 }
 
 async function writeCatalogGlobal(catalog: any) {
   if (db) {
-    await setDoc(doc(db, 'app', 'catalog_global'), { catalog });
+    await escribirDoc('catalog_global', { catalog });
   } else {
     mockCatalog = catalog;
     saveLocalDB();
   }
+}
+
+/**
+ * Personajes que el administrador sube para que el colaborador elija su avatar.
+ *
+ * Son globales, como el catálogo: el avatar de un colaborador tiene que
+ * significar lo mismo mire quien lo mire, y el ranking cruza a gente de
+ * entrenadores distintos.
+ *
+ * Se guardan como `data:` URL ya convertida por el navegador del administrador
+ * (cuadrada, 512 px y recortada en círculo). Van dentro del documento y no en un
+ * almacenamiento aparte porque un documento de Firestore admite 1 MB y un avatar
+ * convertido pesa unos 25 KB: caben de sobra los que hagan falta, sin montar un
+ * servicio de archivos para seis dibujos.
+ */
+async function readPersonajesGlobal(): Promise<{ id: string; url: string }[]> {
+  if (!db) return mockPersonajes;
+  const d = await leerDoc('personajes_global');
+  return (d?.exists() ? d.data().personajes : null) || [];
+}
+
+async function writePersonajesGlobal(personajes: { id: string; url: string }[]) {
+  if (db) {
+    await escribirDoc('personajes_global', { personajes });
+  } else {
+    mockPersonajes = personajes;
+    saveLocalDB();
+  }
+}
+
+/** Cuántos caben y cuánto puede pesar cada uno. Ver `src/lib/personajes.ts`. */
+const MAXIMO_PERSONAJES = 24;
+const MAXIMO_BYTES_PERSONAJE = 90 * 1024;
+
+/**
+ * Deja la lista de personajes en algo que se pueda guardar sin miedo.
+ *
+ * Lo que llega es una imagen entera dentro de un texto, así que se comprueba que
+ * sea de verdad una `data:` URL de imagen y que no venga inflada: sin esto, un
+ * panel comprometido podría meter un `javascript:` en el `src` de una etiqueta
+ * que se pinta en la pantalla de todos los colaboradores.
+ */
+function sanitizePersonajes(raw: any): { id: string; url: string }[] {
+  if (!Array.isArray(raw)) return [];
+  const limpios: { id: string; url: string }[] = [];
+  for (const p of raw.slice(0, MAXIMO_PERSONAJES)) {
+    const id = String(p?.id || '').trim().slice(0, 40);
+    const url = String(p?.url || '').trim();
+    if (!id || !/^data:image\/(webp|png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(url)) continue;
+    if ((url.length * 3) / 4 > MAXIMO_BYTES_PERSONAJE) continue;
+    if (limpios.some((otro) => otro.id === id)) continue;
+    limpios.push({ id, url });
+  }
+  return limpios;
 }
 
 const defaultSheet = {
@@ -275,8 +370,8 @@ const defaultSheet = {
 async function readSheetGlobal() {
   let guardado: any = null;
   if (db) {
-    const d = await getDoc(doc(db, 'app', 'sheet_global'));
-    if (d.exists()) guardado = d.data();
+    const d = await leerDoc('sheet_global');
+    if (d?.exists()) guardado = d.data();
   } else {
     guardado = mockSheet;
   }
@@ -287,7 +382,7 @@ async function writeSheetGlobal(config: any) {
   const limpio: any = {};
   for (const k of Object.keys(defaultSheet)) if (config[k] !== undefined) limpio[k] = config[k];
   if (db) {
-    await setDoc(doc(db, 'app', 'sheet_global'), limpio);
+    await escribirDoc('sheet_global', limpio);
   } else {
     mockSheet = limpio;
     saveLocalDB();
@@ -307,6 +402,8 @@ const estadoVacio = () => ({
   finalizado: false,
   /** Ya vio el preámbulo de la historia. */
   preambuloVisto: false,
+  /** El avatar que eligió. Vacío mientras no ha pasado por la elección. */
+  personaje: '',
   /**
    * Momento en que reinició todo. Las notas anteriores siguen guardadas en el
    * panel y en la hoja, pero dejan de contar para su avance.
@@ -325,15 +422,15 @@ async function readEstado(teacher: string, dni: string) {
   if (!teacher || !dni) return estadoVacio();
   const clave = claveEstado(teacher, dni);
   if (!db) return { ...estadoVacio(), ...(mockEstados[clave] || {}) };
-  const d = await getDoc(doc(db, 'app', 'estado_' + clave));
-  return { ...estadoVacio(), ...(d.exists() ? d.data() : {}) };
+  const d = await leerDoc('estado_' + clave);
+  return { ...estadoVacio(), ...(d?.exists() ? d.data() : {}) };
 }
 
 async function writeEstado(teacher: string, dni: string, estado: any) {
   if (!teacher || !dni) return;
   const clave = claveEstado(teacher, dni);
   if (db) {
-    await setDoc(doc(db, 'app', 'estado_' + clave), estado);
+    await escribirDoc('estado_' + clave, estado);
   } else {
     mockEstados[clave] = estado;
     saveLocalDB();
@@ -343,14 +440,14 @@ async function writeEstado(teacher: string, dni: string, estado: any) {
 async function readStudentLogs(username: string) {
   if (!username) return [];
   if (!db) return mockLogs[username] || [];
-  const d = await getDoc(doc(db, 'app', 'logs_' + username));
-  return d.exists() ? d.data().logs || [] : [];
+  const d = await leerDoc('logs_' + username);
+  return d?.exists() ? d.data().logs || [] : [];
 }
 
 async function writeStudentLogs(username: string, logs: any[]) {
   if (!username) return;
   if (db) {
-    await setDoc(doc(db, 'app', 'logs_' + username), { logs });
+    await escribirDoc('logs_' + username, { logs });
   } else {
     mockLogs[username] = logs;
     saveLocalDB();
@@ -368,6 +465,7 @@ function loadLocalDB() {
     if (data.mockLogs) mockLogs = data.mockLogs;
     if (data.mockCatalog) mockCatalog = data.mockCatalog;
     if (data.mockSheet) mockSheet = data.mockSheet;
+    if (data.mockPersonajes) mockPersonajes = data.mockPersonajes;
     if (data.mockEstados) mockEstados = data.mockEstados;
   } catch (e) {
     console.error('[prism] Error leyendo el almacén local.', e);
@@ -377,7 +475,11 @@ function saveLocalDB() {
   try {
     fs.writeFileSync(
       LOCAL_DB_PATH,
-      JSON.stringify({ mockUsers, mockConfigs, mockLogs, mockCatalog, mockSheet, mockEstados }, null, 2)
+      JSON.stringify(
+        { mockUsers, mockConfigs, mockLogs, mockCatalog, mockSheet, mockEstados, mockPersonajes },
+        null,
+        2
+      )
     );
   } catch (e) {
     console.error('[prism] Error escribiendo el almacén local.', e);
@@ -637,7 +739,15 @@ app.get('/api/step-data', async (req, res) => {
   }
   const config = await readConfig(teacher);
   // El catálogo es el mismo para todas las cuentas; los datos de cada paso, no.
-  res.json({ stepData: config.stepData || {}, catalog: await readCatalogGlobal(), teacherExists: true });
+  res.json({
+    stepData: config.stepData || {},
+    catalog: await readCatalogGlobal(),
+    // Los personajes subidos van en esta misma respuesta a propósito: es la
+    // llamada que el colaborador YA hace al entrar, así que la pantalla de
+    // elección no cuesta ni un viaje más.
+    personajes: await readPersonajesGlobal(),
+    teacherExists: true,
+  });
 });
 
 /**
@@ -707,6 +817,9 @@ app.get('/api/my-progress', async (req, res) => {
     limiteIntentos: MAX_INTENTOS,
     finalizado: !!estado.finalizado,
     preambuloVisto: !!estado.preambuloVisto,
+    // El avatar guardado manda sobre el del navegador: es lo que hace que
+    // siga siendo el suyo al entrar desde otro equipo.
+    personaje: String(estado.personaje || ''),
   });
 });
 
@@ -730,6 +843,8 @@ interface FilaRanking {
   dni: string;
   nombre: string;
   tienda: string;
+  /** Identificador de su avatar, no la imagen: la resuelve el navegador. */
+  personaje: string;
   modulos: number;
   promedio: number;
   segundos: number;
@@ -756,7 +871,7 @@ async function calcularRanking(): Promise<FilaRanking[]> {
 
       let persona = personas.get(dni);
       if (!persona) {
-        persona = { dni, nombre: '', tienda: '', entrenadores: new Set<string>(), mejores: {} as Record<string, any> };
+        persona = { dni, nombre: '', tienda: '', personaje: '', entrenadores: new Set<string>(), mejores: {} as Record<string, any> };
         personas.set(dni, persona);
       }
       persona.entrenadores.add(user.username);
@@ -766,6 +881,9 @@ async function calcularRanking(): Promise<FilaRanking[]> {
         persona.ultimoDato = cuando;
         persona.nombre = String(log.studentName || '').trim() || persona.nombre;
         persona.tienda = String(log.storeName || '').trim() || persona.tienda;
+        // El avatar del intento más reciente, igual que el nombre y la tienda:
+        // así cambiar de personaje se refleja solo en la tabla.
+        persona.personaje = String(log.personaje || '').trim() || persona.personaje;
       }
 
       const anterior = persona.mejores[moduleId];
@@ -799,6 +917,7 @@ async function calcularRanking(): Promise<FilaRanking[]> {
       dni: persona.dni,
       nombre: persona.nombre,
       tienda: persona.tienda,
+      personaje: persona.personaje,
       modulos: mejores.length,
       promedio: Math.round((suma / mejores.length) * 10) / 10,
       segundos: mejores.reduce((a, m) => a + m.segundos, 0),
@@ -822,6 +941,7 @@ app.get('/api/ranking', async (req, res) => {
     puesto,
     nombre: fila.nombre,
     tienda: fila.tienda,
+    personaje: fila.personaje,
     modulos: fila.modulos,
     promedio: fila.promedio,
     segundos: fila.segundos,
@@ -932,6 +1052,9 @@ app.post('/api/student-flag', async (req: any, res) => {
   const estado = await readEstado(teacher, dni);
   if (req.body.preambuloVisto !== undefined) estado.preambuloVisto = !!req.body.preambuloVisto;
   if (req.body.finalizado !== undefined) estado.finalizado = !!req.body.finalizado;
+  // El avatar va aquí y no en el navegador para que siga siendo el suyo si
+  // entra desde otro equipo.
+  if (req.body.personaje !== undefined) estado.personaje = String(req.body.personaje || '').slice(0, 40);
   await writeEstado(teacher, dni, estado);
   res.json({ success: true });
 });
@@ -950,9 +1073,39 @@ app.post('/api/student-reset', async (req: any, res) => {
   res.json({ success: true });
 });
 
+/**
+ * Los personajes que puede elegir el colaborador.
+ *
+ * Los sube SOLO el administrador, como la conexión con la hoja de cálculo: son
+ * globales, así que un entrenador no debería poder cambiárselos a todas las
+ * tiendas. Llegan ya convertidos por el navegador (cuadrados, 512 px y
+ * recortados en círculo); aquí solo se comprueba que lo que entra sea de verdad
+ * una imagen y quepa.
+ */
+app.get('/api/admin/personajes', requireAuth, requireAdmin, async (_req, res) => {
+  res.json({ personajes: await readPersonajesGlobal() });
+});
+
+app.post('/api/admin/personajes', requireAuth, requireAdmin, async (req: any, res) => {
+  if (!Array.isArray(req.body?.personajes)) {
+    return res.status(400).json({ error: 'Formato de personajes inválido.' });
+  }
+  if (req.body.personajes.length > MAXIMO_PERSONAJES) {
+    return res.status(400).json({ error: `No caben más de ${MAXIMO_PERSONAJES} personajes.` });
+  }
+  const limpios = sanitizePersonajes(req.body.personajes);
+  // Si entró algo y no sobrevivió nada, es que venía mal: decirlo es mejor que
+  // guardar una lista vacía y dejar al administrador pensando que se guardó.
+  if (req.body.personajes.length && !limpios.length) {
+    return res.status(400).json({ error: 'Ninguna de las imágenes se pudo guardar. Revisa que sean imágenes y que no pesen demasiado.' });
+  }
+  await writePersonajesGlobal(limpios);
+  res.json({ success: true, personajes: limpios });
+});
+
 app.get('/api/admin/step-data', requireAuth, async (req: any, res) => {
   const config = await readConfig(req.user.username);
-  res.json({ stepData: config.stepData || {}, catalog: await readCatalogGlobal() });
+  res.json({ stepData: config.stepData || {}, catalog: await readCatalogGlobal(), personajes: await readPersonajesGlobal() });
 });
 
 app.post('/api/admin/step-data', requireAuth, async (req: any, res) => {
@@ -1220,7 +1373,7 @@ async function syncRow(config: any, log: any) {
 // --- Registro de nota del colaborador ---
 app.post('/api/submit-score', async (req, res) => {
   const {
-    studentName, studentDni, storeName, moduleId, moduleTitle,
+    studentName, studentDni, storeName, personaje, moduleId, moduleTitle,
     teacherUsername, mistakeLog, totalSeconds, processSteps, attemptId,
   } = req.body || {};
 
@@ -1309,6 +1462,7 @@ app.post('/api/submit-score', async (req, res) => {
     studentName: String(studentName).trim(),
     studentDni: String(studentDni).trim(),
     storeName: String(storeName || '').trim() || 'Sin tienda',
+    personaje: String(personaje || '').trim().slice(0, 40),
     moduleId,
     moduleTitle,
     score,

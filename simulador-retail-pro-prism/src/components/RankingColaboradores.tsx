@@ -4,6 +4,7 @@ import { Badge, Card, CifraAnimada, Isotipo } from './ui/Kit';
 import { cascada, elemento } from '../lib/motion';
 import { FilaRanking, Ranking, RANKING_VACIO, comoReloj, obtenerRanking } from '../lib/ranking';
 import { iconoDeCelebracion } from '../assets/iconos';
+import { Personaje, urlDePersonaje } from '../lib/personajes';
 import { Huella } from './ui/Mascotas';
 
 /**
@@ -23,7 +24,7 @@ const MEDALLAS = ['🥇', '🥈', '🥉'];
 const modulos = (n: number) => `${n} ${n === 1 ? 'módulo' : 'módulos'}`;
 
 /** El podio. En celular se apila; en pantalla ancha va 2-1-3, como un podio real. */
-const Podio = ({ filas }: { filas: FilaRanking[] }) => {
+const Podio = ({ filas, subidos }: { filas: FilaRanking[]; subidos: Personaje[] }) => {
   if (filas.length === 0) return null;
   // El orden visual pone al primero en el centro, pero solo cuando hay sitio:
   // apilado en vertical el primero tiene que ir arriba o no se entiende nada.
@@ -54,12 +55,16 @@ const Podio = ({ filas }: { filas: FilaRanking[] }) => {
             </span>
           </div>
 
-          {iconoDeCelebracion(fila.puesto) && (
+          {/* Manda su avatar: en una tabla de personas, la cara es lo que
+              identifica. Quien todavía no eligió personaje conserva la insignia
+              de felicitación de siempre, para que la tarjeta no quede coja. */}
+          {(urlDePersonaje(fila.personaje, subidos) || iconoDeCelebracion(fila.puesto)) && (
             <img
-              src={iconoDeCelebracion(fila.puesto)}
+              src={urlDePersonaje(fila.personaje, subidos) || iconoDeCelebracion(fila.puesto)}
               alt=""
               aria-hidden
-              className={`mx-auto mb-2 object-contain ${i === 0 ? 'h-24 w-24 sm:h-28 sm:w-28' : 'h-16 w-16 sm:h-20 sm:w-20'}`}
+              data-avatar={fila.personaje || ''}
+              className={`mx-auto mb-2 rounded-full object-contain ${i === 0 ? 'h-24 w-24 sm:h-28 sm:w-28' : 'h-16 w-16 sm:h-20 sm:w-20'}`}
             />
           )}
 
@@ -88,7 +93,7 @@ const Podio = ({ filas }: { filas: FilaRanking[] }) => {
 };
 
 /** Una fila del cuarto puesto en adelante. */
-const Fila = ({ fila }: { fila: FilaRanking }) => (
+const Fila = ({ fila, subidos }: { fila: FilaRanking; subidos: Personaje[] }) => (
   <div
     className={`flex items-center gap-3 rounded-xl border px-3 py-3 sm:px-4 ${
       fila.esTu ? 'border-brand bg-brand-soft' : 'border-line bg-raised'
@@ -101,6 +106,16 @@ const Fila = ({ fila }: { fila: FilaRanking }) => (
     >
       {fila.puesto}
     </span>
+
+    {urlDePersonaje(fila.personaje, subidos) && (
+      <img
+        src={urlDePersonaje(fila.personaje, subidos)}
+        alt=""
+        aria-hidden
+        data-avatar={fila.personaje}
+        className="h-9 w-9 shrink-0 rounded-full object-contain sm:h-10 sm:w-10"
+      />
+    )}
 
     {/* `min-w-0` es lo que permite que el nombre se recorte en vez de empujar
         la nota fuera de la pantalla en un celular estrecho. */}
@@ -121,7 +136,16 @@ const Fila = ({ fila }: { fila: FilaRanking }) => (
   </div>
 );
 
-export const RankingColaboradores = ({ dni, onVolver }: { dni: string; onVolver: () => void }) => {
+export const RankingColaboradores = ({
+  dni,
+  personajesSubidos = [],
+  onVolver,
+}: {
+  dni: string;
+  /** Los que subió el administrador; los de fábrica los resuelve `urlDePersonaje`. */
+  personajesSubidos?: Personaje[];
+  onVolver: () => void;
+}) => {
   const [ranking, setRanking] = useState<Ranking>(RANKING_VACIO);
   const [cargando, setCargando] = useState(true);
 
@@ -192,13 +216,13 @@ export const RankingColaboradores = ({ dni, onVolver }: { dni: string; onVolver:
         </Card>
       ) : (
         <>
-          <Podio filas={podio} />
+          <Podio filas={podio} subidos={personajesSubidos} />
 
           {resto.length > 0 && (
             <motion.div variants={cascada(0.04)} initial="inicial" animate="visible" className="mt-4 space-y-2">
               {resto.map((fila) => (
                 <motion.div key={fila.puesto} variants={elemento}>
-                  <Fila fila={fila} />
+                  <Fila fila={fila} subidos={personajesSubidos} />
                 </motion.div>
               ))}
             </motion.div>
@@ -209,7 +233,7 @@ export const RankingColaboradores = ({ dni, onVolver }: { dni: string; onVolver:
           {ranking.tuFila && (
             <div className="mt-6 border-t border-line pt-5">
               <p className="etiqueta mb-2 text-ink-subtle">Tu puesto</p>
-              <Fila fila={ranking.tuFila} />
+              <Fila fila={ranking.tuFila} subidos={personajesSubidos} />
               <p className="prosa mt-3 text-sm text-ink-muted">
                 {ranking.tuFila.puesto - 10 === 1
                   ? 'Te falta un puesto para entrar al top 10.'

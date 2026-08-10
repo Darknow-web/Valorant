@@ -1,10 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useSimulator } from '../store/SimulatorContext';
 import { StudentInfoModal } from './StudentInfoModal';
 import { PreambuloHistoria } from './PreambuloHistoria';
 import { ScenarioBriefing, ScenarioDrawer } from './ScenarioBriefing';
 import { RankingColaboradores } from './RankingColaboradores';
+import { SeleccionPersonaje } from './SeleccionPersonaje';
+import { todosLosPersonajes, urlDePersonaje } from '../lib/personajes';
 import { SimulatorHeader } from './SimulatorHeader';
 import { SimulatorViewport } from './SimulatorViewport';
 import { ScreenManager } from './ScreenManager';
@@ -495,14 +497,18 @@ const ModuleMenu = ({
   onFinalizar,
   onReiniciarTodo,
   onVerRanking,
+  onCambiarPersonaje,
 }: {
   onPick: (moduleId: string) => void;
   progreso: Progreso;
   onFinalizar: () => void;
   onReiniciarTodo: () => void;
   onVerRanking: () => void;
+  onCambiarPersonaje: () => void;
 }) => {
-  const { modulesData, operatorName, operatorStore, clearOperator } = useSimulator();
+  const { modulesData, operatorName, operatorStore, clearOperator, operatorPersonaje, personajesSubidos } =
+    useSimulator();
+  const avatar = urlDePersonaje(operatorPersonaje, personajesSubidos);
   const total = modulesData.length;
   // El avance sale de las notas guardadas en el servidor, no de esta sesión:
   // así sigue ahí aunque el colaborador entre desde otro equipo.
@@ -648,6 +654,19 @@ const ModuleMenu = ({
         </div>
 
         <div className="mb-6 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+          {/* Su personaje, y la puerta para cambiarlo: tocarlo lleva de vuelta a
+              la pantalla de elección. Con `title` y `aria-label` porque un
+              avatar sin nombre no le dice nada a quien usa lector de pantalla. */}
+          {avatar && (
+            <button
+              onClick={onCambiarPersonaje}
+              title="Cambiar mi personaje"
+              aria-label="Cambiar mi personaje"
+              className="-ml-1 shrink-0 rounded-full border-2 border-transparent p-0.5 transition hover:border-brand"
+            >
+              <img src={avatar} alt="" aria-hidden className="h-11 w-11 rounded-full object-contain" />
+            </button>
+          )}
           <span>
             Colaborador: <span className="font-semibold text-ink">{operatorName}</span>
           </span>
@@ -705,7 +724,7 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
   const {
     status, startModule, modulesData, showErrorModal, handleInteract, currentModuleId,
     operatorName, operatorDni, operatorStore, catalog, configLoading, teacherMissing, reloadConfig,
-    intentosGastados,
+    intentosGastados, operatorPersonaje, setOperatorPersonaje, personajesSubidos,
   } = useSimulator();
   const [briefingModuleId, setBriefingModuleId] = useState<string | null>(null);
   const [estadoGuardado, setEstadoGuardado] = useState<EstadoModuloGuardado | null>(null);
@@ -715,6 +734,8 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
   const [preambuloListo, setPreambuloListo] = useState(false);
   const [verTelon, setVerTelon] = useState(false);
   const [verRanking, setVerRanking] = useState(false);
+  // Solo cuando vuelve a la pantalla a CAMBIAR el personaje que ya tenía.
+  const [cambiarPersonaje, setCambiarPersonaje] = useState(false);
 
   const identidad = { teacher: teacherUsername, dni: operatorDni };
 
@@ -739,6 +760,22 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
       cancelado = true;
     };
   }, [status, teacherUsername, operatorDni]);
+
+  // El avatar guardado en el servidor se adopta UNA sola vez, al entrar.
+  //
+  // Es lo que hace que siga siendo el suyo al abrir desde otro equipo, donde el
+  // navegador no sabe nada de él. Pero solo al entrar: dejándolo pendiente del
+  // progreso, cambiar de personaje se deshacía solo, porque el progreso todavía
+  // traía el anterior y volvía a imponerlo encima del recién elegido.
+  const personajeAdoptado = useRef('');
+  useEffect(() => {
+    if (!progresoCargado || !operatorDni) return;
+    if (personajeAdoptado.current === operatorDni) return;
+    personajeAdoptado.current = operatorDni;
+    if (progreso.personaje && progreso.personaje !== operatorPersonaje) {
+      setOperatorPersonaje(progreso.personaje);
+    }
+  }, [progresoCargado, operatorDni, progreso.personaje, operatorPersonaje, setOperatorPersonaje]);
 
   // Gastar un intento (pulsar «Volver a empezar») cambia lo que el colaborador
   // puede hacer AHORA MISMO, sin salir del módulo: hay que releer el progreso en
@@ -778,6 +815,26 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
     );
   }
 
+  // El personaje, antes del relato: el preámbulo le habla de tú, así que tiene
+  // más sentido que ya se haya elegido a sí mismo cuando eso pasa. Vuelve a
+  // salir si el que tenía elegido ya no existe (el administrador lo quitó).
+  const personajesDisponibles = todosLosPersonajes(personajesSubidos);
+  const suPersonajeExiste = !!urlDePersonaje(operatorPersonaje, personajesSubidos);
+  if (personajesDisponibles.length > 0 && (!suPersonajeExiste || cambiarPersonaje)) {
+    return (
+      <SeleccionPersonaje
+        personajes={personajesDisponibles}
+        elegido={suPersonajeExiste ? operatorPersonaje : ''}
+        nombre={operatorName}
+        onElegir={(id) => {
+          setOperatorPersonaje(id);
+          setCambiarPersonaje(false);
+        }}
+        onCancelar={cambiarPersonaje ? () => setCambiarPersonaje(false) : undefined}
+      />
+    );
+  }
+
   // La entrada del relato, una sola vez. La marca vive en el servidor, así que
   // no vuelve a salir aunque cambie de teléfono.
   if (!progreso.preambuloVisto && !preambuloListo) {
@@ -798,7 +855,11 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
   if (status === 'menu' && verRanking) {
     return (
       <Page>
-        <RankingColaboradores dni={operatorDni} onVolver={() => setVerRanking(false)} />
+        <RankingColaboradores
+          dni={operatorDni}
+          personajesSubidos={personajesSubidos}
+          onVolver={() => setVerRanking(false)}
+        />
       </Page>
     );
   }
@@ -856,6 +917,7 @@ export const StudentApp = ({ teacherUsername }: { teacherUsername: string }) => 
               setVerTelon(true);
             }}
             onVerRanking={() => setVerRanking(true)}
+            onCambiarPersonaje={() => setCambiarPersonaje(true)}
             onReiniciarTodo={async () => {
               await reiniciarCapacitacion(identidad);
               setVerTelon(false);

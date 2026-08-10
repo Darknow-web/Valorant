@@ -119,6 +119,39 @@ try {
   const notaPropia = await json('/api/admin/config', conToken(tEntrenador));
   comprobar('la nota mínima propia se guarda', notaPropia.cuerpo?.passingScore === 17);
   comprobar('la nota ya no expone la URL de la hoja', notaPropia.cuerpo?.googleWebhookUrl === undefined);
+
+  // --- Personajes: globales, y solo el administrador los toca ---
+  console.log('\n  Personajes (globales, solo administrador)');
+  // Un webp mínimo de verdad, para que pase el filtro de "esto es una imagen".
+  const IMAGEN = 'data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==';
+
+  const intentoEntrenador = await json(
+    '/api/admin/personajes',
+    comoJson({ personajes: [{ id: 'sube-1', url: IMAGEN }] }, tEntrenador)
+  );
+  comprobar('un entrenador NO puede subir personajes', intentoEntrenador.estado === 403, `respondió ${intentoEntrenador.estado}`);
+
+  const sinSesion = await json('/api/admin/personajes', comoJson({ personajes: [] }));
+  comprobar('sin sesión tampoco', sinSesion.estado === 401, `respondió ${sinSesion.estado}`);
+
+  const comoAdmin = await json('/api/admin/personajes', comoJson({ personajes: [{ id: 'sube-1', url: IMAGEN }] }, tAdmin));
+  comprobar('el administrador sí puede', comoAdmin.estado === 200 && comoAdmin.cuerpo?.personajes?.length === 1, JSON.stringify(comoAdmin.cuerpo)?.slice(0, 80));
+
+  // Lo que no es una imagen no entra: el `src` de esto se pinta en la pantalla
+  // de todos los colaboradores.
+  const conBasura = await json(
+    '/api/admin/personajes',
+    comoJson({ personajes: [{ id: 'malo', url: 'javascript:alert(1)' }] }, tAdmin)
+  );
+  comprobar('un "personaje" que no es imagen se rechaza', conBasura.estado === 400, `respondió ${conBasura.estado}`);
+
+  // Y le llegan al colaborador por la misma llamada que ya hace al entrar.
+  const publico = await json('/api/step-data?teacher=entrenador');
+  comprobar(
+    'el colaborador recibe los personajes con su configuración',
+    Array.isArray(publico.cuerpo?.personajes) && publico.cuerpo.personajes.length === 1,
+    JSON.stringify(publico.cuerpo?.personajes)?.slice(0, 60)
+  );
 } finally {
   pararServidor(servidor);
 }

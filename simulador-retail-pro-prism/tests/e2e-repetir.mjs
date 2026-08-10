@@ -127,7 +127,7 @@ try {
     page.on('pageerror', (e) => erroresDePagina.push(e.message));
 
     try {
-      await entrarComoColaborador(page, { dni: `7100${moduleId.replace('m', '').padStart(2, '0')}` });
+      await entrarComoColaborador(page, { dni: `710000${moduleId.replace('m', '').padStart(2, '0')}` });
       await entrarAlModulo(page, moduleId);
 
       // El contador se lee sobre la marcha: cuando el módulo se completa la
