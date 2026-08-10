@@ -110,6 +110,12 @@ hecho y verificado con pruebas que corren de verdad.
 9. **La celda de Cantidad del desembolso se selecciona al entrar.** Reescribir el monto lo pegaba
    detrás del anterior (`774.41774.41`) y la celda solo se vacía sola cuando vale 0.00.
 
+10. **Las ilustraciones del relato ya están.** `src/assets/iconos/historia/apertura.webp` (la
+    tienda amaneciendo) y `cierre.webp` (la reja abajo y las mascotas dormidas). El preámbulo
+    abre con la primera y la pantalla final cierra con la segunda. **No las quites ni las
+    sustituyas por otra cosa**, y si añades más ilustraciones al relato, van en esa carpeta y se
+    buscan por nombre (`ilustracionHistoria` en `src/assets/iconos/index.ts`).
+
 Y sigue en pie todo lo de las rondas anteriores, que **no hay que deshacer**: los 32 iconos
 redondos, «Reacomodar pantallas», los dos intentos por módulo con guardado a medias, el catálogo
 de productos y clientes global, Google Sheets solo para el administrador, Firestore con aviso
