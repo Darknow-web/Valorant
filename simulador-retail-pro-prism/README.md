@@ -6,7 +6,8 @@ venta, pagos, clientes, devoluciones y cierre de caja, sin tocar el sistema real
 Hay dos formas de entrar:
 
 - **Colaborador** — abre el enlace o el QR que le compartió su entrenador. No necesita clave:
-  solo escribe su nombre, DNI y tienda. Ve la lista de módulos y, en cada uno, una
+  escribe su nombre, apellido, documento (DNI o carnet de extranjería) y tienda, y elige su
+  personaje. Ve la lista de módulos y, en cada uno, una
   **situación de tienda** de la que tiene que deducir los datos. No hay paso a paso.
 - **Entrenador / administrador** — entra en `/#/entrenador` con usuario y clave. Configura los
   datos de cada módulo, comparte su enlace y QR, conecta su Google Sheet y ve los resultados.
@@ -166,6 +167,22 @@ Y como repetir algo correcto no suma puntos, tampoco puede costar nada ni estrop
 a pasar el mismo artículo no lo mete dos veces en el documento, y volver a contestar la ventana
 del nivel de precio no le vuelve a subir el 5%.
 
+### Cómo se identifica y con qué cara
+
+Nombre y apellido por separado, los dos obligatorios, y el documento a elegir entre **DNI**
+(ocho dígitos exactos) y **carnet de extranjería** (ocho o más). No es quisquillosidad: el
+documento es la llave con la que se guarda su avance y se le reconoce al volver de otro equipo,
+así que uno mal tecleado le crea sin querer un colaborador nuevo y le hace perder lo hecho.
+
+Después elige su **personaje**, y puede cambiarlo tocándolo en su menú. Sale en la tabla de los
+mejores turnos, que es donde sirve para reconocerse entre compañeros. Se guarda el
+identificador y no la imagen, así que cambiar un dibujo no le cambia el personaje a nadie.
+
+Los seis de fábrica están en `src/assets/iconos/personajes/`. El administrador sube más desde la
+pestaña **«Personajes»** de su panel: se suelta una imagen cualquiera y el navegador la deja en
+el formato del icono —cuadrada, 512 px y recortada en círculo— antes de guardarla. Solo el
+administrador, porque son globales y salen en el mismo ranking para todos.
+
 ### El ranking de los diez mejores
 
 Desde el botón **«Ver el ranking»**, junto a su promedio, el colaborador ve la tabla de los diez
@@ -252,6 +269,7 @@ node tests/e2e-deshacer.mjs       # anular un cobro y rehacerlo, sin matar el m�
 node tests/e2e-proceso.mjs        # no se aprueba cobrando por donde no toca
 node tests/e2e-errores.mjs        # qué resta puntos y qué no
 node tests/e2e-repetir.mjs        # repetir un paso correcto no rompe ni encarece nada
+node tests/e2e-identidad.mjs      # reglas del DNI/carnet y el personaje elegido
 node tests/e2e-iconos.mjs         # los 32 badges son discos, sin agujeros dentro
 node tests/e2e-datos.mjs          # qué es compartido, qué es de cada uno, quién puede tocar Sheets
 node tests/e2e-ranking.mjs        # orden del ranking, top 10 y que no se publique ningún DNI

@@ -113,7 +113,11 @@ export const TeacherPanel = ({ user, onLogout }: { user: AuthUser; onLogout: () 
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`-mb-px whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+              // `px-2` y no `px-4`: con la pestaña de personajes son ocho y
+              // pedían 49 px más de los que caben, así que la última
+              // («Entrenadores») salía cortada en una pantalla de portátil. La
+              // barra sabe desplazarse, pero una pestaña cortada parece un error.
+              className={`-mb-px whitespace-nowrap border-b-2 px-2 py-3 text-sm font-semibold transition-colors ${
                 tab === t.id
                   ? 'border-brand text-brand'
                   : 'border-transparent text-ink-muted hover:text-ink'

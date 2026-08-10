@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "test": "node tests/e2e-iconos.mjs && node tests/e2e-guion.mjs && node tests/e2e-datos.mjs && node tests/e2e-ranking.mjs && node tests/e2e-camino-feliz.mjs && node tests/e2e-errores.mjs && node tests/e2e-deshacer.mjs && node tests/e2e-repetir.mjs && node tests/e2e-proceso.mjs && node tests/e2e-intentos.mjs && node tests/e2e-movil.mjs",
+    "test": "node tests/e2e-iconos.mjs && node tests/e2e-identidad.mjs && node tests/e2e-guion.mjs && node tests/e2e-datos.mjs && node tests/e2e-ranking.mjs && node tests/e2e-camino-feliz.mjs && node tests/e2e-errores.mjs && node tests/e2e-deshacer.mjs && node tests/e2e-repetir.mjs && node tests/e2e-proceso.mjs && node tests/e2e-intentos.mjs && node tests/e2e-movil.mjs",
     "test:iconos": "node tests/e2e-iconos.mjs",
     "test:datos": "node tests/e2e-datos.mjs",
     "test:modulos": "node tests/e2e-camino-feliz.mjs",
@@ -22,7 +22,8 @@
     "test:deshacer": "node tests/e2e-deshacer.mjs",
     "test:proceso": "node tests/e2e-proceso.mjs",
     "test:errores": "node tests/e2e-errores.mjs",
-    "test:repetir": "node tests/e2e-repetir.mjs"
+    "test:repetir": "node tests/e2e-repetir.mjs",
+    "test:identidad": "node tests/e2e-identidad.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",

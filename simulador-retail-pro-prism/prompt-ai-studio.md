@@ -122,6 +122,39 @@ de productos y clientes global, Google Sheets solo para el administrador, Firest
 cuando guarda en local, el ranking de los diez mejores, el diseño de celular y el relato del
 turno.
 
+## Ronda 11: identidad y personaje
+
+1. **Identificación.** Nombre y apellido en campos separados, los dos obligatorios, y se elige
+   entre **DNI** (ocho dígitos exactos, ni uno más ni uno menos) y **carnet de extranjería**
+   (ocho o más). El número solo admite dígitos y el aviso dice qué falta en vez de dejar el
+   botón muerto sin explicación. La tienda no cambió. El nombre sigue viajando junto en un solo
+   campo («Ana Torres»): es lo que espera la hoja de cálculo y el ranking, y partirlo por dentro
+   obligaría a tocar las dos cosas sin ganar nada.
+
+2. **Personaje.** Después de identificarse elige un avatar, y puede cambiarlo tocándolo en su
+   menú. Se guarda el **identificador**, no la imagen, para poder cambiar un dibujo sin que
+   quien lo tenía elegido se quede con el viejo; y vive en el servidor, así que sigue siendo el
+   suyo si entra desde otro equipo. Sale en la tabla de los mejores turnos.
+
+3. **De dónde salen los personajes.** Los seis de fábrica están en
+   `src/assets/iconos/personajes/` y se leen con un `import.meta.glob`, igual que las portadas.
+   El administrador sube más desde la pestaña **«Personajes»** de su panel: el propio navegador
+   los recorta al cuadrado del centro, los lleva a 512 px y los recorta en círculo antes de
+   subirlos (`convertirAPersonaje` en `src/lib/personajes.ts`). Se guardan en
+   `app/personajes_global` y llegan al colaborador con `/api/step-data`, que es la llamada que ya
+   hacía al entrar. **Solo el administrador**, como Google Sheets: son globales y salen en el
+   mismo ranking.
+
+4. **El script de iconos ya es idempotente.** Antes, al no quedar fondo cuadrado, volvía a
+   aplicar el margen y cada pasada encogía los 32 badges un 2% más. Si añades un grupo nuevo,
+   respeta esa guarda.
+
+5. **Firebase: manda el archivo.** La configuración se busca primero en
+   `firebase-applet-config.json` y solo después en la variable de entorno, que es el orden que
+   hace falta aquí: una variable a medio poner se imponía sobre el archivo bueno y dejaba la
+   aplicación guardando en local sin avisar. Y un tropiezo de Firestore ya no tumba la petición:
+   se registra en el log y se sigue (`leerDoc` / `escribirDoc` en `server.ts`).
+
 ## Cómo comprobar que no rompiste nada
 
 ```bash
@@ -129,6 +162,7 @@ npm install
 npm run lint                      # tsc --noEmit, tiene que salir limpio
 npm run build
 
+node tests/e2e-identidad.mjs      # reglas del DNI/carnet y el personaje elegido
 node tests/e2e-camino-feliz.mjs   # los 14 módulos se terminan, con CERO errores
 node tests/e2e-guion.mjs          # los 47 datos de las fichas se validan de verdad
 node tests/e2e-repetir.mjs        # repetir un paso correcto no rompe ni encarece nada
@@ -147,12 +181,15 @@ Estos son los resultados **reales** con los que se entrega este ZIP. Tienen que 
 
 | Prueba | Resultado |
 |---|---|
+| `e2e-identidad` | 18/18 |
 | `e2e-camino-feliz` | 14/14 módulos, cero errores en el camino correcto |
 | `e2e-guion` | 47/47 datos validados |
 | `e2e-repetir` | 36/36 |
 | `e2e-deshacer` | 17/17 |
 | `e2e-proceso` | 7/7 |
 | `e2e-errores` | 7/7 |
+| `e2e-datos` | 20/20 |
+| `e2e-movil` | todas las pantallas en los dos teléfonos |
 | `e2e-atascos` | 2 casos de 139 |
 
 Sobre esos 2 de `e2e-atascos`: **no son callejones sin salida**. Los dos son del Módulo 5 con la
