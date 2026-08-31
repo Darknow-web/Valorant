@@ -2,11 +2,16 @@
 
 ## Qué sobrevive y qué no
 
+Comprobado importando un deck real de esta skill y leyendo el resultado con
+`read-design`:
+
 | Elemento | ¿Sobrevive a la importación? |
 |---|---|
-| Cuadros de texto | ✅ editables, con su fuente y color |
+| Cuadros de texto | ✅ **verificado**: siguen siendo texto editable |
 | Formas, tarjetas, líneas, flechas | ✅ vectoriales y editables |
 | Iconos y logos | ✅ como imágenes movibles |
+| Guion del expositor (`addNotes`) | ✅ **verificado**: llega como notas del orador |
+| Colores, tipografía y composición | ✅ **verificado**: la página se ve igual que el render |
 | Gráficos nativos de PowerPoint | ✅ como grupo de formas editables (pierden los datos) |
 | Tablas | ✅ |
 | GIF / WebM / MP4 incrustados | ✅ **siguen animando** |
@@ -27,6 +32,8 @@ Entrégale el `.pptx` a Carlos y dile:
 Dos clics, sin exponer nada, y el resultado es idéntico al de la ruta B.
 
 ## Ruta B — `import-design-from-url`
+
+*(Verificada: 6 páginas importadas con su texto, colores y notas intactos.)*
 
 **Solo si el archivo ya está publicado en una URL HTTPS pública** y Carlos
 quiere que sea así: por ejemplo un `.pptx` que ya vive en un repositorio
@@ -69,10 +76,28 @@ sobre los arquetipos, pero queda como diseño nativo. Úsala solo si la pide.
 Antes hay que llamar a `get-export-formats` con ese diseño: no todos admiten
 todos los formatos y adivinar falla.
 
+## Comprobar que quedó bien
+
+```
+mcp__Canva__read-design
+  design_id: <el que devolvió la importación>
+  filter: { fields: ["design_metadata","design_content","presenter_notes","thumbnails"] }
+```
+
+`design_content` devuelve el texto: si vuelve vacío, el deck entró aplanado y
+algo falló. La miniatura confirma que la composición llegó intacta.
+
 ## Si el conector no responde
 
-El conector Canva puede estar sin autorizar. En ese caso **no se puede
-autorizar desde una sesión no interactiva**: hay que hacerlo en
-claude.ai → Ajustes → Conectores, y además activarlo para el chat.
+Puede estar sin autorizar. En ese caso **no se puede autorizar desde una sesión
+no interactiva**: hay que hacerlo en claude.ai → Ajustes → Conectores, y además
+activarlo para el chat.
 
 Mientras tanto la Ruta A funciona igual de bien y no depende del conector.
+
+## Hay un kit de marca en la cuenta
+
+`list-brand-kits` devuelve un kit (`kAHRp0BPsfc`). Solo lo usa
+`generate-design` (Ruta C); la importación no lo aplica. Si algún día se quiere
+que los temas usen los colores oficiales en vez de los provisionales, ese kit
+es la fuente a consultar.
