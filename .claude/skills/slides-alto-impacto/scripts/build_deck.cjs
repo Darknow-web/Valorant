@@ -171,6 +171,7 @@ const ARQUETIPOS = {
         data: await iconos.dataUri(d.icono, "#" + hex(t.acento)),
         x: W - 2.75, y: 2.35, w: 1.75, h: 1.75,
         transparency: 12, objectName: `${n}_icono`,
+        __icono: d.icono, __color: hex(t.acento),
       });
       orden.push(`${n}_icono`);
     }
@@ -282,6 +283,7 @@ const ARQUETIPOS = {
           data: await iconos.dataUri(items[i].icono, "#" + col),
           x: x + 0.3, y: 2.85, w: 0.6, h: 0.6,
           objectName: `${n}_kpi${i}_icono`,
+          __icono: items[i].icono, __color: col,
         });
       }
       s.addText(items[i].valor || "", {
@@ -321,6 +323,7 @@ const ARQUETIPOS = {
           data: await iconos.dataUri(items[i].icono, "#" + col),
           x: x + 0.5, y: 2.96, w: 0.5, h: 0.5,
           objectName: `${n}_card${i}_icono`,
+          __icono: items[i].icono, __color: col,
         });
       }
       s.addText(items[i].titulo || "", {
