@@ -1,179 +1,196 @@
 ---
 name: slides-alto-impacto
-description: Convierte un documento de Word o PDF (informe de PPP de UPN, reporte de SuperPet, material de Bellie, propuesta, tesis, manual) en una presentación de alto impacto visual — poco texto, muy puntual, con animaciones reales — entregada como .pptx 100% editable, listo para PowerPoint y para importar a Canva, más el guion del expositor. Carlos elige del mapa de contenido qué secciones van a slides y cuántas slides quiere, o le pide al agente que decida por él. Usa esta skill SIEMPRE que Carlos suba o mencione un Word/PDF y pida slides, diapositivas, una presentación, un PPT, un deck, material para exponer o sustentar, o pida "pasar este informe a diapositivas" — incluso si no dice "alto impacto" ni nombra el formato. También cuando pida rehacer o mejorar visualmente una presentación a partir de un documento. No la uses si solo quiere leer o resumir el documento sin producir slides (usa docx o pdf), ni si pide un prompt para Google AI Studio (usa prompt-ai-studio-exposiciones).
+description: Crea presentaciones de alto impacto visual — poco texto, muy puntuales, con animaciones reales — a partir de un documento de Word o PDF, y también corrige y rehace presentaciones que ya existen en PowerPoint o Canva (quitarles texto de más, volverlas visuales, expandir un slide a más temas). Entrega el deck creado directamente en la cuenta de Canva con su link, más el .pptx 100% editable y el guion del expositor. Sirve sobre todo para trabajos de universidad — sustentaciones, exposiciones de curso, informes de PPP de UPN — y también para material de trabajo de SuperPet o Bellie. Carlos elige del mapa de contenido qué secciones van a slides y cuántas quiere, o le pide al agente que decida. Usa esta skill SIEMPRE que Carlos suba o mencione un Word, PDF, PowerPoint o diseño de Canva y pida slides, diapositivas, una presentación, un deck, material para exponer o sustentar, o pida mejorar, rehacer, "quitarle texto" o "hacer más visual" algo que ya tiene — incluso si no dice "alto impacto" ni nombra el formato. No la uses si solo quiere leer o resumir un documento sin producir slides (usa docx o pdf), ni si pide un prompt para Google AI Studio (usa prompt-ai-studio-exposiciones).
 ---
 
-# Slides de alto impacto desde Word o PDF
+# Slides de alto impacto
 
-Esta skill produce presentaciones que se ven trabajadas por un diseñador y que
-**se pueden editar entero** después: cada texto, forma, icono y gráfico entra
-como objeto nativo. Nada de slides-imagen.
+Dos trabajos: **crear** una presentación desde un documento, y **arreglar** una
+que ya existe. El resultado se entrega creado en Canva (con su link) y como
+`.pptx` editable.
 
-## Antes de empezar
+## Antes de nada
 
 ```bash
-bash scripts/setup.sh        # idempotente; una vez por sesión
+bash scripts/setup.sh        # idempotente, una vez por sesión
 ```
 
-Instala pptxgenjs, sharp, ~250.000 iconos, 3.457 logos de marca, ffmpeg y las
-librerías de Python. Todo queda en `.vendor/` y después funciona sin red.
-
-**Rutas:** los comandos de abajo asumen que estás en el directorio de la skill.
-Si no, usa rutas absolutas. Los scripts de Node son `.cjs` a propósito — así
-funcionan aunque el proyecto declare `"type": "module"`.
+Los scripts de Node son `.cjs` a propósito: así funcionan aunque el proyecto
+declare `"type": "module"`.
 
 ---
 
-## El flujo, paso a paso
+## Regla de primer orden: no inventar nada
 
-### Paso 1 — Ingesta
+**Ninguna cifra, fecha, nombre o afirmación que no esté en el documento de
+origen o que Carlos no haya dicho.** Ni de relleno, ni «de ejemplo», ni
+redondeada para que quede mejor. Sumar dos datos del documento y presentar el
+total como si estuviera ahí también es inventar.
+
+Si un arquetipo pide un dato que no existe, **se cambia de arquetipo**. Si el
+hueco importa, se le pregunta a Carlos.
+
+Lee `references/integridad-datos.md` — es la referencia más importante de esta
+skill — y verifica siempre:
+
+```bash
+python3 scripts/verificar_datos.py deck.json salida/contenido.json
+```
+
+---
+
+# A. Crear desde un documento
+
+### 1. Ingesta
 
 ```bash
 python3 scripts/extraer_contenido.py <documento.docx|pdf> -o salida
 ```
 
-Deja `salida/contenido.json` (secciones jerárquicas, párrafos, listas, tablas,
-cifras detectadas) y `salida/img/` con las imágenes del documento. Imprime el
-mapa de contenido numerado.
+### 2. Que Carlos elija (obligatorio)
 
-### Paso 2 — Que Carlos elija (obligatorio, nunca te lo saltes)
+Muéstrale el mapa de contenido y pregúntale con `AskUserQuestion`:
 
-Muéstrale el mapa tal como sale y pregúntale con `AskUserQuestion`:
+1. **Qué secciones** — «todo con tu criterio», «yo elijo» (acepta `2,4,5`,
+   rangos `2-6`, `todo`), o «solo lo esencial para N minutos».
+2. **Cuántas slides** — auto, un número exacto o un rango.
+3. **Contexto de la exposición** — curso y jurado si es de universidad, o
+   audiencia si es de trabajo. Esto decide el tono, no un formulario.
 
-1. **Qué secciones** — opciones: *(a)* «todo el documento, con tu criterio»,
-   *(b)* «yo elijo cuáles», *(c)* «solo lo esencial para 10 minutos».
-   Si elige (b), pídele los números; acepta `2,4,5`, rangos `2-6` y `todo`.
-2. **Cuántas slides** — auto (una por sección, más las que pidan los datos),
-   un número exacto, o un rango.
-3. **Tema visual** — de `assets/temas.json`: `cinema` (el más vistoso
-   proyectado), `editorial` (académico), `corporativo`, `vibrante`,
-   `bellie`, `superpet`, `upn`.
+Si ya lo dijo en el chat, confírmalo en una línea y sigue.
 
-Si Carlos ya dijo en el chat qué quiere ("solo resultados y conclusiones, 8
-slides"), no repreguntes: confirma en una línea y sigue.
+### 3. Dirección de arte
 
-Los temas `bellie`, `superpet` y `upn` traen colores **de partida sin
-verificar** contra el manual de marca. Si el deck sale de la empresa, avísale y
-ofrece confirmarlos (para Bellie está la skill `auditor-marca-bellie`).
+**No elijas un tema de una lista.** Compón uno para el asunto del documento:
 
-### Paso 3 — Escribir el deck.json
+```bash
+node scripts/director_arte.cjs --semilla "#2E6F9E" --modo oscuro \
+  --tono academico --tratamiento topografico --marca-agua "lucide:book-open" \
+  -o salida/tema.json
+```
 
-Este paso es tuyo, no de un script: es donde se decide el deck. Lee
-`references/arquetipos-slide.md` y `references/sistema-diseno.md` antes.
+Elige el color, el tratamiento de fondo y la marca de agua **por el tema**, con
+criterio propio: un informe de sostenibilidad no se ve como un pitch comercial.
+Lee `references/direccion-arte.md`.
 
-Reglas que no se negocian:
+Dos excepciones:
+- **Si Carlos ya eligió un tema o una plantilla de Canva**, léelo con
+  `read-design` y usa sus colores y tipografías. No compongas otro.
+- Si pide continuidad con material anterior, parte de `assets/temas.json`.
 
-- **Un mensaje por slide.** Si una sección tiene dos ideas, son dos slides.
-- **El cuerpo del slide no pasa de lo que fija `limites.palabras_cuerpo_max`**
-  para su arquetipo. Todo lo demás va a `notas`, que es el guion del expositor.
-- **Cada slide lleva `notas`.** Escríbelas como se hablan, no como se leen:
-  qué decir mientras esa slide está en pantalla. `qa.py` da error si falta.
-- **Toda cifra relevante merece protagonismo.** Un dato importante enterrado en
-  un párrafo se convierte en un slide `dato_gigante` o en un `kpis`.
+Ajusta los colores contra el fondo real antes de renderizar:
+
+```js
+const { ajustarAlFondo } = require("./scripts/fondos.cjs");
+const { tema } = await ajustarAlFondo(temaBase, { tratamiento, icono });
+```
+
+### 4. Escribir el deck.json
+
+Este paso es tuyo. Lee `references/arquetipos-slide.md` y
+`references/sistema-diseno.md` antes.
+
+- **Un mensaje por slide.** Dos ideas son dos slides.
+- **El cuerpo no pasa del tope del arquetipo.** Lo demás va al guion.
+- **Cada slide lleva `notas`**, escritas como se hablan.
+- **Toda cifra importante merece protagonismo**, y toda cifra del deck tiene que
+  estar en el documento.
 - **Varía los arquetipos.** Tres slides seguidas de viñetas es un deck malo.
-- **Iconos por significado**, no de adorno. Búscalos:
-  `node scripts/iconos.cjs buscar objetivo meta crecimiento`
+- Busca los iconos: `node scripts/iconos.cjs buscar objetivo meta crecimiento`
 
-Valida contra `assets/deck.schema.json` antes de renderizar.
+Muéstrale el outline (una línea por slide) y espera su visto bueno.
 
-Muéstrale a Carlos el esquema resultante (una línea por slide: número,
-arquetipo, titular) y espera su visto bueno antes del paso 4.
-
-### Paso 4 — Renderizar
+### 5. Renderizar y animar
 
 ```bash
 node scripts/build_deck.cjs deck.json -o salida/deck.pptx
-```
-
-Produce el `.pptx` y `salida/deck.plan.json`, que es lo que consumen los pasos
-siguientes (lleva los `objectName` de cada shape y una copia fiel del layout).
-
-Fuentes incrustadas, para que se vea igual en cualquier PC:
-
-```bash
-python3 scripts/fuentes.py incrustar salida/deck.pptx Inter Sora
-```
-
-### Paso 5 — Animar (obligatorio, en dos capas)
-
-pptxgenjs no genera animaciones: hay que inyectarlas.
-
-```bash
+python3 scripts/fuentes.py incrustar salida/deck.pptx <familias del tema>
 python3 scripts/animar.py salida/deck.pptx salida/deck.plan.json
 node scripts/animar_media.cjs salida/deck.plan.json -o salida/media --formatos gif,webm
 ```
 
-- `animar.py` escribe las animaciones **nativas de PowerPoint**: transiciones
-  (incluida Morph), entradas escalonadas, énfasis, salidas y builds.
-- `animar_media.cjs` genera contadores, donas y líneas animadas como GIF/WebM.
-  **Esta es la capa que sobrevive a Canva**, que descarta las animaciones
-  OOXML al importar. Insértalas como objetos separados encima de su versión
-  estática (ver `references/animaciones-canva.md`).
+`animar.py` es obligatorio: pptxgenjs no genera animaciones. `animar_media.cjs`
+crea las piezas que sobreviven a Canva.
 
-### Paso 6 — QA y entrega
+### 6. QA
 
 ```bash
-python3 scripts/qa.py salida/deck.pptx salida/deck.plan.json
+python3 scripts/qa.py salida/deck.pptx salida/deck.plan.json \
+  --deck deck.json --contenido salida/contenido.json
 node scripts/render_html.cjs salida/deck.plan.json -o salida/vista.html
 node scripts/capturar.cjs salida/vista.html -o salida/png --grid
 ```
 
-**Mira la hoja de contacto con la herramienta Read.** El QA automático no ve
-un desborde ni un desequilibrio; tú sí. Si algo se ve mal, corrige el
-`deck.json` y vuelve al paso 4.
+**Mira la hoja de contacto con Read.** El QA automático no ve un desequilibrio;
+tú sí. `qa.py` debe terminar con **0 errores**.
 
-`qa.py` debe terminar con **0 errores**. Los avisos se juzgan.
+### 7. Entregar
 
-Entrega con `SendUserFile`: el `.pptx` y un `guion.md` con las notas por slide.
+1. **Crear el deck en Canva** y darle el link — ruta por defecto. Sigue
+   `references/canva-directo.md`.
+2. El `.pptx` y el `guion.md` con `SendUserFile`.
+3. La lista de animaciones de Canva (`references/animaciones-canva.md`).
 
 ---
 
-## Extras que Carlos puede pedir
+# B. Arreglar una presentación existente
 
-### Mandarlo a Canva
+Sigue `references/rediseno.md`. En resumen:
 
-Lee `references/canva.md` completo antes. Lo esencial:
+| Entrada | Cómo se lee |
+|---|---|
+| `.pptx` que sube | `python3 scripts/leer_pptx.py archivo.pptx -o salida/original` y se dibuja con el renderizador |
+| Link de Canva | `read-design` con `design_content`, `presenter_notes` y `thumbnails` |
+| Capturas o PDF | Se miran directamente |
 
-**La ruta por defecto es que Carlos suba el archivo él mismo** en Canva →
-*Importar archivo*. Son dos clics y queda 100% editable.
-
-`mcp__Canva__import-design-from-url` **solo sirve si el archivo YA está en una
-URL pública**. Nunca subas su documento a Drive, Dropbox ni a un pastebin para
-fabricar esa URL: eso publica en internet abierto un informe que puede ser
-confidencial, y la propia herramienta lo prohíbe.
-
-Para esa ruta, `render_html.cjs --canva` genera un HTML anotado que Canva
-importa como presentación con páginas y notas del expositor.
-
-### Deck interactivo con link de Claude
+Después:
 
 ```bash
-node scripts/render_html.cjs salida/deck.plan.json -o salida/deck.html --artifact
+python3 scripts/auditar.py salida/original/deck.plan.json
 ```
 
-Navegable con flechas y clic, con animaciones CSS y el guion con la tecla `N`.
-Publícalo con la herramienta `Artifact` (carga antes la skill `artifact-design`).
+Da un veredicto por slide (correcta / a ajustar / a rehacer) con lo que le pasa
+y qué hacer. **Mira también las capturas.**
+
+Enséñale el diagnóstico antes de rehacer nada, y al entregar pon el antes y el
+después uno al lado del otro.
+
+Cuando pida más temas en un slide, salen del material fuente. Si no hay más,
+díselo y pídeselo.
 
 ---
 
 ## Referencias
 
-| Archivo | Cuándo leerlo |
+| Archivo | Cuándo |
 |---|---|
-| `references/arquetipos-slide.md` | Siempre, antes del paso 3 |
-| `references/sistema-diseno.md` | Siempre, antes del paso 3 |
-| `references/ingesta.md` | Si el documento viene raro o el mapa sale mal |
-| `references/animaciones-pptx.md` | Para ajustar animaciones a mano |
-| `references/animaciones-canva.md` | Si el destino es Canva |
-| `references/biblioteca-visual.md` | Para iconos, logos, ilustraciones, fuentes |
-| `references/canva.md` | Para mandarlo a Canva |
+| `references/integridad-datos.md` | **Siempre.** Es la regla que no se rompe |
+| `references/arquetipos-slide.md` | Antes de escribir el deck |
+| `references/sistema-diseno.md` | Antes de escribir el deck |
+| `references/direccion-arte.md` | Para componer la paleta y el fondo |
+| `references/rediseno.md` | Para arreglar material existente |
+| `references/canva-directo.md` | Para crear el deck en Canva (por defecto) |
+| `references/canva.md` | Para la ruta alternativa por importación |
+| `references/animaciones-pptx.md` | Para ajustar animaciones de PowerPoint |
+| `references/animaciones-canva.md` | Para las animaciones en Canva |
+| `references/biblioteca-visual.md` | Iconos, logos, ilustraciones, fuentes |
+| `references/ingesta.md` | Si el documento viene raro |
 | `references/qa.md` | Si `qa.py` da un error que no entiendes |
+
+## Deck interactivo (opcional)
+
+```bash
+node scripts/render_html.cjs salida/deck.plan.json -o salida/deck.html --artifact
+```
+
+Navegable con flechas, con animaciones CSS y el guion con la tecla `N`.
+Publícalo con `Artifact` (carga antes la skill `artifact-design`).
 
 ## Errores que se pagan caro
 
+- Inventar un dato. Es el único error que no tiene arreglo después.
 - Renderizar sin que Carlos haya elegido las secciones.
+- Elegir un tema de la lista en vez de componer uno para el asunto.
 - Saltarse `animar.py`: el deck queda estático.
 - Dar por bueno el deck sin mirar los PNG.
-- Meter párrafos del documento tal cual en el slide. El documento se lee; el
-  slide se ve. Lo que hay que decir va al guion.
-- Cambiar los colores de un tema de marca sin avisar que no están verificados.
+- Meter párrafos del documento tal cual. El documento se lee; el slide se ve.

@@ -273,12 +273,32 @@ def revisar_animaciones(pptx, plan, rep):
         rep.ok(f"transiciones en las {total} slides")
 
 
+def revisar_cifras(deck_path, contenido_path, rep):
+    """Ninguna cifra del deck puede faltar en el documento de origen."""
+    try:
+        from verificar_datos import verificar
+    except ImportError:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from verificar_datos import verificar
+    deck = json.loads(Path(deck_path).read_text(encoding="utf-8"))
+    contenido = json.loads(Path(contenido_path).read_text(encoding="utf-8"))
+    r = verificar(deck, contenido)
+    if r["huerfanas"]:
+        for h in r["huerfanas"][:6]:
+            rep.error(f"cifra sin respaldo en el documento: «{h['cifra']}» "
+                      f"en {h['campo']} — «{h['contexto'][:60]}»")
+    else:
+        rep.ok(f"las {r['revisadas']} cifras del deck están en el documento")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("pptx")
     ap.add_argument("plan")
     ap.add_argument("--sin-animaciones", action="store_true",
                     help="omite el chequeo de animaciones (deck aún sin animar)")
+    ap.add_argument("--deck", help="deck.json, para verificar las cifras")
+    ap.add_argument("--contenido", help="contenido.json del documento de origen")
     args = ap.parse_args()
 
     plan = json.loads(Path(args.plan).read_text(encoding="utf-8"))
@@ -292,6 +312,11 @@ def main():
     revisar_contraste(plan, rep)
     if not args.sin_animaciones:
         revisar_animaciones(args.pptx, plan, rep)
+    if args.deck and args.contenido:
+        revisar_cifras(args.deck, args.contenido, rep)
+    else:
+        rep.aviso("cifras sin verificar: pasa --deck y --contenido para "
+                  "comprobar que ninguna esté inventada")
 
     sys.exit(rep.imprimir())
 
