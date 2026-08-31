@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "deck.json — contrato entre el planificador y el motor de render",
+  "type": "object",
+  "required": ["titulo", "tema", "slides"],
+  "properties": {
+    "titulo":   { "type": "string" },
+    "subtitulo":{ "type": "string" },
+    "autor":    { "type": "string" },
+    "tema":     { "type": "string", "description": "clave de assets/temas.json" },
+    "fuente":   { "type": "string", "description": "documento de origen" },
+    "slides": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["arquetipo"],
+        "properties": {
+          "arquetipo": {
+            "type": "string",
+            "enum": ["portada", "divisor", "dato_gigante", "kpis", "comparacion",
+                     "antes_despues", "timeline", "proceso", "matriz", "embudo",
+                     "tarjetas", "cita", "grafico", "tabla", "bullets", "cierre"]
+          },
+          "kicker":    { "type": "string", "description": "etiqueta pequeña sobre el título" },
+          "titulo":    { "type": "string" },
+          "subtitulo": { "type": "string" },
+          "conclusion":{ "type": "string", "description": "la frase que remata el slide" },
+          "notas":     { "type": "string", "description": "guion del expositor. Obligatorio." },
+          "icono":     { "type": "string", "description": "ej. 'lucide:target' o 'si:instagram'" },
+          "imagen":    { "type": "string", "description": "ruta a imagen del documento fuente" },
+          "transicion":{ "type": "string",
+                         "enum": ["fade", "morph", "push", "wipe", "split", "cover", "ninguna"] },
+          "dato": {
+            "type": "object",
+            "properties": {
+              "valor": { "type": "string" }, "unidad": { "type": "string" },
+              "etiqueta": { "type": "string" }, "delta": { "type": "string" },
+              "tendencia": { "type": "string", "enum": ["sube", "baja", "neutro"] },
+              "animar_conteo": { "type": "boolean", "default": true }
+            }
+          },
+          "items": {
+            "type": "array", "maxItems": 6,
+            "description": "tarjetas, pasos, bullets, hitos… según el arquetipo",
+            "items": {
+              "type": "object",
+              "properties": {
+                "titulo": { "type": "string" }, "texto": { "type": "string" },
+                "icono": { "type": "string" }, "valor": { "type": "string" },
+                "color": { "type": "string" }, "fecha": { "type": "string" }
+              }
+            }
+          },
+          "grafico": {
+            "type": "object",
+            "properties": {
+              "tipo": { "type": "string",
+                        "enum": ["bar", "barH", "line", "pie", "doughnut", "area", "radar", "scatter"] },
+              "categorias": { "type": "array", "items": { "type": "string" } },
+              "series": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "nombre": { "type": "string" },
+                    "valores": { "type": "array", "items": { "type": "number" } }
+                  }
+                }
+              },
+              "sufijo": { "type": "string", "description": "ej. '%'" },
+              "animar_dibujo": { "type": "boolean", "default": false }
+            }
+          },
+          "tabla": {
+            "type": "object",
+            "properties": {
+              "encabezado": { "type": "array", "items": { "type": "string" } },
+              "filas": { "type": "array",
+                         "items": { "type": "array", "items": { "type": "string" } } },
+              "resaltar_columna": { "type": "integer" }
+            }
+          },
+          "animacion": {
+            "type": "object",
+            "description": "sobrescribe la animación por defecto del arquetipo",
+            "properties": {
+              "entrada": { "type": "string",
+                           "enum": ["fade", "flyIn", "wipe", "zoom", "floatIn",
+                                    "growTurn", "split", "ninguna"] },
+              "direccion": { "type": "string",
+                             "enum": ["arriba", "abajo", "izquierda", "derecha"] },
+              "escalonado": { "type": "boolean", "default": true },
+              "retardo_ms": { "type": "integer", "default": 180 },
+              "disparador": { "type": "string",
+                              "enum": ["onClick", "withPrev", "afterPrev"] },
+              "enfasis": { "type": "string",
+                           "enum": ["pulso", "crecer", "girar", "color", "ninguno"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

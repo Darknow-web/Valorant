@@ -1,0 +1,311 @@
+{
+  "_lienzo": {
+    "ancho_in": 13.333,
+    "alto_in": 7.5,
+    "layout_pptxgenjs": "LAYOUT_WIDE",
+    "nota": "16:9. Equivale a 1920x1080 px en Canva, así que la importación calza exacta."
+  },
+  "_nota_marcas": "Los temas 'bellie', 'superpet' y 'upn' traen colores de PARTIDA, no verificados contra el manual de marca oficial. Antes de usarlos en algo que salga de la empresa, confirma los hex con el manual (para Bellie existe la skill auditor-marca-bellie) y edítalos AQUÍ: todo el deck los toma de este archivo.",
+  "temas": {
+    "cinema": {
+      "nombre": "Oscuro cinematográfico",
+      "uso": "Pitch, lanzamiento, resultados con impacto. El más vistoso proyectado.",
+      "verificado": true,
+      "fondo": "0B1120",
+      "fondo_alt": "111C34",
+      "superficie": "1B2942",
+      "borde": "2E4162",
+      "texto": "F8FAFC",
+      "texto_suave": "94A3B8",
+      "acento": "38BDF8",
+      "acento2": "A78BFA",
+      "exito": "34D399",
+      "alerta": "FBBF24",
+      "peligro": "FB7185",
+      "serie": [
+        "38BDF8",
+        "A78BFA",
+        "34D399",
+        "FBBF24",
+        "FB7185",
+        "22D3EE"
+      ],
+      "fuente_titulo": "Sora",
+      "fuente_cuerpo": "Inter",
+      "modo": "oscuro"
+    },
+    "editorial": {
+      "nombre": "Claro editorial",
+      "uso": "Informes académicos, sustentaciones, documentos formales.",
+      "verificado": true,
+      "fondo": "FBFAF7",
+      "fondo_alt": "F1EFE9",
+      "superficie": "FFFFFF",
+      "borde": "DED9CF",
+      "texto": "14110D",
+      "texto_suave": "6B6255",
+      "acento": "B45309",
+      "acento2": "1E5A72",
+      "exito": "15803D",
+      "alerta": "B45309",
+      "peligro": "B91C1C",
+      "serie": [
+        "B45309",
+        "1E5A72",
+        "15803D",
+        "7C3AED",
+        "BE123C",
+        "0E7490"
+      ],
+      "fuente_titulo": "Fraunces",
+      "fuente_cuerpo": "Inter",
+      "modo": "claro"
+    },
+    "vibrante": {
+      "nombre": "Degradado vibrante",
+      "uso": "Marketing, redes, propuestas comerciales, contenido joven.",
+      "verificado": true,
+      "fondo": "1A0B2E",
+      "fondo_alt": "2D1155",
+      "superficie": "3B1E6D",
+      "borde": "5B2FA0",
+      "texto": "FFFFFF",
+      "texto_suave": "C4B5FD",
+      "acento": "F472B6",
+      "acento2": "22D3EE",
+      "exito": "4ADE80",
+      "alerta": "FACC15",
+      "peligro": "FB7185",
+      "serie": [
+        "F472B6",
+        "22D3EE",
+        "A78BFA",
+        "FACC15",
+        "4ADE80",
+        "FB923C"
+      ],
+      "fuente_titulo": "Outfit",
+      "fuente_cuerpo": "Inter",
+      "modo": "oscuro",
+      "degradado": [
+        "1A0B2E",
+        "3B1E6D",
+        "6D28D9"
+      ]
+    },
+    "corporativo": {
+      "nombre": "Corporativo sobrio",
+      "uso": "Directorio, reportes de gestión, comités, clientes conservadores.",
+      "verificado": true,
+      "fondo": "FFFFFF",
+      "fondo_alt": "F1F5F9",
+      "superficie": "FFFFFF",
+      "borde": "CBD5E1",
+      "texto": "0F172A",
+      "texto_suave": "475569",
+      "acento": "1D4ED8",
+      "acento2": "0F766E",
+      "exito": "15803D",
+      "alerta": "C2410C",
+      "peligro": "B91C1C",
+      "serie": [
+        "1D4ED8",
+        "0F766E",
+        "C2410C",
+        "7C3AED",
+        "0891B2",
+        "65A30D"
+      ],
+      "fuente_titulo": "Inter",
+      "fuente_cuerpo": "Inter",
+      "modo": "claro"
+    },
+    "bellie": {
+      "nombre": "Bellie (kits de belleza)",
+      "uso": "Todo lo de la marca Bellie.",
+      "verificado": false,
+      "fondo": "FFF8F5",
+      "fondo_alt": "FBE9E7",
+      "superficie": "FFFFFF",
+      "borde": "F0D4CC",
+      "texto": "3D2B26",
+      "texto_suave": "7A6058",
+      "acento": "A85F49",
+      "acento2": "8F6E3C",
+      "exito": "7A9A6B",
+      "alerta": "C99B4A",
+      "peligro": "B5525C",
+      "serie": [
+        "A85F49",
+        "8F6E3C",
+        "B07A66",
+        "7A6058",
+        "5F7A52",
+        "96604D"
+      ],
+      "fuente_titulo": "Cormorant Garamond",
+      "fuente_cuerpo": "Jost",
+      "modo": "claro",
+      "_nota_contraste": "Colores ajustados para cumplir el mínimo AA de 3:1 sobre el fondo claro y con texto blanco encima. Si los reemplazas por los del manual de marca, vuelve a correr qa.py: puede que los oficiales no cumplan y haya que reservarlos para superficies grandes en vez de para texto."
+    },
+    "superpet": {
+      "nombre": "SuperPet (retail de mascotas)",
+      "uso": "Reportes de tienda, capacitaciones, indicadores del área.",
+      "verificado": false,
+      "fondo": "FFFFFF",
+      "fondo_alt": "F3F7F4",
+      "superficie": "FFFFFF",
+      "borde": "D3E0D6",
+      "texto": "13251A",
+      "texto_suave": "4E6656",
+      "acento": "1F7A4D",
+      "acento2": "F08C1E",
+      "exito": "1F7A4D",
+      "alerta": "F08C1E",
+      "peligro": "C0392B",
+      "serie": [
+        "1F7A4D",
+        "F08C1E",
+        "2D9CDB",
+        "8E6C3F",
+        "56B37F",
+        "C0392B"
+      ],
+      "fuente_titulo": "Nunito",
+      "fuente_cuerpo": "Nunito Sans",
+      "modo": "claro"
+    },
+    "upn": {
+      "nombre": "UPN institucional",
+      "uso": "Sustentaciones, informes de PPP, trabajos de la universidad.",
+      "verificado": false,
+      "fondo": "FFFFFF",
+      "fondo_alt": "EEF2F8",
+      "superficie": "FFFFFF",
+      "borde": "C7D3E5",
+      "texto": "0B1B33",
+      "texto_suave": "48607F",
+      "acento": "0F3D75",
+      "acento2": "00A0DF",
+      "exito": "1E7A46",
+      "alerta": "D08700",
+      "peligro": "B3261E",
+      "serie": [
+        "0F3D75",
+        "00A0DF",
+        "1E7A46",
+        "D08700",
+        "6B4FA1",
+        "B3261E"
+      ],
+      "fuente_titulo": "Barlow",
+      "fuente_cuerpo": "Inter",
+      "modo": "claro"
+    }
+  },
+  "tipografia": {
+    "_nota": "Tamaños en puntos sobre lienzo 13.333x7.5 in. Nunca bajar del mínimo: si no entra, se parte en dos slides.",
+    "kicker": {
+      "pt": 14,
+      "peso": "bold",
+      "espaciado": 2.5,
+      "mayusculas": true
+    },
+    "titulo_xl": {
+      "pt": 60,
+      "peso": "bold",
+      "espaciado": -1.2,
+      "interlineado": 0.95
+    },
+    "titulo": {
+      "pt": 40,
+      "peso": "bold",
+      "espaciado": -0.6,
+      "interlineado": 1.0
+    },
+    "subtitulo": {
+      "pt": 24,
+      "peso": "normal",
+      "espaciado": 0,
+      "interlineado": 1.25
+    },
+    "dato_xxl": {
+      "pt": 140,
+      "peso": "bold",
+      "espaciado": -4,
+      "interlineado": 0.9
+    },
+    "dato_xl": {
+      "pt": 96,
+      "peso": "bold",
+      "espaciado": -3,
+      "interlineado": 0.9
+    },
+    "dato": {
+      "pt": 54,
+      "peso": "bold",
+      "espaciado": -1.5,
+      "interlineado": 1.0
+    },
+    "cuerpo": {
+      "pt": 20,
+      "peso": "normal",
+      "espaciado": 0,
+      "interlineado": 1.35
+    },
+    "cuerpo_sm": {
+      "pt": 16,
+      "peso": "normal",
+      "espaciado": 0,
+      "interlineado": 1.3
+    },
+    "etiqueta": {
+      "pt": 13,
+      "peso": "bold",
+      "espaciado": 0.8,
+      "mayusculas": true
+    },
+    "minimo_pt": 13
+  },
+  "grid": {
+    "_nota": "Márgenes de seguridad. Nada de contenido fuera de estos límites.",
+    "margen_x": 0.85,
+    "margen_y": 0.7,
+    "ancho_util": 11.633,
+    "alto_util": 6.1,
+    "gutter": 0.4,
+    "col_2": 5.616,
+    "col_3": 3.611,
+    "col_4": 2.608,
+    "radio": 0.14,
+    "radio_grande": 0.28
+  },
+  "limites": {
+    "_nota": "Reglas duras. qa.py las verifica. El conteo de palabras es del CUERPO del slide: no incluye kicker ni título, que son necesarios y no compiten con el mensaje.",
+    "palabras_visibles_max": 20,
+    "palabras_por_bullet_max": 6,
+    "bullets_max": 5,
+    "tarjetas_max": 4,
+    "caracteres_titulo_max": 60,
+    "filas_tabla_max": 6,
+    "mensajes_por_slide": 1,
+    "palabras_cuerpo_max": {
+      "portada": 14,
+      "divisor": 6,
+      "dato_gigante": 30,
+      "kpis": 28,
+      "tarjetas": 40,
+      "comparacion": 34,
+      "antes_despues": 34,
+      "proceso": 40,
+      "timeline": 30,
+      "matriz": 36,
+      "embudo": 24,
+      "cita": 26,
+      "grafico": 26,
+      "tabla": 50,
+      "bullets": 32,
+      "cierre": 22
+    }
+  }
+}
