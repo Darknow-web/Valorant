@@ -1,0 +1,44 @@
+{
+  "titulo": "Deck de demostración",
+  "subtitulo": "Prueba técnica de la skill slides-alto-impacto",
+  "tema": "cinema",
+  "slides": [
+    { "arquetipo": "portada", "kicker": "Prueba técnica",
+      "titulo": "Deck de demostración de la skill",
+      "subtitulo": "Contenido genérico para verificar la importación a Canva",
+      "icono": "lucide:presentation", "transicion": "fade",
+      "notas": "Este deck existe solo para comprobar que la importación funciona. Los datos son de ejemplo." },
+    { "arquetipo": "dato_gigante", "kicker": "Ejemplo de dato",
+      "dato": { "valor": "16", "unidad": "", "etiqueta": "Arquetipos de slide disponibles",
+                "delta": "todos verificados", "tendencia": "sube" },
+      "conclusion": "Cada arquetipo resuelve un tipo distinto de mensaje: cifras, comparaciones, procesos, secuencias.",
+      "transicion": "morph",
+      "notas": "Ejemplo del arquetipo de dato protagonista." },
+    { "arquetipo": "kpis", "kicker": "Ejemplo de indicadores", "titulo": "Cuatro métricas de ejemplo",
+      "items": [
+        { "titulo": "Iconos disponibles", "valor": "250k", "icono": "lucide:shapes" },
+        { "titulo": "Logos de marca", "valor": "3457", "icono": "lucide:badge" },
+        { "titulo": "Temas visuales", "valor": "7", "icono": "lucide:palette" },
+        { "titulo": "Cobertura de QA", "valor": "100%", "icono": "lucide:check" }
+      ],
+      "transicion": "morph", "notas": "Ejemplo del arquetipo de indicadores en fila." },
+    { "arquetipo": "grafico", "kicker": "Ejemplo de gráfico", "titulo": "Serie de datos de muestra",
+      "grafico": { "tipo": "line", "categorias": ["Ene", "Feb", "Mar", "Abr", "May", "Jun"],
+                   "series": [{ "nombre": "Muestra", "valores": [20, 35, 45, 60, 72, 85] }],
+                   "sufijo": "%", "animar_dibujo": true },
+      "conclusion": "Los gráficos entran como objetos nativos, con sus datos editables.",
+      "transicion": "morph", "notas": "Ejemplo de gráfico nativo con conclusión al lado." },
+    { "arquetipo": "proceso", "kicker": "Ejemplo de secuencia", "titulo": "Las fases del flujo",
+      "items": [
+        { "titulo": "Ingesta", "texto": "Se lee el documento y se mapea.", "icono": "lucide:file-text" },
+        { "titulo": "Selección", "texto": "El usuario elige qué entra.", "icono": "lucide:list-checks" },
+        { "titulo": "Diseño", "texto": "Se arma el deck por arquetipos.", "icono": "lucide:layout" },
+        { "titulo": "Animación", "texto": "Se inyectan los efectos.", "icono": "lucide:sparkles" }
+      ],
+      "transicion": "wipe", "notas": "Ejemplo del arquetipo de proceso numerado." },
+    { "arquetipo": "cierre", "titulo": "Fin de la demostración",
+      "subtitulo": "Todos los elementos siguen siendo editables tras la importación",
+      "conclusion": "Prueba completa", "transicion": "fade",
+      "notas": "Cierre de la demostración." }
+  ]
+}
