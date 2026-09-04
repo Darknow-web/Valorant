@@ -38,6 +38,37 @@ tardío del miércoles.
 Por eso el gym quedó viernes tarde, sábado y domingo por la mañana: son las únicas
 franjas que no le quitan horas al sueño.
 
+## Fútbol con hora variable
+
+Carlos juega **un partido de 40 min**: llega 20 antes y se va 15 después. Con traslado
+(40 min por lado) son **2 h 35 fuera de casa**, fijas, sin importar la hora del partido.
+La versión anterior bloqueaba la ventana completa 20:40–23:00, que costaba 40 min extra el
+martes y 65 el jueves.
+
+Él avisa la hora un día antes. `tardeFutbol()` genera la tarde completa a partir de ella:
+recorta la jornada laboral si hace falta, ubica el traslado y la cancha, y convierte el
+sobrante en un **bloque flexible** cuyo destino Carlos elige cada semana (dormir más,
+tesis, pendientes, o cena tranquila). Sin hora confirmada usa el escenario tardío (22:00),
+nunca el optimista.
+
+Sueño resultante en las noches de fútbol: 7 h 05 sin confirmar, 7 h 35 con partido 21:30,
+8 h 25 con partido 20:40.
+
+## Re-planificador
+
+`construirEscenarios(dia, idx, desde)` reprograma los bloques desde `idx` a partir de la
+hora `desde`. Nada se descarta por el reloj: lo que no cabe hay que comprimirlo o soltarlo
+a propósito. Devuelve tres escenarios ordenados por horas de sueño resultantes —
+**Comprimir**, **Soltar lo barato** y **Dormir menos** — y Carlos elige uno; ninguno se
+aplica solo.
+
+Metadatos por bloque (séptimo elemento de cada entrada de `DIAS`):
+
+- `fijo` — hora inamovible (clase, reunión, partido, cita). Si se llega tarde, se avisa.
+- `min` — duración mínima al comprimir. Sin valor, el bloque no se comprime.
+- `prio` — orden de sacrificio (1 primero). Sin valor, **nunca** se ofrece eliminar: así
+  quedan protegidos tesis, pareja, descompresión, areneros y sueño.
+
 ## Cartera (Matriz de Indicadores 2026, hoja SETIEMBRE)
 
 20 tiendas asignadas a Carlos Inga, todas en región Lima, agrupadas en la página por

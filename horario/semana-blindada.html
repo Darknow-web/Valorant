@@ -208,6 +208,57 @@ label.done input{accent-color:var(--accent); width:15px; height:15px; cursor:poi
 .plan li.tr .t{color:var(--ink-3)}
 .plan .pm{font-style:normal; font-size:11px; color:var(--ink-3); white-space:nowrap}
 
+/* ---------- re-planificador ---------- */
+.retraso{margin-top:18px; border:1px solid var(--line); border-radius:3px; background:var(--surface); padding:14px 15px}
+.rhead{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.rhead h3{font-size:15px}
+.rmodes{display:flex; gap:0; border:1px solid var(--line); border-radius:3px; overflow:hidden}
+.rm{
+  flex:1 1 0; padding:8px 6px; background:none; border:0; border-right:1px solid var(--line);
+  font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--ink-2); cursor:pointer; line-height:1.3;
+}
+.rm:last-child{border-right:0}
+.rm[aria-selected="true"]{background:var(--ink); color:var(--bg)}
+.rm:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+.escen{
+  display:block; width:100%; text-align:left; margin-bottom:9px; cursor:pointer;
+  border:1px solid var(--line-2); border-left:4px solid var(--c-traslado);
+  border-radius:3px; background:var(--bg); padding:11px 13px; font-family:inherit; color:var(--ink);
+}
+.escen:hover{border-color:var(--accent)}
+.escen.sel{border-left-color:var(--accent); background:var(--surface-2)}
+.escen:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.etop{display:flex; align-items:baseline; gap:9px; flex-wrap:wrap}
+.etop b{font-family:"Bricolage Grotesque",sans-serif; font-size:15px; letter-spacing:-.01em}
+.etop span{font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3)}
+.edorm{font-family:"JetBrains Mono",monospace; font-size:12px; margin-top:4px; color:var(--ink-2); font-variant-numeric:tabular-nums}
+.edorm.corto{color:var(--bad)}
+.edorm em{font-style:normal; font-size:10px; letter-spacing:.08em; text-transform:uppercase}
+.edet{list-style:none; margin:7px 0 0; padding:0; display:flex; flex-direction:column; gap:3px}
+.edet li{font-size:12.5px; color:var(--ink-3); padding-left:13px; position:relative; line-height:1.4}
+.edet li::before{content:"·"; position:absolute; left:3px}
+.eaviso{margin-top:7px; font-size:12.5px; color:var(--bad); line-height:1.45}
+.etop .tras{color:var(--warn)}
+.chip.rec{color:var(--warn)}
+.chip.cai{color:var(--bad)}
+.blk.est-caido{opacity:.5}
+.blk.est-caido .name{text-decoration:line-through}
+.blk.est-pasado{opacity:.42}
+
+/* ---------- panel de fútbol ---------- */
+.fcard{border:1px solid var(--line); border-radius:3px; background:var(--surface); padding:14px 15px; margin-bottom:12px}
+.fhead{
+  display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:11px;
+  font-family:"Bricolage Grotesque",sans-serif; font-weight:700; font-size:15px; letter-spacing:-.01em;
+}
+.fhead span{
+  font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.1em;
+  text-transform:uppercase; font-weight:700; padding:2px 6px; border-radius:2px; border:1px solid currentColor;
+}
+.fhead .ok{color:var(--good)}
+.fhead .warn{color:var(--warn)}
+
 /* ---------- cartera ---------- */
 .grupo{border:1px solid var(--line); border-radius:3px; background:var(--surface); margin-bottom:10px; overflow:hidden}
 .ghead{
@@ -359,6 +410,29 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
   <div class="tabs" id="tabs" role="tablist"></div>
   <div id="dayPane"></div>
   <div class="legend" id="legend"></div>
+
+  <div class="retraso">
+    <div class="rhead">
+      <h3>Voy retrasado</h3>
+      <button class="btn ghost" id="rToggle" aria-expanded="false">Recalcular el día</button>
+    </div>
+    <div id="rBody" hidden>
+      <p class="sub" style="margin:0 0 12px">Dime cómo vas y te propongo tres formas de cerrar el día. Ninguna se aplica sola — tú eliges.</p>
+      <div class="rmodes" id="rModes" role="tablist">
+        <button class="rm" data-m="donde" aria-selected="true">Dónde estoy</button>
+        <button class="rm" data-m="tarde" aria-selected="false">Cuánto tarde voy</button>
+        <button class="rm" data-m="termino" aria-selected="false">Cuándo termino</button>
+      </div>
+      <div class="frow" id="rInputs" style="margin-top:12px"></div>
+      <div id="rOut" style="margin-top:14px"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="shead"><h2>Noches de fútbol</h2><span class="eyebrow">Hora variable</span></div>
+  <p class="sub" style="margin:0 0 12px">Juegas <b>un partido de 40 minutos</b>: llegas 20 antes y te vas 15 después. Con traslados son 2 h 35 fuera de casa, no la ventana completa. Pon la hora del partido el día anterior y el día se rearma solo.</p>
+  <div id="futbolPanel"></div>
 </section>
 
 <section>
@@ -437,6 +511,17 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
 <section>
   <div class="shead"><h2>Cuando la semana se rompe</h2><span class="eyebrow">Orden de sacrificio</span></div>
   <p class="sub" style="margin:0 0 12px">Escrito ahora, con la cabeza descansada, para no decidirlo a las 11 de la noche. Se sacrifica de arriba hacia abajo, nunca salteado.</p>
+  <div class="card" style="margin-bottom:14px">
+    <h3>Qué resuelve el botón y qué me escribes a mí</h3>
+    <p>El botón <b>Voy retrasado</b> arregla minutos dentro del día, sin chat y sin internet. Los cambios de forma los reacomodo yo en la semana completa. Frases que ya entiendo:</p>
+    <ul class="plain" style="margin-top:8px">
+      <li><b>«El partido de mañana es a las 21:30»</b> — ajusto el día y el evento del calendario.</li>
+      <li><b>«Se cayó la visita del jueves»</b> — reacomodo la semana y republico esta página.</li>
+      <li><b>«Esta semana el bloque flexible va a tesis»</b> — reasigno martes y jueves.</li>
+      <li><b>«Adelantaron la entrega de tesis al viernes»</b> — recompongo los cuatro bloques de tesis.</li>
+      <li><b>«Esta semana trabajo sábado completo»</b> — muevo el bloque de pareja y reviso los contadores.</li>
+    </ul>
+  </div>
   <ol class="order">
     <li><div><b>Lectura del día</b><div class="why">Se recupera el fin de semana sin costo. Es el amortiguador barato.</div></div></li>
     <li><div><b>Un bloque de trabajo adelantado</b><div class="why">Lo que ibas a adelantar, no lo que vence. Se corre al día siguiente.</div></div></li>
@@ -465,119 +550,196 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
    DATOS — la semana base. Minutos verificados, peor escenario.
    tag: cuenta para los innegociables.
    ============================================================ */
+/* ============================================================
+   FÚTBOL CON HORA VARIABLE
+   Carlos juega UN partido de 40 min. Llega 20 min antes y se va
+   15 después: 1 h 15 en cancha, no la ventana completa. Con el
+   traslado (40 min por lado, peor escenario) son 2 h 35 fuera de
+   casa, fijas, sin importar a qué hora sea el partido.
+   Él avisa la hora un día antes; sin confirmar se usa el escenario
+   tardío, nunca el optimista.
+   ============================================================ */
+const F_ANTES = 20, F_PARTIDO = 40, F_DESPUES = 15, F_TRASLADO = 40;
+const F_DEFECTO = "22:00";
+
+const FLEX_OPCIONES = {
+  dormir:     {nom:"Dormir más",              cat:"sueno",   nota:"Te acuestas antes. Martes y jueves son tus noches más justas: esto repara la semana."},
+  tesis:      {nom:"Tesis",                   cat:"u",       nota:"Adelantas aquí y aligeras el bloque del lunes o del domingo.", tag:"tesis"},
+  pendientes: {nom:"Pendientes y adelanto",   cat:"trabajo", nota:"Vacías la bandeja acá en vez de acumularlo todo al domingo."},
+  cena:       {nom:"Cena tranquila y descompresión", cat:"mente", nota:"Los martes y jueves comes apurado entre traslados. Esto lo arregla."}
+};
+
+function tardeFutbol(cfg, diaId, o){
+  const sinHora = !(cfg.partidos && cfg.partidos[diaId]);
+  const P = toMin(sinHora ? F_DEFECTO : cfg.partidos[diaId]);
+  const salidaCasa = P - F_TRASLADO - F_ANTES;
+
+  const preCasa = o.preCasa || [];
+  const preTotal = preCasa.reduce(function(a,b){ return a+b[2]; }, 0);
+  const colchon = o.vueltaCasa + preTotal + o.cena;
+
+  const iniT = toMin(o.trabajoIni), maxT = toMin(o.trabajoMax);
+  const finT = Math.max(iniT + 120, Math.min(maxT, salidaCasa - colchon));
+
+  const out = [];
+  let t = iniT;
+  const push = function(mins, nom, cat, nota, tag, meta){
+    out.push([fmt(t), fmt(t+mins), nom, cat, nota||"", tag||"", meta||{}]);
+    t += mins;
+  };
+
+  if(o.trasladoTrabajo){
+    out.push([o.trasladoTrabajo[0], o.trasladoTrabajo[1], o.trasladoTrabajo[2], "traslado", "", "", {}]);
+  }
+  push(finT-iniT, o.trabajoNom || "Trabajo · bloque 2", "trabajo", o.trabajoNota, "", {prio:2});
+  push(o.vueltaCasa, "Traslado a casa", "traslado", "", "", {});
+  preCasa.forEach(function(b){ push(b[2], b[0], b[1], "", (b[3]||{}).tag, b[3]||{}); });
+  push(o.cena, "Cena y cambio", "cuerpo", "", "", {min:28});
+
+  // Bloque flexible: lo que el fútbol variable te devuelve, antes de salir
+  const flexPre = salidaCasa - t;
+  if(flexPre >= 20){
+    const dest = FLEX_OPCIONES[(cfg.flex && cfg.flex[diaId]) || "dormir"];
+    const esDormir = dest === FLEX_OPCIONES.dormir;
+    push(flexPre,
+      esDormir ? "Bloque flexible · sin asignar" : "Bloque flexible · "+dest.nom,
+      esDormir ? "mente" : dest.cat,
+      esDormir
+        ? "El fútbol te devolvió este rato. Elige arriba en qué invertirlo esta semana."
+        : dest.nota,
+      esDormir ? "" : dest.tag, {prio:3});
+  } else if(flexPre > 0){
+    push(flexPre, "Margen antes de salir", "cuerpo", "", "", {min:0, prio:3});
+  }
+
+  push(F_TRASLADO, "Traslado a la cancha", "traslado", "", "", {fijo:true});
+  push(F_ANTES, "Llegada y calentamiento", "cuerpo", "", "", {fijo:true, min:12});
+  push(F_PARTIDO, "Partido",  "cuerpo",
+    sinHora ? "Hora sin confirmar: el día está armado con el escenario tardío. Dime a qué hora juegas y se recalcula."
+            : "Tu único partido de la semana en este día.", "", {fijo:true});
+  push(F_DESPUES, "Salida de la cancha", "cuerpo",
+    "Si juegan temprano y te quieres quedar a ver, el rato que sigue es tuyo: es opcional, no es un compromiso.", "", {min:8});
+  push(F_TRASLADO, "Traslado a casa", "traslado", "", "", {});
+  push(20, "Descompresión y areneros", "mente", "", "", {min:10});
+
+  const desp = toMin(o.despiertaManana);
+  let dormir = desp - t; if(dormir <= 0) dormir += 1440;
+  out.push([fmt(t), o.despiertaManana, "Dormir", "sueno",
+    dormir >= 450 ? "Llegaste antes de lo habitual: aprovéchalo durmiendo, no estirando la noche." : "", "", {}]);
+  return out;
+}
+
 const DIAS = [
   {
     id:"lun", nom:"Lunes", corto:"Lun", res:"Trabajo + clase de noche",
     nota:{txt:"Terminas la clase 22:40 y llegas 23:45. Mañana entras a la U a las 7:30. Esta noche es corta por diseño de tus horarios, no por mala planificación — no le agregues nada.", alert:true},
     b:[
-      ["07:00","07:15","Areneros de los gatos","vinculo","",""],
-      ["07:15","07:35","Aseo y vestirse","cuerpo","",""],
-      ["07:35","08:05","Desayuno","cuerpo","",""],
-      ["08:05","08:15","Táper, mochila y salida","cuerpo","Dejar listo lo de la noche: la clase termina tarde",""],
+      ["07:00","07:15","Areneros de los gatos","vinculo","","",{min:12}],
+      ["07:15","07:35","Aseo y vestirse","cuerpo","","",{min:14}],
+      ["07:35","08:05","Desayuno","cuerpo","","",{min:18}],
+      ["08:05","08:15","Táper, mochila y salida","cuerpo","Dejar listo lo de la noche: la clase termina tarde","",{min:8}],
       ["08:15","09:00","Traslado a la primera parada","traslado","Audiolibro si vas en auto. En scooter, silencio: también cuenta.",""],
       ["09:00","13:00","Trabajo · bloque 1","trabajo","",""],
-      ["13:00","13:35","Almuerzo","cuerpo","",""],
-      ["13:35","17:00","Trabajo · bloque 2","trabajo","",""],
+      ["13:00","13:35","Almuerzo","cuerpo","","",{min:25}],
+      ["13:35","17:00","Trabajo · bloque 2","trabajo","","",{prio:2}],
       ["17:00","17:45","Tesis","u","Aprovechas que la cabeza ya está en modo trabajo, antes de moverte","tesis"],
       ["17:45","18:55","Traslado a la universidad","traslado","",""],
-      ["18:55","19:30","Cena ligera y lectura","mente","La espera antes de clase es tu bloque de lectura más fácil de sostener","lectura"],
-      ["19:30","22:40","Clase presencial","u","",""],
+      ["18:55","19:30","Cena ligera y lectura","mente","La espera antes de clase es tu bloque de lectura más fácil de sostener","lectura",{min:20, prio:1}],
+      ["19:30","22:40","Clase presencial","u","","",{fijo:true}],
       ["22:40","23:45","Traslado a casa","traslado","",""],
-      ["23:45","00:05","Descompresión sin celular","mente","",""],
-      ["00:05","00:15","Captura de pendientes","mente","Todo lo suelto va a la lista. Nada se queda en tu cabeza.",""],
+      ["23:45","00:05","Descompresión sin celular","mente","","",{min:10}],
+      ["00:05","00:15","Captura de pendientes","mente","Todo lo suelto va a la lista. Nada se queda en tu cabeza.","",{min:5}],
       ["00:15","05:30","Dormir","sueno","5 h 15. La única noche corta de la semana.",""]
     ]
   },
   {
     id:"mar", nom:"Martes", corto:"Mar", res:"Clase de mañana + fútbol",
     nota:{txt:"El día más pesado. La jornada laboral va corta a propósito y la siesta de la tarde no es opcional: dormiste 5 h 15.", alert:false},
-    b:[
-      ["05:30","05:45","Areneros de los gatos","vinculo","",""],
-      ["05:45","06:05","Aseo y vestirse","cuerpo","",""],
-      ["06:05","06:15","Desayuno rápido","cuerpo","",""],
-      ["06:15","07:20","Traslado a la universidad","traslado","55 min reales + 10 de margen. Sales 6:15, no 6:30.",""],
-      ["07:30","12:40","Clase presencial","u","",""],
-      ["12:40","13:15","Almuerzo cerca de la U","cuerpo","No vuelvas a casa: son 55 min que no tienes",""],
-      ["13:15","13:40","Siesta de recuperación","cuerpo","25 minutos, no más. Es lo que sostiene el resto del día.",""],
-      ["13:40","14:45","Traslado a oficina o tienda","traslado","",""],
-      ["14:45","19:00","Trabajo · jornada corta","trabajo","4 h 15. Hoy no se recupera lo que falta: se reparte al resto de la semana.",""],
-      ["19:00","19:45","Traslado a casa","traslado","",""],
-      ["19:45","20:25","Cena y cambio","cuerpo","",""],
-      ["20:25","20:40","Traslado a la cancha","traslado","",""],
-      ["20:40","23:00","Fútbol · ventana completa","cuerpo","Juegas 30 min; el resto es espera. Lleva el libro o duerme en el carro.",""],
-      ["23:00","23:40","Traslado a casa","traslado","",""],
-      ["23:40","00:00","Descompresión y areneros","mente","",""],
-      ["00:00","07:00","Dormir","sueno","7 h. Recuperas.",""]
-    ]
+    b: function(cfg){
+      return [
+        ["05:30","05:45","Areneros de los gatos","vinculo","","",{min:12}],
+        ["05:45","06:05","Aseo y vestirse","cuerpo","","",{min:14}],
+        ["06:05","06:15","Desayuno rápido","cuerpo","","",{min:10}],
+        ["06:15","07:20","Traslado a la universidad","traslado","55 min reales + 10 de margen. Sales 6:15, no 6:30.","",{fijo:true}],
+        ["07:30","12:40","Clase presencial","u","","",{fijo:true}],
+        ["12:40","13:15","Almuerzo cerca de la U","cuerpo","No vuelvas a casa: son 55 min que no tienes","",{min:25}],
+        ["13:15","13:40","Siesta de recuperación","cuerpo","25 minutos, no más. Es lo que sostiene el resto del día.","",{min:20}]
+      ].concat(tardeFutbol(cfg,"mar",{
+        trasladoTrabajo:["13:40","14:45","Traslado a oficina o tienda"],
+        trabajoIni:"14:45", trabajoMax:"19:00",
+        trabajoNom:"Trabajo · jornada corta",
+        trabajoNota:"Hoy no se recupera lo que falta: se reparte al resto de la semana.",
+        vueltaCasa:45, cena:40, despiertaManana:"07:00"
+      }));
+    }
   },
   {
     id:"mie", nom:"Miércoles", corto:"Mié", res:"Trabajo + reunión de grupo",
     nota:{txt:"Arranque tardío a propósito: es tu primera noche completa de la semana. La reunión es desde casa, así que la tarde queda libre para tesis.", alert:false},
     b:[
-      ["07:00","07:15","Areneros de los gatos","vinculo","",""],
-      ["07:15","07:35","Aseo y vestirse","cuerpo","",""],
-      ["07:35","08:05","Desayuno","cuerpo","",""],
-      ["08:05","08:15","Táper y salida","cuerpo","",""],
+      ["07:00","07:15","Areneros de los gatos","vinculo","","",{min:12}],
+      ["07:15","07:35","Aseo y vestirse","cuerpo","","",{min:14}],
+      ["07:35","08:05","Desayuno","cuerpo","","",{min:18}],
+      ["08:05","08:15","Táper y salida","cuerpo","","",{min:8}],
       ["08:15","09:00","Traslado a la primera parada","traslado","",""],
       ["09:00","13:00","Trabajo · bloque 1","trabajo","",""],
-      ["13:00","13:35","Almuerzo","cuerpo","",""],
-      ["13:35","17:00","Trabajo · bloque 2","trabajo","",""],
+      ["13:00","13:35","Almuerzo","cuerpo","","",{min:25}],
+      ["13:35","17:00","Trabajo · bloque 2","trabajo","","",{prio:2}],
       ["17:00","17:45","Traslado a casa","traslado","",""],
-      ["17:45","18:05","Descompresión sin celular","mente","",""],
+      ["17:45","18:05","Descompresión sin celular","mente","","",{min:10}],
       ["18:05","19:00","Tesis","u","","tesis"],
-      ["19:00","19:45","Cena","cuerpo","",""],
-      ["19:45","20:00","Preparar la reunión","u","Llega con tu parte lista: acorta la reunión para todos",""],
-      ["20:00","22:00","Reunión · Lanzamiento de producto y marca","u","",""],
-      ["22:00","22:20","Areneros y captura de pendientes","vinculo","",""],
-      ["22:20","22:55","Lectura","mente","","lectura"],
-      ["22:55","23:00","Dejar listo lo de mañana","cuerpo","",""],
+      ["19:00","19:45","Cena","cuerpo","","",{min:28}],
+      ["19:45","20:00","Preparar la reunión","u","Llega con tu parte lista: acorta la reunión para todos","",{min:8}],
+      ["20:00","22:00","Reunión · Lanzamiento de producto y marca","u","","",{fijo:true}],
+      ["22:00","22:20","Areneros y captura de pendientes","vinculo","","",{min:10}],
+      ["22:20","22:55","Lectura","mente","","lectura",{min:20, prio:1}],
+      ["22:55","23:00","Dejar listo lo de mañana","cuerpo","","",{min:4, prio:3}],
       ["23:00","06:00","Dormir","sueno","",""]
     ]
   },
   {
     id:"jue", nom:"Jueves", corto:"Jue", res:"Jornada completa + fútbol",
     nota:{txt:"Tu día de trabajo más largo y el único con margen real por la tarde. Aquí es donde entra la tesis entre semana.", alert:false},
-    b:[
-      ["06:00","06:15","Areneros de los gatos","vinculo","",""],
-      ["06:15","06:35","Aseo y vestirse","cuerpo","",""],
-      ["06:35","07:05","Desayuno","cuerpo","",""],
-      ["07:05","07:15","Táper y salida","cuerpo","",""],
-      ["07:15","08:00","Traslado a la primera parada","traslado","",""],
-      ["08:00","12:30","Trabajo · bloque 1","trabajo","",""],
-      ["12:30","13:05","Almuerzo","cuerpo","",""],
-      ["13:05","16:30","Trabajo · bloque 2","trabajo","",""],
-      ["16:30","17:15","Traslado a casa","traslado","",""],
-      ["17:15","17:35","Descompresión sin celular","mente","",""],
-      ["17:35","18:35","Tesis","u","","tesis"],
-      ["18:35","19:15","Cena","cuerpo","",""],
-      ["19:15","19:50","Lectura","mente","","lectura"],
-      ["19:50","20:00","Cambio y salida","cuerpo","",""],
-      ["20:00","20:40","Traslado a la cancha","traslado","",""],
-      ["20:40","23:00","Fútbol · ventana completa","cuerpo","",""],
-      ["23:00","23:40","Traslado a casa","traslado","",""],
-      ["23:40","00:00","Descompresión y areneros","mente","",""],
-      ["00:00","07:00","Dormir","sueno","",""]
-    ]
+    b: function(cfg){
+      return [
+        ["06:00","06:15","Areneros de los gatos","vinculo","","",{min:12}],
+        ["06:15","06:35","Aseo y vestirse","cuerpo","","",{min:14}],
+        ["06:35","07:05","Desayuno","cuerpo","","",{min:20}],
+        ["07:05","07:15","Táper y salida","cuerpo","","",{min:8}],
+        ["07:15","08:00","Traslado a la primera parada","traslado","","",{}],
+        ["08:00","12:30","Trabajo · bloque 1","trabajo","","",{}],
+        ["12:30","13:05","Almuerzo","cuerpo","","",{min:25}]
+      ].concat(tardeFutbol(cfg,"jue",{
+        trasladoTrabajo:null,
+        trabajoIni:"13:05", trabajoMax:"16:30",
+        preCasa:[
+          ["Descompresión sin celular","mente",20,{min:10}],
+          ["Tesis","u",60,{tag:"tesis"}],
+          ["Lectura","mente",35,{tag:"lectura",prio:1}]
+        ],
+        vueltaCasa:45, cena:40, despiertaManana:"07:00"
+      }));
+    }
   },
   {
     id:"vie", nom:"Viernes", corto:"Vie", res:"Gym + tu única noche libre",
     nota:{txt:"La noche del viernes alterna entre salir con tu enamorada y un bloque profundo de tesis. Decide el lunes cuál toca, no el viernes a las 8.", alert:false},
     b:[
-      ["07:00","07:15","Areneros de los gatos","vinculo","",""],
-      ["07:15","07:35","Aseo y vestirse","cuerpo","",""],
-      ["07:35","08:05","Desayuno","cuerpo","",""],
-      ["08:05","08:15","Ropa de gym en la mochila y salida","cuerpo","Si la ropa no sale contigo en la mañana, no vas al gym",""],
+      ["07:00","07:15","Areneros de los gatos","vinculo","","",{min:12}],
+      ["07:15","07:35","Aseo y vestirse","cuerpo","","",{min:14}],
+      ["07:35","08:05","Desayuno","cuerpo","","",{min:18}],
+      ["08:05","08:15","Ropa de gym en la mochila y salida","cuerpo","Si la ropa no sale contigo en la mañana, no vas al gym","",{min:8}],
       ["08:15","09:00","Traslado a la primera parada","traslado","",""],
       ["09:00","13:00","Trabajo · bloque 1","trabajo","",""],
-      ["13:00","13:35","Almuerzo","cuerpo","",""],
-      ["13:35","17:00","Trabajo · bloque 2","trabajo","",""],
+      ["13:00","13:35","Almuerzo","cuerpo","","",{min:25}],
+      ["13:35","17:00","Trabajo · bloque 2","trabajo","","",{prio:2}],
       ["17:00","17:40","Traslado al gym","traslado","Directo desde el trabajo, sin pasar por casa",""],
-      ["17:40","19:10","Gym","cuerpo","","gym"],
+      ["17:40","19:10","Gym","cuerpo","","gym",{min:60, prio:4}],
       ["19:10","19:50","Traslado a casa","traslado","",""],
-      ["19:50","20:35","Ducha y cena","cuerpo","",""],
+      ["19:50","20:35","Ducha y cena","cuerpo","","",{min:30}],
       ["20:35","22:45","Noche libre · pareja o tesis profunda","vinculo","Alterna semana a semana. Es el único bloque flexible grande que tienes.",""],
-      ["22:45","23:00","Areneros y captura","vinculo","",""],
-      ["23:00","23:30","Lectura","mente","","lectura"],
+      ["22:45","23:00","Areneros y captura","vinculo","","",{min:10}],
+      ["23:00","23:30","Lectura","mente","","lectura",{min:20, prio:1}],
       ["23:30","06:30","Dormir","sueno","",""]
     ]
   },
@@ -585,21 +747,21 @@ const DIAS = [
     id:"sab", nom:"Sábado", corto:"Sáb", res:"Gym + media jornada + pareja",
     nota:{txt:"El bloque grande con tu enamorada va aquí, protegido: casi 6 horas seguidas. No lo piques con pendientes de trabajo.", alert:false},
     b:[
-      ["06:30","06:45","Areneros de los gatos","vinculo","",""],
-      ["06:45","07:05","Aseo y pre-entreno","cuerpo","",""],
+      ["06:30","06:45","Areneros de los gatos","vinculo","","",{min:12}],
+      ["06:45","07:05","Aseo y pre-entreno","cuerpo","","",{min:14}],
       ["07:05","07:45","Traslado al gym","traslado","",""],
-      ["07:45","09:15","Gym","cuerpo","","gym"],
+      ["07:45","09:15","Gym","cuerpo","","gym",{min:60, prio:4}],
       ["09:15","09:55","Traslado a casa","traslado","",""],
-      ["09:55","10:35","Ducha y desayuno","cuerpo","",""],
+      ["09:55","10:35","Ducha y desayuno","cuerpo","","",{min:25}],
       ["10:35","11:20","Traslado al trabajo","traslado","",""],
-      ["11:20","15:00","Trabajo · media jornada","trabajo","",""],
-      ["15:00","15:35","Almuerzo","cuerpo","",""],
+      ["11:20","15:00","Trabajo · media jornada","trabajo","","",{prio:2}],
+      ["15:00","15:35","Almuerzo","cuerpo","","",{min:25}],
       ["15:35","16:20","Traslado a casa","traslado","",""],
-      ["16:20","16:40","Descompresión sin celular","mente","",""],
-      ["16:40","17:10","Arreglarse","cuerpo","",""],
-      ["17:10","23:00","Salida con tu enamorada","vinculo","Sin revisar el correo del trabajo. Ese es el punto del bloque.","pareja"],
-      ["23:00","23:15","Areneros y captura","vinculo","",""],
-      ["23:15","23:45","Lectura","mente","","lectura"],
+      ["16:20","16:40","Descompresión sin celular","mente","","",{min:10}],
+      ["16:40","17:10","Arreglarse","cuerpo","","",{min:18}],
+      ["17:10","23:00","Salida con tu enamorada","vinculo","Sin revisar el correo del trabajo. Ese es el punto del bloque.","pareja",{fijo:true}],
+      ["23:00","23:15","Areneros y captura","vinculo","","",{min:10}],
+      ["23:15","23:45","Lectura","mente","","lectura",{min:20, prio:1}],
       ["23:45","06:45","Dormir","sueno","",""]
     ]
   },
@@ -607,23 +769,23 @@ const DIAS = [
     id:"dom", nom:"Domingo", corto:"Dom", res:"Correos, tesis, cocina y planificación",
     nota:{txt:"El día que hace posible la semana: correos de visitas, compras, tápers y el bloque profundo de tesis. Termina con tu enamorada y con 8 h de sueño para arrancar el lunes entero.", alert:false},
     b:[
-      ["06:45","07:00","Areneros de los gatos","vinculo","",""],
-      ["07:00","07:20","Aseo y pre-entreno","cuerpo","",""],
+      ["06:45","07:00","Areneros de los gatos","vinculo","","",{min:12}],
+      ["07:00","07:20","Aseo y pre-entreno","cuerpo","","",{min:14}],
       ["07:20","08:00","Traslado al gym","traslado","",""],
-      ["08:00","09:30","Gym","cuerpo","","gym"],
+      ["08:00","09:30","Gym","cuerpo","","gym",{min:60, prio:4}],
       ["09:30","10:10","Traslado a casa","traslado","",""],
-      ["10:10","10:50","Ducha y desayuno","cuerpo","",""],
-      ["10:50","12:50","Correos de las visitas de la semana","trabajo","Todos de una. Repartirlos en la semana te cuesta el triple por el cambio de contexto.",""],
-      ["12:50","14:00","Compras del mercado","cuerpo","",""],
-      ["14:00","14:40","Almuerzo","cuerpo","",""],
-      ["14:40","16:10","Cocina batch · tápers de la semana","cuerpo","Esto es lo que te quita de encima la decisión diaria de qué comer. Es fatiga mental disfrazada de logística.",""],
+      ["10:10","10:50","Ducha y desayuno","cuerpo","","",{min:25}],
+      ["10:50","12:50","Correos de las visitas de la semana","trabajo","Todos de una. Repartirlos en la semana te cuesta el triple por el cambio de contexto.","",{min:90}],
+      ["12:50","14:00","Compras del mercado","cuerpo","","",{min:45, prio:3}],
+      ["14:00","14:40","Almuerzo","cuerpo","","",{min:25}],
+      ["14:40","16:10","Cocina batch · tápers de la semana","cuerpo","Esto es lo que te quita de encima la decisión diaria de qué comer. Es fatiga mental disfrazada de logística.","",{min:60, prio:3}],
       ["16:10","18:30","Tesis · bloque profundo","u","Cabeza descansada y sin interrupciones: aquí avanza de verdad la tesis.","tesis"],
-      ["18:30","18:50","Descompresión sin celular","mente","",""],
+      ["18:30","18:50","Descompresión sin celular","mente","","",{min:10}],
       ["18:50","21:00","Tiempo con tu enamorada","vinculo","","pareja"],
-      ["21:00","21:40","Cena","cuerpo","",""],
-      ["21:40","22:00","Areneros y planificación de la semana","mente","Me pasas la programación de tiendas y tus pendientes de la U; yo reacomodo el horario.",""],
-      ["22:00","22:45","Lectura","mente","","lectura"],
-      ["22:45","23:00","Dejar listo el lunes","cuerpo","",""],
+      ["21:00","21:40","Cena","cuerpo","","",{min:28}],
+      ["21:40","22:00","Areneros y planificación de la semana","mente","Me pasas la programación de tiendas y tus pendientes de la U; yo reacomodo el horario.","",{min:12}],
+      ["22:00","22:45","Lectura","mente","","lectura",{min:20, prio:1}],
+      ["22:45","23:00","Dejar listo el lunes","cuerpo","","",{min:5, prio:3}],
       ["23:00","07:00","Dormir","sueno","8 h. La noche larga que paga el lunes.",""]
     ]
   }
@@ -703,16 +865,38 @@ function weekId(d){
 const WEEK = weekId(new Date());
 let hechos = {};           // blockKey -> true
 let pendientes = [];       // {id,txt,min,hecho}
+let CFG = {                // configuración de la semana en curso
+  partidos: {},            // {mar:"21:30", jue:"20:40"} — Carlos avisa el día antes
+  flex: {},                // {mar:"tesis", jue:"dormir"} — destino del bloque flexible
+  ajuste: null             // re-planificación activa: {dia, desde, escenario, caidos:[]}
+};
+
+/* Devuelve los bloques del día, generándolos si dependen de la
+   configuración (los días de fútbol). */
+function bloquesDe(d){
+  return typeof d.b === "function" ? d.b(CFG) : d.b;
+}
 let db = null;             // capacidad db, si está disponible
-const LS_H = "sb.hechos."+WEEK, LS_P = "sb.pend";
+const LS_H = "sb.hechos."+WEEK, LS_P = "sb.pend", LS_C = "sb.cfg."+WEEK;
 
 function loadLocal(){
   try{ hechos = JSON.parse(localStorage.getItem(LS_H) || "{}") || {}; }catch(e){ hechos = {}; }
   try{ pendientes = JSON.parse(localStorage.getItem(LS_P) || "[]") || []; }catch(e){ pendientes = []; }
+  try{
+    const c = JSON.parse(localStorage.getItem(LS_C) || "null");
+    if(c && typeof c==="object") CFG = Object.assign(CFG, c);
+  }catch(e){}
 }
 function saveLocal(){
   try{ localStorage.setItem(LS_H, JSON.stringify(hechos)); }catch(e){}
   try{ localStorage.setItem(LS_P, JSON.stringify(pendientes)); }catch(e){}
+  try{ localStorage.setItem(LS_C, JSON.stringify(CFG)); }catch(e){}
+}
+function pushCfg(){
+  saveLocal();
+  if(db){ db.doc("semanas/"+WEEK).update({cfg:CFG, actualizado:new Date().toISOString()})
+    .catch(function(){ db.doc("semanas/"+WEEK).set({hechos:hechos, cfg:CFG}).catch(function(){}); }); }
+  renderDay(); renderMeters(); renderFutbol();
 }
 function pushHechos(){
   saveLocal();
@@ -730,7 +914,7 @@ function renderMeters(){
   METAS.forEach(function(m){
     let plan=0, hecho=0, sesPlan=0, sesHecho=0;
     DIAS.forEach(function(d){
-      d.b.forEach(function(b,i){
+      bloquesDe(d).forEach(function(b,i){
         if(b[5]!==m.tag) return;
         const mins=dur(b[0],b[1]);
         plan+=mins; sesPlan++;
@@ -749,7 +933,7 @@ function renderMeters(){
   // traslado + sueño: informativos, no metas
   let tras=0, noches=[];
   DIAS.forEach(function(d){
-    d.b.forEach(function(b){
+    bloquesDe(d).forEach(function(b){
       if(b[3]==="traslado") tras+=dur(b[0],b[1]);
       if(b[3]==="sueno") noches.push(dur(b[0],b[1]));
     });
@@ -772,7 +956,7 @@ function renderTabs(){
   const el=document.getElementById("tabs");
   el.innerHTML = DIAS.map(function(d,i){
     return '<button class="tab" role="tab" id="tab-'+d.id+'" aria-selected="'+(i===activo)+'" data-i="'+i+'">'+
-           d.corto+'<span>'+d.b[0][0]+'</span></button>';
+           d.corto+'<span>'+bloquesDe(d)[0][0]+'</span></button>';
   }).join("");
   el.querySelectorAll(".tab").forEach(function(t){
     t.addEventListener("click", function(){ activo=+t.dataset.i; renderTabs(); renderDay(); });
@@ -782,7 +966,7 @@ function renderTabs(){
 function renderDay(){
   const d=DIAS[activo];
   let despierto=0, trab=0, tras=0, suenoMin=0;
-  d.b.forEach(function(b){
+  bloquesDe(d).forEach(function(b){
     const m=dur(b[0],b[1]);
     if(b[3]==="sueno"){ suenoMin=m; return; }
     despierto+=m;
@@ -796,14 +980,39 @@ function renderDay(){
 
   if(d.nota) html+='<div class="daynote'+(d.nota.alert?" alert":"")+'">'+d.nota.txt+'</div>';
 
+  // Ajuste activo: el día se re-dibuja desde la hora reportada
+  const aj = (CFG.ajuste && CFG.ajuste.dia===d.id) ? CFG.ajuste : null;
+  let ajPlan=null, ajCaidos=[];
+  if(aj){
+    const e = construirEscenarios(d, aj.idx||0, aj.desde).find(function(x){return x.id===aj.escenario;});
+    if(e){
+      ajPlan = {}; ajCaidos = e.caidos;
+      e.plan.forEach(function(p){ ajPlan[p.i] = p; });
+      html += '<div class="daynote alert">Plan ajustado desde las <b>'+fmt(aj.desde)+
+        '</b> · escenario «'+e.nom+'». Duermes '+fmt(e.acostar)+', '+hm(e.horas)+
+        '. Los bloques tachados se cayeron hoy.</div>';
+    }
+  }
+
   html+='<ul class="tl">';
-  d.b.forEach(function(b,i){
-    const key=d.id+"-"+i, done=!!hechos[key], m=dur(b[0],b[1]);
+  bloquesDe(d).forEach(function(b,i){
+    const key=d.id+"-"+i, done=!!hechos[key];
+    let m=dur(b[0],b[1]);
+    let ini=b[0], fin=b[1], estado="";
+    if(ajPlan){
+      if(ajCaidos.indexOf(i)>=0){ estado="caido"; }
+      else if(ajPlan[i]){ ini=fmt(ajPlan[i].ini); fin=fmt(ajPlan[i].fin); m=ajPlan[i].d;
+        if(ajPlan[i].recortado) estado="recortado"; }
+      else if(b[3]!=="sueno"){ estado="pasado"; }
+    }
+    b = [ini, fin, b[2], b[3], b[4], b[5], b[6]];
     const marcable = b[3]!=="sueno" && b[3]!=="traslado";
     let chip="";
     if(b[5]) chip='<span class="chip blindado">'+b[5]+'</span>';
     if(b[3]==="sueno" && m<390) chip='<span class="chip corta">noche corta</span>';
-    html+='<li class="blk'+(done?" checked":"")+'" data-c="'+b[3]+'">'+
+    if(estado==="recortado") chip+='<span class="chip rec">recortado</span>';
+    if(estado==="caido")     chip+='<span class="chip cai">se cae hoy</span>';
+    html+='<li class="blk'+(done?" checked":"")+(estado?" est-"+estado:"")+'" data-c="'+b[3]+'">'+
       '<div class="time">'+b[0]+'<em>'+(b[3]==="sueno"?"→ "+b[1]:b[1])+'</em></div>'+
       '<div class="rail"></div>'+
       '<div><div class="name">'+b[2]+chip+'</div>'+(b[4]?'<div class="why">'+b[4]+'</div>':'')+'</div>'+
@@ -830,6 +1039,249 @@ function renderLegend(){
       : "var(--c-"+k+")";
     return '<span class="lg"><i style="background:'+bg+'"></i>'+CATS[k]+'</span>';
   }).join("");
+}
+
+/* ============================================================
+   PANEL DE FÚTBOL — hora del partido y destino del bloque flexible
+   ============================================================ */
+function renderFutbol(){
+  const dias=[{id:"mar",nom:"Martes"},{id:"jue",nom:"Jueves"}];
+  document.getElementById("futbolPanel").innerHTML = dias.map(function(d){
+    const hora = (CFG.partidos && CFG.partidos[d.id]) || "";
+    const flex = (CFG.flex && CFG.flex[d.id]) || "dormir";
+    const dia = DIAS.find(function(x){return x.id===d.id;});
+    const bs = bloquesDe(dia);
+    const dorm = bs[bs.length-1];
+    const fb = bs.find(function(b){ return b[2]==="Bloque flexible · sin asignar" || b[2].indexOf("Bloque flexible")===0; });
+    return '<div class="fcard">'+
+      '<div class="fhead">'+d.nom+
+        (hora?'<span class="ok">partido '+hora+'</span>':'<span class="warn">hora sin confirmar</span>')+'</div>'+
+      '<div class="frow">'+
+        '<div class="field"><label for="f-'+d.id+'">Hora del partido</label>'+
+          '<input id="f-'+d.id+'" type="time" value="'+(hora||F_DEFECTO)+'" data-fut="'+d.id+'"></div>'+
+        '<div class="field"><label for="x-'+d.id+'">El rato que se libera va a</label>'+
+          '<select id="x-'+d.id+'" data-flex="'+d.id+'">'+
+            Object.keys(FLEX_OPCIONES).map(function(k){
+              return '<option value="'+k+'"'+(k===flex?" selected":"")+'>'+FLEX_OPCIONES[k].nom+'</option>';
+            }).join("")+
+          '</select></div>'+
+      '</div>'+
+      '<p class="why" style="margin-top:9px">'+
+        (fb ? 'Se te liberan <b>'+hm(dur(fb[0],fb[1]))+'</b> antes de salir. ' : 'Con esta hora no queda margen antes de salir. ')+
+        'Duermes desde las <b>'+dorm[0]+'</b> · '+hm(dur(dorm[0],dorm[1]))+'.</p>'+
+      (hora?'':'<p class="why" style="color:var(--warn)">Sin hora confirmada el día se arma con el escenario tardío ('+F_DEFECTO+'), nunca con el optimista.</p>')+
+      '</div>';
+  }).join("");
+
+  document.querySelectorAll('input[data-fut]').forEach(function(i){
+    i.addEventListener("change", function(){
+      CFG.partidos = CFG.partidos || {};
+      CFG.partidos[i.dataset.fut] = i.value;
+      pushCfg();
+    });
+  });
+  document.querySelectorAll('select[data-flex]').forEach(function(s){
+    s.addEventListener("change", function(){
+      CFG.flex = CFG.flex || {};
+      CFG.flex[s.dataset.flex] = s.value;
+      pushCfg();
+    });
+  });
+}
+
+/* ============================================================
+   RE-PLANIFICADOR — el sistema propone, Carlos elige
+   Anclas duras: los bloques `fijo` y la hora de despertar.
+   `min` = duración mínima al comprimir. `prio` = orden de sacrificio
+   (1 primero). Sin `prio`, el bloque nunca se ofrece para eliminar:
+   tesis, pareja, descompresión, areneros y sueño quedan fuera.
+   ============================================================ */
+let rModo = "donde";
+
+function metaDe(b){ return b[6] || {}; }
+
+/* Hora original de inicio de un bloque, en minutos desde el arranque
+   del día (los bloques después de medianoche suman 1440). */
+function iniAbs(bloques, i){
+  let v = toMin(bloques[i][0]);
+  if(v < toMin(bloques[0][0])) v += 1440;
+  return v;
+}
+
+/* Índice del bloque que, según el plan original, debería estar
+   corriendo a la hora `t`. */
+function bloqueEn(bloques, t){
+  for(let i=0;i<bloques.length;i++){
+    if(bloques[i][3]==="sueno") break;
+    const ini=iniAbs(bloques,i), fin=ini+dur(bloques[i][0],bloques[i][1]);
+    if(t < fin) return i;
+  }
+  return bloques.length-2;
+}
+
+/* Reprograma los bloques desde `idx` en adelante, arrancando a la hora
+   `desde`. Todo lo anterior se da por terminado; nada se descarta por
+   el reloj — lo que no cabe hay que comprimirlo o soltarlo a propósito. */
+function simular(bloques, idx, desde, comprimir, caidos){
+  const out=[]; let t=desde; let tardeA=[];
+  for(let i=idx;i<bloques.length;i++){
+    const b=bloques[i], m=metaDe(b);
+    if(b[3]==="sueno") continue;
+    if(caidos.indexOf(i)>=0) continue;
+    let full = dur(b[0],b[1]);
+    let d = full;
+    if(comprimir && typeof m.min==="number") d = Math.max(m.min, 0);
+    if(m.fijo){
+      const ini = iniAbs(bloques,i);
+      if(t < ini) t = ini;                         // ancla: esperas hasta la hora
+      else if(t > ini) tardeA.push(b[2]);          // llegas tarde a algo fijo
+    }
+    out.push({i:i, ini:t, fin:t+d, b:b, d:d, recortado: d<full});
+    t += d;
+  }
+  return {plan:out, fin:t, tardeA:tardeA};
+}
+
+function construirEscenarios(dia, idx, desde){
+  const bloques = bloquesDe(dia);
+  const dormirB = bloques[bloques.length-1];
+  let acostar = toMin(dormirB[0]); if(acostar < toMin(bloques[0][0])) acostar += 1440;
+  const despierta = toMin(dormirB[1]);
+  let horasBase = despierta - acostar; if(horasBase<=0) horasBase += 1440;
+
+  const esc=[];
+
+  // A · comprimir sin eliminar nada
+  const a = simular(bloques, idx, desde, true, []);
+  esc.push({id:"comprimir", nom:"Comprimir", sub:"No pierdes nada",
+    factible: a.fin <= acostar, plan:a.plan, fin:a.fin, caidos:[], comprimir:true,
+    tardeA:a.tardeA,
+    detalle: a.plan.filter(function(p){return p.recortado;}).map(function(p){
+      return p.b[2]+": "+hm(dur(p.b[0],p.b[1]))+" → "+hm(p.d); })});
+
+  // B · comprimir y soltar siguiendo el orden de sacrificio
+  const candidatos = bloques.map(function(b,i){ return {i:i, p:metaDe(b).prio}; })
+    .filter(function(x){ return x.p && x.i>=idx; })
+    .sort(function(x,y){ return x.p-y.p; });
+  const caidos=[]; let bsim = a;
+  for(let k=0; k<candidatos.length && bsim.fin>acostar; k++){
+    caidos.push(candidatos[k].i);
+    bsim = simular(bloques, idx, desde, true, caidos);
+  }
+  if(caidos.length){
+    esc.push({id:"soltar", nom:"Soltar lo barato", sub:"Cae "+caidos.length+" bloque"+(caidos.length>1?"s":""),
+      factible: bsim.fin <= acostar, plan:bsim.plan, fin:bsim.fin, caidos:caidos.slice(), comprimir:true,
+      tardeA:bsim.tardeA,
+      detalle: caidos.map(function(i){ return "Se cae: "+bloques[i][2]+" ("+hm(dur(bloques[i][0],bloques[i][1]))+")"; })});
+  }
+
+  // C · mantener todo y dormir menos. Solo tiene sentido si de verdad
+  // empuja la hora de dormir; si no, es idéntico a comprimir.
+  const c = simular(bloques, idx, desde, false, []);
+  if(c.fin > acostar){
+    let horasC = despierta - c.fin; if(horasC<=0) horasC += 1440;
+    esc.push({id:"dormir", nom:"Dormir menos", sub:"Mantienes todo",
+      factible:true, plan:c.plan, fin:c.fin, caidos:[], comprimir:false, tardeA:c.tardeA,
+      aviso: horasC < 360 ? "Bajo 6 h. Si mañana tienes clase temprano o fútbol, esta no es la opción." : "",
+      detalle:["Te acuestas "+hm(c.fin-acostar)+" más tarde de lo previsto",
+               "Pierdes "+hm(horasBase-horasC)+" de sueño"]});
+  }
+
+  esc.forEach(function(e){
+    let h = despierta - Math.max(e.fin, acostar===e.fin?acostar:e.fin);
+    let ac = Math.max(e.fin, e.id==="dormir" ? e.fin : Math.min(e.fin, acostar));
+    if(e.id!=="dormir") ac = e.fin <= acostar ? acostar : e.fin;
+    h = despierta - ac; if(h<=0) h += 1440;
+    e.acostar = ac; e.horas = h; e.horasBase = horasBase;
+  });
+  // Se muestran todas: cuando ya pasaste la hora de dormir ninguna
+  // "alcanza", pero sigue habiendo una que te hace perder menos.
+  esc.forEach(function(e){ e.alcanza = e.fin <= acostar; });
+  return esc.sort(function(x,y){ return y.horas - x.horas; });
+}
+
+function renderRetrasoInputs(){
+  const dia = DIAS[activo];
+  const bs = bloquesDe(dia);
+  const ahora = new Date();
+  const hhmm = String(ahora.getHours()).padStart(2,"0")+":"+String(ahora.getMinutes()).padStart(2,"0");
+  let html="";
+  if(rModo==="donde"){
+    html = '<div class="field" style="grid-column:1/-1"><label for="rBloque">Recién estoy terminando</label>'+
+      '<select id="rBloque">'+bs.map(function(b,i){
+        return b[3]==="sueno" ? "" : '<option value="'+i+'">'+b[0]+' · '+b[2]+'</option>';
+      }).join("")+'</select></div>'+
+      '<div class="field"><label for="rAhora">Y son las</label><input id="rAhora" type="time" value="'+hhmm+'"></div>';
+  } else if(rModo==="tarde"){
+    html = '<div class="field"><label for="rMin">Minutos tarde</label><input id="rMin" type="number" min="5" max="480" step="5" value="40"></div>'+
+      '<div class="field"><label for="rAhora">Son las</label><input id="rAhora" type="time" value="'+hhmm+'"></div>';
+  } else {
+    html = '<div class="field"><label for="rFin">Quedo libre a las</label><input id="rFin" type="time" value="'+hhmm+'"></div>';
+  }
+  document.getElementById("rInputs").innerHTML = html + '<div class="field" style="align-self:end">'+
+    '<button class="btn" id="rGo">Ver opciones</button></div>';
+  document.getElementById("rGo").addEventListener("click", renderRetrasoOut);
+}
+
+/* Devuelve {idx, desde}: el primer bloque que queda pendiente y la hora
+   a la que realmente arranca. En los tres modos, el bloque en curso se
+   da por terminado a la hora indicada. */
+function puntoDePartida(){
+  const bs = bloquesDe(DIAS[activo]);
+  const g=function(id){const e=document.getElementById(id); return e?e.value:null;};
+  let actual, desde;
+  if(rModo==="donde"){
+    actual = +g("rBloque"); desde = toMin(g("rAhora"));
+  } else if(rModo==="tarde"){
+    desde = toMin(g("rAhora")) + (+g("rMin")||0);
+    actual = bloqueEn(bs, toMin(g("rAhora")));
+  } else {
+    desde = toMin(g("rFin"));
+    actual = bloqueEn(bs, desde);
+  }
+  let idx = Math.min(actual+1, bs.length-1);
+  while(idx < bs.length && bs[idx][3]==="sueno") idx++;
+  return {idx:idx, desde:desde, actual:actual};
+}
+
+function renderRetrasoOut(){
+  const dia = DIAS[activo];
+  const pp = puntoDePartida();
+  const desde = pp.desde;
+  const esc = construirEscenarios(dia, pp.idx, desde);
+  const el = document.getElementById("rOut");
+  if(!esc.length){ el.innerHTML='<p class="why">No pude armar ninguna opción con esa hora. Revisa el dato.</p>'; return; }
+
+  const bsD = bloquesDe(dia);
+  el.innerHTML = '<p class="why" style="margin-bottom:10px">Retomas en <b>'+bsD[pp.idx][2]+
+      '</b> a las <b>'+fmt(desde)+'</b>. Todo lo anterior queda cerrado.</p>'+
+    '<div class="eyebrow" style="margin-bottom:8px">Elige cómo cerrar el día</div>'+
+    esc.map(function(e){
+      const corto = e.horas < 420;
+      return '<button type="button" class="escen'+(CFG.ajuste && CFG.ajuste.dia===dia.id && CFG.ajuste.escenario===e.id?" sel":"")+
+        '" data-esc="'+e.id+'" data-desde="'+desde+'" data-idx="'+pp.idx+'">'+
+        '<div class="etop"><b>'+e.nom+'</b><span>'+e.sub+'</span>'+
+          (e.alcanza?'':'<span class="tras">no llega a tu hora</span>')+'</div>'+
+        '<div class="edorm'+(corto?" corto":"")+'">Duermes '+fmt(e.acostar)+' · <b>'+hm(e.horas)+'</b>'+
+          (corto?' <em>bajo tus 7 h</em>':'')+'</div>'+
+        '<ul class="edet">'+e.detalle.slice(0,4).map(function(d){return '<li>'+d+'</li>';}).join("")+'</ul>'+
+        (e.tardeA && e.tardeA.length?'<div class="eaviso">Llegas tarde a: '+e.tardeA.join(", ")+'</div>':'')+
+        (e.aviso?'<div class="eaviso">'+e.aviso+'</div>':'')+
+        '</button>';
+    }).join("");
+
+  el.querySelectorAll(".escen").forEach(function(b){
+    b.addEventListener("click", function(){
+      CFG.ajuste = {dia:dia.id, desde:+b.dataset.desde, idx:+b.dataset.idx, escenario:b.dataset.esc};
+      pushCfg(); renderRetrasoOut();
+    });
+  });
+  if(CFG.ajuste && CFG.ajuste.dia===dia.id){
+    el.innerHTML += '<button class="btn ghost" id="rClear" style="margin-top:10px">Volver al plan original</button>';
+    document.getElementById("rClear").addEventListener("click", function(){
+      CFG.ajuste=null; pushCfg(); renderRetrasoOut();
+    });
+  }
 }
 
 /* ---------------- cartera ---------------- */
@@ -1015,7 +1467,23 @@ function addPend(){
 loadLocal();
 document.getElementById("weekLabel").textContent = "Semana "+WEEK;
 renderMeters(); renderTabs(); renderDay(); renderLegend();
-renderCartera(); renderPicker(); renderCalc(); renderPend();
+renderFutbol(); renderCartera(); renderPicker(); renderCalc(); renderPend();
+
+// re-planificador
+document.getElementById("rToggle").addEventListener("click", function(){
+  const body=document.getElementById("rBody"), abierto=!body.hidden;
+  body.hidden = abierto;
+  this.setAttribute("aria-expanded", String(!abierto));
+  this.textContent = abierto ? "Recalcular el día" : "Cerrar";
+  if(!abierto){ renderRetrasoInputs(); document.getElementById("rOut").innerHTML=""; }
+});
+document.querySelectorAll(".rm").forEach(function(b){
+  b.addEventListener("click", function(){
+    rModo=b.dataset.m;
+    document.querySelectorAll(".rm").forEach(function(x){ x.setAttribute("aria-selected", String(x===b)); });
+    renderRetrasoInputs(); document.getElementById("rOut").innerHTML="";
+  });
+});
 
 // el día de hoy, si estamos dentro de la semana
 (function(){
@@ -1044,7 +1512,9 @@ document.getElementById("pTxt").addEventListener("keydown", function(e){ if(e.ke
     db.doc("semanas/"+WEEK).onSnapshot(function(snap){
       if(!snap.exists) return;
       const d=snap.data()||{};
-      if(d.hechos && typeof d.hechos==="object"){ hechos=Object.assign({},d.hechos); saveLocal(); renderDay(); renderMeters(); }
+      if(d.hechos && typeof d.hechos==="object"){ hechos=Object.assign({},d.hechos); }
+      if(d.cfg && typeof d.cfg==="object"){ CFG=Object.assign(CFG,d.cfg); }
+      saveLocal(); renderDay(); renderMeters(); renderFutbol();
     }, function(){ st.textContent="estado local"; st.classList.remove("on"); });
 
     db.doc("listas/pendientes").onSnapshot(function(snap){
