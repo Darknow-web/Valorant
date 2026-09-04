@@ -38,6 +38,41 @@ tardío del miércoles.
 Por eso el gym quedó viernes tarde, sábado y domingo por la mañana: son las únicas
 franjas que no le quitan horas al sueño.
 
+## Navegación
+
+La página se usa a una mano, en la calle, en cinco segundos. Cinco destinos:
+
+| Pestaña | Contenido |
+|---|---|
+| **Hoy** | Tarjeta «Ahora», día completo con lo pasado plegado, re-planificador |
+| **Semana** | Innegociables y noches de fútbol |
+| **Ruta** | Calculadora de día puntual y pendientes sueltos |
+| **Asistente** | Foto del domingo, tareas, preguntas, reporte, calendario |
+| **···** | Cartera completa, protocolo de cabeza, orden de sacrificio, supuestos |
+
+`renderAhora()` y el plegado por hora se refrescan cada 60 s y solo actúan sobre el día de
+hoy (`esHoy()`); en cualquier otro día se ve el plan completo. `bloqueActual()` devuelve
+-1 si el día no arrancó y -2 si ya terminó.
+
+## Traslados desde casa
+
+**Casa: Las Gladiolas 125, Independencia.** Minutos puerta a puerta en scooter, peor
+escenario, +10 de margen. Son estimaciones: se corrigen con los tiempos reales medidos.
+
+| Conglomerado | Min | Tiendas |
+|---|---|---|
+| Norte | 15 | SP33, SP56 (Independencia) · SP44, SP15 (Los Olivos) · SP61 (Callao) |
+| Centro y oeste | 50 | SP52, SP55, SP20 |
+| Este · SJL y Santa Anita | 60 | SP25, SP54, SP66 |
+| Miraflores | 70 | SP47, SP41, SP12 |
+| Este · Ate | 75 | SP36 Puruchuco, SP69 Paracas |
+| La Molina | 85 | SP03, SP16, SP42, SP48 |
+
+`autoEntre()` rellena «casa → 1ª» y «última → casa» con el `min` del conglomerado, tras
+ordenar la ruta igual que `renderCalc()` — agrupando por zona, de modo que la última tienda
+sea la más cercana a casa. El Norte es el día barato de la semana: cinco tiendas a 15 min o
+menos. Cruzar del Norte al Sur o al Este cuesta ~55 min por salto.
+
 ## Asistente en la página (capacidades `sample` + `mcp`)
 
 La operación semanal ya no pasa por el chat. La página declara:
@@ -107,14 +142,8 @@ Metadatos por bloque (séptimo elemento de cada entrada de `DIAS`):
 conglomerado geográfico. Un día que cruza conglomerados cuesta ~55 min por salto frente
 a ~25 min dentro del mismo grupo, así que la calculadora avisa cuando la ruta los cruza.
 
-| Grupo | Tiendas |
-|---|---|
-| Norte | SP33, SP56, SP44, SP15, SP61 |
-| Este | SP36, SP66, SP25, SP54 |
-| La Molina | SP03, SP16, SP42, SP48 |
-| Centro y oeste | SP52, SP55, SP20 |
-| Miraflores | SP47, SP41, SP12 |
-| Sin zona confirmada | SP69 Paracas |
+La agrupación y los minutos de cada conglomerado están en la tabla **Traslados desde
+casa** de arriba: es la misma estructura `GRUPOS` que usa la página.
 
 Tipos de día detectados en el plan de banca: visita a tienda (90 min), capacitación
 (180 min, no se acorta), tienda escuela (turno mañana o tarde), MMEE / proyecto en
@@ -122,9 +151,10 @@ oficina, y los correos de visitas el domingo.
 
 ## Pendiente de incorporar
 
-- Distrito de la casa: sin él no se puede calcular ningún tramo de vuelta.
-- Zona de SP69 Paracas; confirmar SP15 Mayolo, SP55 El Ejército y SP20 Dos de Mayo.
-- Calibrar los tiempos entre conglomerados (hoy 25 min intra / 55 min inter, provisionales).
+- Confirmar los distritos de SP15 Mayolo, SP55 El Ejército y SP20 Dos de Mayo, inferidos
+  del nombre y marcados como tales en la página.
+- Calibrar los minutos por conglomerado con los tiempos reales que Carlos vaya midiendo:
+  hoy son estimaciones, y la calculadora lo dice.
 - Capa opcional que consulte Google Maps Distance Matrix con `traffic_model=pessimistic`
   para calcular la ruta del día de visitas (requiere API key).
 

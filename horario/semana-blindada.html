@@ -298,6 +298,126 @@ label.done input{accent-color:var(--accent); width:15px; height:15px; cursor:poi
   text-transform:uppercase; color:var(--warn); font-weight:700;
 }
 
+/* ---------- cabecera y navegación ---------- */
+header{padding-bottom:0; border-bottom:0; margin-bottom:16px}
+.hbar{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:12px}
+.hbar h1{font-size:clamp(22px,5.5vw,28px)}
+.stamp{display:flex; flex-direction:column; align-items:flex-end; gap:1px; line-height:1.4}
+.stamp b{font-size:11px}
+.nav{
+  display:flex; gap:0; border:1px solid var(--line); border-radius:3px;
+  background:var(--surface); overflow:hidden; position:sticky; top:0; z-index:20;
+}
+.nv{
+  flex:1 1 0; min-width:0; padding:10px 4px; background:none; border:0;
+  border-right:1px solid var(--line); cursor:pointer; color:var(--ink-2);
+  font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.08em;
+  text-transform:uppercase; font-weight:500;
+}
+.nv:last-child{border-right:0}
+.nv.mas{flex:0 0 46px; letter-spacing:.15em}
+.nv[aria-selected="true"]{background:var(--ink); color:var(--bg)}
+.nv:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+.vista{animation:aparece .18s ease}
+@keyframes aparece{from{opacity:.4}to{opacity:1}}
+
+/* ---------- tarjeta AHORA ---------- */
+.ahora{
+  display:flex; gap:14px; align-items:center; margin:16px 0 14px;
+  border:1px solid var(--line); border-left:4px solid var(--c-mente);
+  border-radius:3px; background:var(--surface); padding:14px 15px; box-shadow:var(--shadow);
+}
+.ahora[data-c="trabajo"]{border-left-color:var(--c-trabajo)}
+.ahora[data-c="u"]{border-left-color:var(--c-u)}
+.ahora[data-c="cuerpo"]{border-left-color:var(--c-cuerpo)}
+.ahora[data-c="vinculo"]{border-left-color:var(--c-vinculo)}
+.ahora[data-c="traslado"]{border-left-color:var(--c-traslado)}
+.ahora[data-c="sueno"]{border-left-color:var(--c-sueno)}
+.ahora.otro{
+  display:block; border-left-color:var(--line-2); font-size:13.5px; color:var(--ink-2);
+  box-shadow:none; padding:11px 14px;
+}
+.acuerpo{flex:1; min-width:0}
+.aeti{
+  font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--ink-3);
+}
+.anom{
+  font-family:"Bricolage Grotesque",sans-serif; font-weight:700; font-size:19px;
+  letter-spacing:-.02em; line-height:1.15; margin-top:2px;
+}
+.asub{font-size:13px; color:var(--ink-2); margin-top:5px}
+.abar{height:3px; background:var(--surface-3); border-radius:99px; margin-top:8px; overflow:hidden}
+.abar i{display:block; height:100%; background:var(--accent); border-radius:99px}
+.aring{
+  flex:none; width:52px; height:52px; border-radius:50%;
+  background:conic-gradient(var(--accent) calc(var(--p)*1%), var(--surface-3) 0);
+  display:grid; place-items:center; position:relative;
+}
+.aring::after{content:""; position:absolute; inset:5px; border-radius:50%; background:var(--surface)}
+.aring span{
+  position:relative; z-index:1; font-family:"JetBrains Mono",monospace;
+  font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.04em;
+}
+.aring em{font-style:normal; font-size:8px; color:var(--ink-3)}
+.lnk{
+  background:none; border:0; padding:0; cursor:pointer; color:var(--accent);
+  font-family:inherit; font-size:inherit; text-decoration:underline; text-underline-offset:2px;
+}
+
+/* ---------- plegado del pasado ---------- */
+.plegado{
+  display:flex; width:100%; align-items:center; gap:10px; cursor:pointer;
+  border:1px dashed var(--line-2); border-radius:3px; background:var(--surface-2);
+  padding:10px 13px; margin-bottom:10px; color:var(--ink-2);
+  font-family:"Public Sans",sans-serif; font-size:13.5px; text-align:left;
+}
+.plegado b{font-weight:700; color:var(--ink)}
+.plegado span{
+  margin-left:auto; font-family:"JetBrains Mono",monospace; font-size:10px;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); white-space:nowrap;
+}
+.plegado:hover{border-color:var(--accent)}
+.plegado:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.plegado.abierto{justify-content:center; font-size:11px; font-family:"JetBrains Mono",monospace;
+  letter-spacing:.1em; text-transform:uppercase}
+.blk.encurso{
+  background:var(--surface-2); box-shadow:inset 3px 0 0 var(--accent);
+  margin-left:-9px; padding-left:9px; border-radius:0 3px 3px 0;
+}
+
+/* ---------- medidores compactos ---------- */
+.meters{grid-template-columns:repeat(auto-fit,minmax(112px,1fr))}
+.meter{padding:9px 11px 10px}
+.meter .val{font-size:17px}
+.meter .val small{font-size:11px}
+
+/* ---------- bloque compacto ---------- */
+.blk{grid-template-columns:50px 12px 1fr auto; align-items:start; padding:8px 0}
+.cuerpo{min-width:0}
+.cuerpo.conNota{cursor:pointer}
+.cuerpo.conNota:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:2px}
+.blk .dur{padding-top:1px; display:flex; gap:8px; align-items:baseline}
+.pista{
+  font-family:"JetBrains Mono",monospace; font-size:9.5px; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--accent);
+}
+.cuerpo.abierto .pista{opacity:.45}
+.blk .why{margin-top:5px}
+label.done{
+  display:grid; place-items:center; gap:0; width:30px; padding-top:1px;
+  position:relative;
+}
+label.done em{
+  font-style:normal; font-family:"JetBrains Mono",monospace; font-size:8px;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); margin-top:2px;
+}
+label.done input{width:18px; height:18px}
+.plegado{font-size:13px}
+.plegado span{
+  padding:2px 7px; border:1px solid var(--line-2); border-radius:2px; color:var(--ink-2);
+}
+
 /* ---------- cartera ---------- */
 .grupo{border:1px solid var(--line); border-radius:3px; background:var(--surface); margin-bottom:10px; overflow:hidden}
 .ghead{
@@ -416,8 +536,7 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
 .savestate.on{color:var(--good)}
 
 @media (max-width:560px){
-  .blk{grid-template-columns:48px 10px 1fr; gap:0 8px}
-  .dur{grid-column:3; padding-top:3px}
+  .blk{grid-template-columns:46px 10px 1fr auto; gap:0 8px}
   .plan li{grid-template-columns:96px 1fr}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
@@ -426,29 +545,23 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
 <div class="wrap">
 
 <header>
-  <div class="hgrid">
-    <div>
-      <div class="eyebrow">Horario operativo · Lima</div>
-      <h1>Semana Blindada</h1>
-      <p class="sub">Cada minuto contado en el peor escenario. Los traslados son bloques, no supuestos. Lo que sostiene tu cabeza está protegido antes de repartir lo demás.</p>
-    </div>
-    <div class="stamp">
-      <b id="weekLabel">—</b>
-      v1 · base parametrizable<br>
-      <span id="saveState" class="savestate">estado local</span>
-    </div>
+  <div class="hbar">
+    <h1>Semana Blindada</h1>
+    <span class="stamp"><b id="weekLabel">—</b><span id="saveState" class="savestate">local</span></span>
   </div>
+  <nav class="nav" id="nav" role="tablist">
+    <button class="nv" data-v="hoy" aria-selected="true">Hoy</button>
+    <button class="nv" data-v="semana" aria-selected="false">Semana</button>
+    <button class="nv" data-v="ruta" aria-selected="false">Ruta</button>
+    <button class="nv" data-v="asis" aria-selected="false" id="nvAsis" hidden>Asistente</button>
+    <button class="nv mas" data-v="mas" aria-selected="false" aria-label="Más">···</button>
+  </nav>
 </header>
 
-<div class="eyebrow" style="margin-bottom:9px">Innegociables de la semana</div>
-<div class="meters" id="meters"></div>
-<p class="metersNote" id="metersNote"></p>
-
-<section>
-  <div class="shead"><h2>El día, minuto a minuto</h2><span class="eyebrow">Peor escenario</span></div>
+<div class="vista" id="v-hoy">
+  <div id="ahora"></div>
   <div class="tabs" id="tabs" role="tablist"></div>
   <div id="dayPane"></div>
-  <div class="legend" id="legend"></div>
 
   <div class="retraso">
     <div class="rhead">
@@ -466,15 +579,22 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
       <div id="rOut" style="margin-top:14px"></div>
     </div>
   </div>
-</section>
+</div>
 
-<section>
+<div class="vista" id="v-semana" hidden>
+  <div class="eyebrow" style="margin-bottom:9px">Innegociables de la semana</div>
+  <div class="meters" id="meters"></div>
+  <p class="metersNote" id="metersNote"></p>
+
+  <section style="margin-top:22px">
   <div class="shead"><h2>Noches de fútbol</h2><span class="eyebrow">Hora variable</span></div>
   <p class="sub" style="margin:0 0 12px">Juegas <b>un partido de 40 minutos</b>: llegas 20 antes y te vas 15 después. Con traslados son 2 h 35 fuera de casa, no la ventana completa. Pon la hora del partido el día anterior y el día se rearma solo.</p>
   <div id="futbolPanel"></div>
-</section>
+  </section>
+</div>
 
-<section id="asistente" hidden>
+<div class="vista" id="v-asis" hidden>
+  <div id="asistente" hidden>
   <div class="shead"><h2>Asistente</h2><span class="eyebrow">Sin pasar por el chat</span></div>
   <p class="sub" style="margin:0 0 14px">Todo esto le pregunta a Claude desde aquí, mandando solo tu horario y no una conversación entera. Gasta tu uso de Claude, pero una fracción de lo que cuesta un chat largo.</p>
 
@@ -527,24 +647,10 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
     </div>
     <div id="calOut"></div>
   </div>
-</section>
-
-<section>
-  <div class="shead"><h2>Tu cartera</h2><span class="eyebrow">20 tiendas · todas en Lima</span></div>
-  <p class="sub" style="margin:0 0 12px">Agrupadas por conglomerado geográfico. Un día de ruta dentro de un mismo grupo cuesta la mitad que uno que los cruza — por eso la agrupación es la decisión que más tiempo te ahorra en la semana.</p>
-  <div id="cartera"></div>
-  <div class="card" style="margin-top:14px">
-    <h3>Cuánto dura cada tipo de día</h3>
-    <ul class="plain">
-      <li><b>Visita a tienda</b> · 90 min por tienda. Tú la resuelves más rápido, pero el horario se planifica con 90: el día que se complica, es lo que evita que todo se corra.</li>
-      <li><b>Capacitación</b> · 180 min. Es el único bloque que no se puede acortar.</li>
-      <li><b>Tienda escuela</b> · turno mañana o turno tarde completo.</li>
-      <li><b>MMEE / proyecto en oficina</b> · bloque de oficina, sin traslados entre paradas.</li>
-      <li><b>Correos de visitas</b> · domingo, todos de una vez.</li>
-    </ul>
   </div>
-</section>
+</div>
 
+<div class="vista" id="v-ruta" hidden>
 <section>
   <div class="shead"><h2>Modo día puntual</h2><span class="eyebrow">Cálculo hacia atrás</span></div>
   <p class="sub" style="margin:0 0 10px">Marca las tiendas de hoy y pon tu hora tope. La hora tope decide cuántas caben — no al revés.</p>
@@ -574,6 +680,28 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
   </div>
   <ul class="pend" id="pendList"></ul>
 </section>
+</div>
+
+<div class="vista" id="v-mas" hidden>
+  <section>
+  <div class="shead"><h2>Tu cartera</h2><span class="eyebrow">20 tiendas · todas en Lima</span></div>
+  <p class="sub" style="margin:0 0 12px">Agrupadas por conglomerado geográfico. Un día de ruta dentro de un mismo grupo cuesta la mitad que uno que los cruza — por eso la agrupación es la decisión que más tiempo te ahorra en la semana.</p>
+  <div id="cartera"></div>
+  <div class="card" style="margin-top:14px">
+    <h3>Cuánto dura cada tipo de día</h3>
+    <ul class="plain">
+      <li><b>Visita a tienda</b> · 90 min por tienda. Tú la resuelves más rápido, pero el horario se planifica con 90: el día que se complica, es lo que evita que todo se corra.</li>
+      <li><b>Capacitación</b> · 180 min. Es el único bloque que no se puede acortar.</li>
+      <li><b>Tienda escuela</b> · turno mañana o turno tarde completo.</li>
+      <li><b>MMEE / proyecto en oficina</b> · bloque de oficina, sin traslados entre paradas.</li>
+      <li><b>Correos de visitas</b> · domingo, todos de una vez.</li>
+    </ul>
+  </div>
+</section>
+
+
+
+
 
 <section>
   <div class="shead"><h2>Protocolo de cabeza</h2><span class="eyebrow">Antes de que se rompa</span></div>
@@ -634,6 +762,7 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
     <li>La noche del lunes al martes son 5 h 15 y no se puede arreglar moviendo bloques — sales de clase 22:40 y entras a las 7:30. Se compensa con la siesta del martes y el arranque tardío del miércoles.</li>
   </ul>
 </footer>
+</div>
 
 </div>
 
@@ -899,39 +1028,43 @@ const METAS = [
    pendiente de que Carlos lo confirme.
    ============================================================ */
 const GRUPOS = [
-  {id:"norte", nom:"Norte", color:"var(--c-u)", tiendas:[
+  {id:"norte", nom:"Norte", color:"var(--c-u)", min:15, tiendas:[
     ["SP33","Plaza Norte","Independencia","PLATINO",true],
     ["SP56","Mega Plaza","Independencia","BRONCE",true],
     ["SP44","Izaguirre","Los Olivos","BRONCE",true],
     ["SP15","Mayolo","Los Olivos","BRONCE",false],
     ["SP61","Minka","Callao","BRONCE",true]
   ]},
-  {id:"este", nom:"Este", color:"var(--c-cuerpo)", tiendas:[
-    ["SP36","Real Plaza Puruchuco","Ate","PLATA",true],
-    ["SP66","Mall Santa Anita","Santa Anita","BRONCE",true],
+  {id:"este", nom:"Este · SJL y Santa Anita", color:"var(--c-cuerpo)", min:60, tiendas:[
+        ["SP66","Mall Santa Anita","Santa Anita","BRONCE",true],
     ["SP25","SJL","San Juan de Lurigancho","BRONCE",true],
     ["SP54","Mall Aventura SJL","San Juan de Lurigancho","BRONCE",true]
   ]},
-  {id:"molina", nom:"La Molina", color:"var(--c-trabajo)", tiendas:[
+  {id:"molina", nom:"La Molina", color:"var(--c-trabajo)", min:85, tiendas:[
     ["SP03","La Molina","La Molina","PLATA",true],
     ["SP16","La Planicie","La Molina","PLATA",true],
     ["SP42","Portal La Molina","La Molina","BRONCE",true],
     ["SP48","Molicentro","La Molina","BRONCE",true]
   ]},
-  {id:"centro", nom:"Centro y oeste", color:"var(--c-mente)", tiendas:[
+  {id:"centro", nom:"Centro y oeste", color:"var(--c-mente)", min:50, tiendas:[
     ["SP52","Real Plaza Salaverry","Jesús María","ORO",true],
     ["SP55","El Ejército","Magdalena del Mar","BRONCE",false],
     ["SP20","Dos de Mayo","San Isidro","PLATINO",false]
   ]},
-  {id:"mira", nom:"Miraflores", color:"var(--c-vinculo)", tiendas:[
+  {id:"mira", nom:"Miraflores", color:"var(--c-vinculo)", min:70, tiendas:[
     ["SP47","28 de Julio","Miraflores","PLATINO",true],
     ["SP41","Aurora","Miraflores · Av. República de Panamá 5985","ORO",true],
     ["SP12","Bajada Balta","Miraflores","PLATA",true]
   ]},
-  {id:"sinzona", nom:"Sin zona confirmada", color:"var(--c-traslado)", tiendas:[
-    ["SP69","Paracas","por confirmar","BRONCE",false]
+  {id:"ate", nom:"Este · Ate", color:"var(--c-traslado)", min:75, tiendas:[
+    ["SP36","Real Plaza Puruchuco","Ate","PLATA",true],
+    ["SP69","Paracas","Ate","BRONCE",true]
   ]}
 ];
+/* CASA: Las Gladiolas 125, Independencia. Minutos puerta a puerta en
+   scooter, peor escenario, +10 de margen. Estimaciones: se corrigen con
+   los tiempos que Carlos vaya midiendo. */
+const CASA = "Las Gladiolas 125, Independencia";
 /* Traslados por conglomerado, peor escenario en scooter. Provisionales:
    se corrigen con los tiempos reales que Carlos vaya midiendo. */
 const T_INTRA = 25, T_INTER = 55;
@@ -990,7 +1123,7 @@ function pushCfg(){
   saveLocal();
   if(db){ db.doc("semanas/"+WEEK).update({cfg:CFG, actualizado:new Date().toISOString()})
     .catch(function(){ db.doc("semanas/"+WEEK).set({hechos:hechos, cfg:CFG}).catch(function(){}); }); }
-  renderDay(); renderMeters(); renderFutbol();
+  renderDay(); renderMeters(); renderFutbol(); renderAhora();
 }
 function pushHechos(){
   saveLocal();
@@ -1053,7 +1186,7 @@ function renderTabs(){
            d.corto+'<span>'+bloquesDe(d)[0][0]+'</span></button>';
   }).join("");
   el.querySelectorAll(".tab").forEach(function(t){
-    t.addEventListener("click", function(){ activo=+t.dataset.i; renderTabs(); renderDay(); });
+    t.addEventListener("click", function(){ activo=+t.dataset.i; verPasado=false; renderTabs(); renderDay(); renderAhora(); });
   });
 }
 
@@ -1088,8 +1221,29 @@ function renderDay(){
     }
   }
 
+  // Plegado por hora: solo en el día de hoy, y solo si no pidió verlo
+  const bsAll = bloquesDe(d);
+  let corte = -1;
+  if(esHoy(d) && !verPasado){
+    const t = minutosAhora();
+    for(let i=0;i<bsAll.length;i++){
+      if(bsAll[i][3]==="sueno") break;
+      if(iniAbs(bsAll,i)+dur(bsAll[i][0],bsAll[i][1]) <= t) corte = i;
+    }
+  }
+  if(corte >= 0){
+    let hechosPas=0;
+    for(let i=0;i<=corte;i++) if(hechos[d.id+"-"+i]) hechosPas++;
+    html += '<button class="plegado" id="verPasado">'+
+      '<b>'+(corte+1)+'</b> bloques hasta las '+bsAll[corte][1]+
+      ' · <b>'+hechosPas+'</b> cumplidos<span>ver</span></button>';
+  } else if(esHoy(d) && verPasado){
+    html += '<button class="plegado abierto" id="ocultarPasado">Ocultar lo que ya pasó</button>';
+  }
+
   html+='<ul class="tl">';
   bloquesDe(d).forEach(function(b,i){
+    if(i<=corte) return;
     const key=d.id+"-"+i, done=!!hechos[key];
     let m=dur(b[0],b[1]);
     let ini=b[0], fin=b[1], estado="";
@@ -1109,25 +1263,109 @@ function renderDay(){
     html+='<li class="blk'+(done?" checked":"")+(estado?" est-"+estado:"")+'" data-c="'+b[3]+'">'+
       '<div class="time">'+b[0]+'<em>'+(b[3]==="sueno"?"→ "+b[1]:b[1])+'</em></div>'+
       '<div class="rail"></div>'+
-      '<div><div class="name">'+b[2]+chip+'</div>'+(b[4]?'<div class="why">'+b[4]+'</div>':'')+'</div>'+
-      '<div class="dur">'+hm(m)+'</div>'+
-      (marcable?'<div class="tick"><label class="done"><input type="checkbox" data-k="'+key+'"'+(done?" checked":"")+'> hecho</label></div>':'')+
+      '<div class="cuerpo'+(b[4]?' conNota':'')+'"'+(b[4]?' data-nota="'+i+'" tabindex="0" role="button"':'')+'>'+
+        '<div class="name">'+b[2]+chip+'</div>'+
+        '<div class="dur">'+hm(m)+(b[4]?'<span class="pista">·  por qué</span>':'')+'</div>'+
+        (b[4]?'<div class="why" hidden>'+b[4]+'</div>':'')+
+      '</div>'+
+      (marcable?'<label class="done"><input type="checkbox" data-k="'+key+'"'+(done?" checked":"")+
+        '><span aria-hidden="true"></span><em>hecho</em></label>':'<span></span>')+
       '</li>';
   });
   html+='</ul>';
 
   const pane=document.getElementById("dayPane");
   pane.innerHTML=html;
+  if(esHoy(d)){
+    const cur = bloqueActual(bloquesDe(d));
+    if(cur>=0){
+      const li = pane.querySelectorAll(".tl > .blk")[Math.max(0, cur-(corte+1))];
+      if(li) li.classList.add("encurso");
+    }
+  }
+  pane.querySelectorAll("[data-nota]").forEach(function(c){
+    const abrir=function(){ const w=c.querySelector(".why"); if(w) w.hidden=!w.hidden; c.classList.toggle("abierto"); };
+    c.addEventListener("click", function(e){ if(e.target.tagName!=="INPUT") abrir(); });
+    c.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); abrir(); } });
+  });
+  const vp=document.getElementById("verPasado");
+  if(vp) vp.addEventListener("click", function(){ verPasado=true; renderDay(); });
+  const op=document.getElementById("ocultarPasado");
+  if(op) op.addEventListener("click", function(){ verPasado=false; renderDay(); });
+
   pane.querySelectorAll('input[type="checkbox"][data-k]').forEach(function(c){
     c.addEventListener("change", function(){
       if(c.checked) hechos[c.dataset.k]=true; else delete hechos[c.dataset.k];
-      pushHechos(); renderDay(); renderMeters();
+      pushHechos(); renderDay(); renderMeters(); renderAhora();
     });
   });
 }
 
+/* ============================================================
+   CONCIENCIA DE LA HORA
+   El día de hoy se pliega solo: lo que ya pasó desaparece detrás de
+   una línea, y arriba queda lo único que importa en la calle — qué
+   estás haciendo, cuánto le queda y qué viene.
+   ============================================================ */
+let verPasado = false;
+
+function minutosAhora(){ const d=new Date(); return d.getHours()*60+d.getMinutes(); }
+function indiceHoy(){ const j=new Date().getDay(); return j===0?6:j-1; }
+function esHoy(d){ return DIAS[indiceHoy()].id === d.id; }
+
+/* Índice del bloque en curso según el reloj, o -1 si el día no empezó
+   o ya terminó. */
+function bloqueActual(bs){
+  const t = minutosAhora();
+  for(let i=0;i<bs.length;i++){
+    if(bs[i][3]==="sueno") continue;
+    const ini=iniAbs(bs,i), fin=ini+dur(bs[i][0],bs[i][1]);
+    if(t>=ini && t<fin) return i;
+    if(t < ini) return -1;   // aún no arranca el día
+  }
+  return -2;                 // el día ya terminó
+}
+
+function renderAhora(){
+  const el=document.getElementById("ahora");
+  const d=DIAS[activo];
+  if(!esHoy(d)){
+    el.innerHTML='<div class="ahora otro">Estás viendo <b>'+d.nom+'</b>. '+
+      '<button class="lnk" id="irHoy">Ir a hoy</button></div>';
+    const b=document.getElementById("irHoy");
+    if(b) b.addEventListener("click", function(){ activo=indiceHoy(); renderTabs(); renderDay(); renderAhora(); });
+    return;
+  }
+  const bs=bloquesDe(d), i=bloqueActual(bs), t=minutosAhora();
+  const hechosHoy = bs.filter(function(b,j){ return hechos[d.id+"-"+j]; }).length;
+  const marcables = bs.filter(function(b){ return b[3]!=="sueno" && b[3]!=="traslado"; }).length;
+  const pct = marcables ? Math.round(hechosHoy/marcables*100) : 0;
+
+  let cuerpo;
+  if(i===-1){
+    cuerpo = '<div class="anom">El día todavía no arranca</div>'+
+      '<div class="asub">Empieza a las '+bs[0][0]+' con '+bs[0][2]+'</div>';
+  } else if(i===-2){
+    cuerpo = '<div class="anom">Día cerrado</div><div class="asub">A dormir.</div>';
+  } else {
+    const ini=iniAbs(bs,i), fin=ini+dur(bs[i][0],bs[i][1]);
+    const quedan=fin-t, avance=Math.round((t-ini)/(fin-ini)*100);
+    let sig=null;
+    for(let j=i+1;j<bs.length;j++){ if(bs[j][3]!=="sueno"){ sig=bs[j]; break; } }
+    cuerpo = '<div class="aeti">Ahora · '+bs[i][0]+'–'+bs[i][1]+'</div>'+
+      '<div class="anom">'+bs[i][2]+'</div>'+
+      '<div class="abar"><i style="width:'+Math.max(2,Math.min(100,avance))+'%"></i></div>'+
+      '<div class="asub"><b>'+hm(quedan)+'</b> por delante'+
+        (sig?' · luego <b>'+sig[2]+'</b> a las '+sig[0]:'')+'</div>';
+  }
+  el.innerHTML='<div class="ahora" data-c="'+(i>=0?bs[i][3]:"mente")+'">'+
+    '<div class="aring" style="--p:'+pct+'"><span>'+pct+'<em>%</em></span></div>'+
+    '<div class="acuerpo">'+cuerpo+'</div></div>';
+}
+
 function renderLegend(){
-  document.getElementById("legend").innerHTML = Object.keys(CATS).map(function(k){
+  const lg=document.getElementById("legend"); if(!lg) return;
+  lg.innerHTML = Object.keys(CATS).map(function(k){
     const bg = k==="traslado"
       ? "repeating-linear-gradient(90deg,var(--c-traslado) 0 3px,transparent 3px 6px)"
       : "var(--c-"+k+")";
@@ -1417,11 +1655,23 @@ function renderPicker(){
   });
 }
 
-/* Rellena "entre tiendas" según los conglomerados elegidos. */
+/* Rellena los traslados según los conglomerados elegidos: entre tiendas,
+   y los tramos desde y hacia casa con los minutos reales desde
+   Independencia. */
 function autoEntre(){
-  if(elegidas.length<2) return;
-  const gs = new Set(elegidas.map(function(c){ const r=tiendaPorCodigo(c); return r?r.g.id:"?"; }));
-  document.getElementById("cEntre").value = gs.size>1 ? T_INTER : T_INTRA;
+  if(!elegidas.length) return;
+  // mismo orden que usa la ruta: agrupado por conglomerado
+  const orden = elegidas.slice().sort(function(a,b){
+    const ra=tiendaPorCodigo(a), rb=tiendaPorCodigo(b);
+    return (ra?ra.g.id:"").localeCompare(rb?rb.g.id:"");
+  });
+  const gs = orden.map(function(c){ const r=tiendaPorCodigo(c); return r?r.g:null; }).filter(Boolean);
+  if(!gs.length) return;
+  const ids = new Set(gs.map(function(g){return g.id;}));
+  if(elegidas.length>1) document.getElementById("cEntre").value = ids.size>1 ? T_INTER : T_INTRA;
+  // ida: hasta la más lejana del grupo con el que arrancas · vuelta: la última
+  document.getElementById("cIda").value    = gs[0].min || 45;
+  document.getElementById("cVuelta").value = gs[gs.length-1].min || 45;
 }
 
 /* ---------------- calculadora día puntual ---------------- */
@@ -1803,6 +2053,7 @@ async function iniciarAsistente(){
   try{ sampleFn = await window.claude.use("sample"); }catch(e){ sampleFn=null; }
   if(sampleFn){
     document.getElementById("asistente").hidden=false;
+    document.getElementById("nvAsis").hidden=false;
     try{
       sampleCaps = await sampleFn.limits();
       if(sampleCaps && sampleCaps.images){
@@ -1822,6 +2073,7 @@ async function iniciarAsistente(){
   try{ mcpNs = await window.claude.use("mcp"); }catch(e){ mcpNs=null; }
   if(mcpNs){
     document.getElementById("asistente").hidden=false;
+    document.getElementById("nvAsis").hidden=false;
     document.getElementById("acCal").hidden=false;
     document.getElementById("calSemana").innerHTML = "Se sincronizará la semana del <b>"+etiquetaSemana()+"</b>.";
     document.getElementById("calGo").addEventListener("click", sincronizarCalendario);
@@ -1874,6 +2126,25 @@ renderMeters(); renderTabs(); renderDay(); renderLegend();
 renderFutbol(); renderCartera(); renderPicker(); renderCalc(); renderPend();
 iniciarAsistente();
 
+// navegación entre vistas
+function irA(v){
+  ["hoy","semana","ruta","asis","mas"].forEach(function(k){
+    const el=document.getElementById("v-"+k); if(el) el.hidden = (k!==v);
+  });
+  document.querySelectorAll(".nv").forEach(function(b){
+    b.setAttribute("aria-selected", String(b.dataset.v===v));
+  });
+  window.scrollTo({top:0, behavior:"instant"});
+}
+document.querySelectorAll(".nv").forEach(function(b){
+  b.addEventListener("click", function(){ irA(b.dataset.v); });
+});
+
+// el reloj reordena la vista sin recargar
+setInterval(function(){
+  if(!document.getElementById("v-hoy").hidden){ renderAhora(); renderDay(); }
+}, 60000);
+
 // re-planificador
 document.getElementById("rToggle").addEventListener("click", function(){
   const body=document.getElementById("rBody"), abierto=!body.hidden;
@@ -1890,12 +2161,9 @@ document.querySelectorAll(".rm").forEach(function(b){
   });
 });
 
-// el día de hoy, si estamos dentro de la semana
-(function(){
-  const jsDay=new Date().getDay();           // 0 dom … 6 sáb
-  const idx = jsDay===0 ? 6 : jsDay-1;
-  if(idx>=0 && idx<7){ activo=idx; renderTabs(); renderDay(); }
-})();
+// abrir en el día de hoy antes de dibujar la tarjeta Ahora
+activo = indiceHoy();
+renderTabs(); renderDay(); renderAhora();
 
 calcIds.forEach(function(id){
   const el=document.getElementById(id);
