@@ -259,6 +259,45 @@ label.done input{accent-color:var(--accent); width:15px; height:15px; cursor:poi
 .fhead .ok{color:var(--good)}
 .fhead .warn{color:var(--warn)}
 
+/* ---------- asistente ---------- */
+.acard{border:1px solid var(--line); border-radius:3px; background:var(--surface); padding:15px 16px; margin-bottom:12px}
+.acard h3{margin-bottom:5px}
+.acard .why{max-width:58ch}
+.acard input[type="file"]{
+  flex:1 1 180px; font-family:"JetBrains Mono",monospace; font-size:11.5px; padding:8px;
+  border:1px dashed var(--line-2); border-radius:2px; background:var(--bg); color:var(--ink-2);
+}
+.pensando{
+  font-family:"JetBrains Mono",monospace; font-size:11.5px; letter-spacing:.06em;
+  color:var(--ink-3); margin-top:11px;
+}
+.pensando::after{content:""; animation:dots 1.4s steps(4,end) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+.respuesta{
+  margin-top:11px; border-left:3px solid var(--accent); background:var(--surface-2);
+  padding:11px 13px; border-radius:0 3px 3px 0;
+}
+.respuesta.no{border-left-color:var(--bad)}
+.respuesta b{font-family:"Bricolage Grotesque",sans-serif; font-size:14.5px; letter-spacing:-.01em}
+.respuesta p{font-size:14px; color:var(--ink-2); margin-top:4px; line-height:1.5}
+.ok{margin-top:11px; font-size:13.5px; color:var(--good)}
+.conf{list-style:none; margin:0; padding:0; border:1px solid var(--line); border-radius:3px; overflow:hidden}
+.conf li{
+  display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:9px 11px;
+  background:var(--surface); border-bottom:1px solid var(--line);
+}
+.conf li:last-child{border-bottom:0}
+.conf li.dudoso{background:var(--surface-2); box-shadow:inset 3px 0 0 var(--warn)}
+.conf select, .conf input{
+  font-family:"JetBrains Mono",monospace; font-size:12px; padding:5px 6px;
+  border:1px solid var(--line-2); border-radius:2px; background:var(--bg); color:var(--ink);
+}
+.conf input{flex:1 1 110px; min-width:100px}
+.conf .dudo{
+  font-family:"JetBrains Mono",monospace; font-size:9px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--warn); font-weight:700;
+}
+
 /* ---------- cartera ---------- */
 .grupo{border:1px solid var(--line); border-radius:3px; background:var(--surface); margin-bottom:10px; overflow:hidden}
 .ghead{
@@ -433,6 +472,61 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
   <div class="shead"><h2>Noches de fútbol</h2><span class="eyebrow">Hora variable</span></div>
   <p class="sub" style="margin:0 0 12px">Juegas <b>un partido de 40 minutos</b>: llegas 20 antes y te vas 15 después. Con traslados son 2 h 35 fuera de casa, no la ventana completa. Pon la hora del partido el día anterior y el día se rearma solo.</p>
   <div id="futbolPanel"></div>
+</section>
+
+<section id="asistente" hidden>
+  <div class="shead"><h2>Asistente</h2><span class="eyebrow">Sin pasar por el chat</span></div>
+  <p class="sub" style="margin:0 0 14px">Todo esto le pregunta a Claude desde aquí, mandando solo tu horario y no una conversación entera. Gasta tu uso de Claude, pero una fracción de lo que cuesta un chat largo.</p>
+
+  <div class="acard" id="acFoto" hidden>
+    <h3>Domingo · tu programación de trabajo</h3>
+    <p class="why">Sube la captura de tu plan de banca. Te muestro lo que entendí antes de tocar nada.</p>
+    <div class="addrow" style="margin-top:10px">
+      <input type="file" id="fotoIn" accept="image/*">
+      <button class="btn" id="fotoGo">Leer la foto</button>
+    </div>
+    <div id="fotoOut"></div>
+  </div>
+
+  <div class="acard">
+    <h3>Agregar una tarea</h3>
+    <p class="why">Escríbela como te salga: «trabajo de marketing, 3 horas, para el viernes». Te digo en qué bloque cae y por qué.</p>
+    <div class="addrow" style="margin-top:10px">
+      <input id="tareaIn" type="text" placeholder="Qué te dejaron, cuánto dura y para cuándo" maxlength="240">
+      <button class="btn" id="tareaGo">Ubicar</button>
+    </div>
+    <div id="tareaOut"></div>
+  </div>
+
+  <div class="acard">
+    <h3>Pregunta lo que sea de tu semana</h3>
+    <p class="why">«¿Me da tiempo de ir al gym hoy?» · «¿Cuándo meto SP33?» · «¿Qué dejo de hacer esta semana?»</p>
+    <div class="addrow" style="margin-top:10px">
+      <input id="preIn" type="text" placeholder="Tu pregunta" maxlength="300">
+      <button class="btn" id="preGo">Preguntar</button>
+      <button class="btn ghost" id="preStop" hidden>Parar</button>
+    </div>
+    <div id="preOut"></div>
+  </div>
+
+  <div class="acard">
+    <h3>Reporte del domingo</h3>
+    <p class="why">Lee lo que cumpliste de verdad y te dice qué bloques se caen siempre. Eso corrige el horario, no tu voluntad.</p>
+    <div class="addrow" style="margin-top:10px">
+      <button class="btn" id="repGo">Ver el reporte</button>
+    </div>
+    <div id="repOut"></div>
+  </div>
+
+  <div class="acard" id="acCal" hidden>
+    <h3>Sincronizar tu Google Calendar</h3>
+    <p class="why">Crea y mueve los eventos de la semana variable: visitas, capacitaciones y el partido. Los bloques fijos que ya tienes no se tocan.</p>
+    <p class="why" id="calSemana"></p>
+    <div class="addrow" style="margin-top:10px">
+      <button class="btn" id="calGo">Sincronizar</button>
+    </div>
+    <div id="calOut"></div>
+  </div>
 </section>
 
 <section>
@@ -1424,6 +1518,316 @@ function renderCalc(){
   document.getElementById("calcOut").innerHTML = out;
 }
 
+/* ============================================================
+   ASISTENTE — la página le pregunta a Claude directamente.
+   Cada llamada manda solo el contexto necesario, no una
+   conversación entera: ahí está el ahorro frente al chat.
+   ============================================================ */
+let sampleFn = null, mcpNs = null, sampleCaps = null;
+
+const COPY_ERR = {
+  not_granted:"No diste permiso para usar Claude desde aquí. Recarga y acepta si quieres activarlo.",
+  rate_limited:"Demasiadas consultas seguidas. Espera un minuto y vuelve a intentar.",
+  images_unavailable:"Tu cuenta no puede mandar imágenes desde una página. Pásame la foto por el chat.",
+  image_rejected:"No pude leer esa imagen. Prueba con una captura más nítida o menos pesada.",
+  cancelled:"",
+  needs_reauth:"Tu conexión con Google Calendar caducó. Reconéctala en claude.ai y vuelve a intentar.",
+  server_not_connected:"Google Calendar no está conectado en tu cuenta de Claude.",
+  tool_error:"Google Calendar rechazó la operación. Revisa el detalle y vuelve a intentar."
+};
+function copyErr(e){ return (e && COPY_ERR[e.code]) || "Algo falló ("+((e&&e.code)||"desconocido")+"). Intenta de nuevo."; }
+
+/* Resumen compacto de la semana para meter en los prompts. */
+function contextoSemana(){
+  const l=[];
+  DIAS.forEach(function(d){
+    const bs=bloquesDe(d);
+    const libres=bs.filter(function(b){
+      return /flexible|Pendientes|Margen|Tesis|Lectura/.test(b[2]);
+    }).map(function(b){ return b[2]+" "+b[0]+"-"+b[1]; });
+    l.push(d.nom+": "+d.res+(libres.length?" | huecos: "+libres.join("; "):""));
+  });
+  const pend = pendientes.filter(function(p){return !p.hecho;})
+    .map(function(p){return p.txt+" ("+p.min+"min)";}).join("; ");
+  return "Semana de Carlos (Lima, trabaja lunes a sábado en SuperPet, U lunes noche y martes mañana).\n"+
+    l.join("\n")+
+    "\nInnegociables semanales: tesis 5h, lectura 3h30, pareja 8h, gym 3 sesiones, dormir 7h.\n"+
+    "Regla: lo que exige cabeza va a bloques con cabeza descansada (jueves tarde, viernes noche, domingo); "+
+    "lo mecánico a huecos cansados y traslados en auto.\n"+
+    (pend?"Pendientes sueltos: "+pend:"Sin pendientes sueltos.");
+}
+
+function pensando(el, txt){ el.innerHTML='<p class="pensando">'+(txt||"Pensando…")+'</p>'; }
+
+/* ---- 1 · leer la foto de la programación ---- */
+async function leerFoto(){
+  const inp=document.getElementById("fotoIn"), out=document.getElementById("fotoOut");
+  const f = inp.files && inp.files[0];
+  if(!f){ out.innerHTML='<p class="why">Elige primero la captura.</p>'; return; }
+  pensando(out, "Leyendo la foto… esto tarda entre 10 y 60 segundos.");
+  try{
+    const data = await sampleFn.json(
+      "Esta imagen es el plan de banca semanal de Carlos, Entrenador de Marca en SuperPet (Lima). "+
+      "Es una grilla con los días de la semana en columnas y su fila de actividades.\n\n"+
+      "Extrae SOLO la fila de Carlos Inga. Devuelve un array JSON, un objeto por actividad:\n"+
+      '[{"dia":"lun|mar|mie|jue|vie|sab","tipo":"visita|capacitacion|tienda-escuela|oficina",'+
+      '"tiendas":["SP41"],"horaFija":"09:00 o null","detalle":"texto corto",'+
+      '"confianza":"alta|baja"}]\n\n'+
+      "Reglas: los códigos de tienda tienen forma SPnn. Si no distingues bien un código o un día, "+
+      "ponlo igual pero con confianza \"baja\". Si una celda dice TIENDA ESCUELA es tipo "+
+      "tienda-escuela sin tiendas. MMEE o proyecto es tipo oficina. "+
+      "Responde solo el array JSON, sin texto alrededor.",
+      {images: f, modelTier: "default"}
+    );
+    if(!Array.isArray(data) || !data.length){
+      out.innerHTML='<p class="why">No encontré la fila de Carlos en esa imagen. Prueba con una captura que incluya los encabezados de los días.</p>';
+      return;
+    }
+    renderConfirmacion(data);
+  }catch(e){ out.innerHTML='<p class="eaviso">'+copyErr(e)+'</p>'; }
+}
+
+/* Pantalla de confirmación: nada se aplica hasta que Carlos revise. */
+function renderConfirmacion(prop){
+  const out=document.getElementById("fotoOut");
+  const dias={lun:"Lunes",mar:"Martes",mie:"Miércoles",jue:"Jueves",vie:"Viernes",sab:"Sábado"};
+  out.innerHTML =
+    '<p class="why" style="margin:12px 0 8px"><b>Esto entendí.</b> Corrige lo que esté mal y recién ahí se aplica. '+
+    'Lo resaltado es de lo que no estoy seguro.</p>'+
+    '<ul class="conf" id="confList">'+prop.map(function(r,i){
+      const baja = String(r.confianza||"").toLowerCase()==="baja";
+      return '<li class="'+(baja?"dudoso":"")+'">'+
+        '<select data-c="dia" data-i="'+i+'">'+Object.keys(dias).map(function(k){
+          return '<option value="'+k+'"'+(k===r.dia?" selected":"")+'>'+dias[k]+'</option>';
+        }).join("")+'</select>'+
+        '<select data-c="tipo" data-i="'+i+'">'+["visita","capacitacion","tienda-escuela","oficina"].map(function(t){
+          return '<option value="'+t+'"'+(t===r.tipo?" selected":"")+'>'+t+'</option>';
+        }).join("")+'</select>'+
+        '<input data-c="tiendas" data-i="'+i+'" type="text" value="'+
+          (Array.isArray(r.tiendas)?r.tiendas.join(", "):"")+'" placeholder="SP41, SP47">'+
+        '<button class="del" data-x="'+i+'" aria-label="Quitar">×</button>'+
+        (baja?'<span class="dudo">revisar</span>':'')+
+        '</li>';
+    }).join("")+'</ul>'+
+    '<div class="addrow" style="margin-top:12px">'+
+      '<button class="btn" id="confOk">Aplicar a mi semana</button>'+
+      '<button class="btn ghost" id="confNo">Descartar</button></div>';
+
+  const filas = prop.slice();
+  out.querySelectorAll("[data-c]").forEach(function(el){
+    el.addEventListener("change", function(){
+      const i=+el.dataset.i, c=el.dataset.c;
+      filas[i][c] = c==="tiendas"
+        ? el.value.split(",").map(function(x){return x.trim().toUpperCase();}).filter(Boolean)
+        : el.value;
+    });
+  });
+  out.querySelectorAll("[data-x]").forEach(function(b){
+    b.addEventListener("click", function(){ filas[+b.dataset.x]=null; b.closest("li").remove(); });
+  });
+  document.getElementById("confNo").addEventListener("click", function(){ out.innerHTML=""; });
+  document.getElementById("confOk").addEventListener("click", function(){
+    CFG.programacion = filas.filter(Boolean);
+    pushCfg();
+    out.innerHTML='<p class="ok">Programación guardada: '+CFG.programacion.length+
+      ' actividades. Ya la uso para ubicar tus tareas y sugerir rutas.</p>';
+  });
+}
+
+/* ---- 2 · ubicar una tarea ---- */
+async function ubicarTarea(){
+  const inp=document.getElementById("tareaIn"), out=document.getElementById("tareaOut");
+  const txt=inp.value.trim();
+  if(!txt){ inp.focus(); return; }
+  pensando(out);
+  try{
+    const r = await sampleFn.json(
+      contextoSemana()+"\n\nTarea nueva de Carlos: \""+txt+"\"\n\n"+
+      "Ubícala en un hueco real de su semana. Devuelve solo este JSON:\n"+
+      '{"titulo":"","minutos":0,"dia":"lun|mar|mie|jue|vie|sab|dom","bloque":"nombre del bloque",'+
+      '"razon":"una frase de por qué ahí","cabe":true}\n'+
+      "Si no cabe sin sacrificar un innegociable, pon cabe:false y en razon di qué habría que mover. "+
+      "No comprimas el sueño ni la tesis ni el tiempo de pareja.",
+      {modelTier:"quick"}
+    );
+    const dias={lun:"lunes",mar:"martes",mie:"miércoles",jue:"jueves",vie:"viernes",sab:"sábado",dom:"domingo"};
+    out.innerHTML = '<div class="respuesta'+(r.cabe===false?" no":"")+'">'+
+      '<b>'+(r.cabe===false?"No cabe esta semana":"Va el "+(dias[r.dia]||r.dia)+" · "+(r.bloque||""))+'</b>'+
+      '<p>'+(r.razon||"")+'</p></div>'+
+      (r.cabe===false?'':'<div class="addrow" style="margin-top:10px"><button class="btn" id="tOk">Guardar en pendientes</button></div>');
+    const ok=document.getElementById("tOk");
+    if(ok) ok.addEventListener("click", function(){
+      pendientes.unshift({id:String(Date.now()), txt:(r.titulo||txt)+" — "+(dias[r.dia]||"")+" "+(r.bloque||""),
+        min:Math.max(5,+r.minutos||30), hecho:false});
+      pushPend(); renderPend(); inp.value="";
+      out.innerHTML='<p class="ok">Guardada en tus pendientes.</p>';
+    });
+  }catch(e){ out.innerHTML='<p class="eaviso">'+copyErr(e)+'</p>'; }
+}
+
+/* ---- 3 · preguntar sobre la semana ---- */
+let preCtl=null;
+async function preguntar(){
+  const inp=document.getElementById("preIn"), out=document.getElementById("preOut");
+  const stop=document.getElementById("preStop");
+  const q=inp.value.trim(); if(!q){ inp.focus(); return; }
+  preCtl = new AbortController();
+  stop.hidden=false; pensando(out);
+  try{
+    await sampleFn(
+      contextoSemana()+"\n\nHoy es "+DIAS[activo].nom+". Pregunta de Carlos: \""+q+"\"\n\n"+
+      "Responde corto y concreto, con horas cuando aplique. Si la respuesta es que no le da el tiempo, "+
+      "dilo claro y propón qué mover. Habla directo, sin rodeos ni listas largas.",
+      {signal:preCtl.signal, modelTier:"quick",
+       onText:function(ev){ out.innerHTML='<div class="respuesta"><p>'+
+         ev.text.replace(/[<>&]/g,function(c){return {"<":"&lt;",">":"&gt;","&":"&amp;"}[c];})
+         .replace(/\n/g,"<br>")+'</p></div>'; }}
+    );
+  }catch(e){
+    if(e && e.code==="cancelled"){ /* el texto parcial se queda */ }
+    else out.innerHTML='<p class="eaviso">'+copyErr(e)+'</p>';
+  }finally{ stop.hidden=true; preCtl=null; }
+}
+
+/* ---- 4 · reporte dominical ---- */
+async function reporte(){
+  const out=document.getElementById("repOut");
+  const filas=[];
+  DIAS.forEach(function(d){
+    bloquesDe(d).forEach(function(b,i){
+      if(b[3]==="sueno"||b[3]==="traslado") return;
+      filas.push(d.nom+" · "+b[2]+": "+(hechos[d.id+"-"+i]?"cumplido":"no marcado"));
+    });
+  });
+  const cumplidos=filas.filter(function(f){return /cumplido$/.test(f);}).length;
+  if(!cumplidos){
+    out.innerHTML='<p class="why">Todavía no has marcado bloques, así que no hay nada que leer. '+
+      'Marca «hecho» durante la semana y el domingo esto te dice qué se cae siempre.</p>';
+    return;
+  }
+  pensando(out);
+  try{
+    await sampleFn(
+      "Este es el cumplimiento real de la semana de Carlos, bloque por bloque:\n"+filas.join("\n")+
+      "\n\nDile en máximo 6 frases: qué bloques se caen sistemáticamente, qué patrón hay detrás "+
+      "(hora del día, tipo de actividad, día de la semana) y UN cambio concreto al horario que lo arregle. "+
+      "El principio es que si un bloque nunca se cumple, el horario está mal, no su voluntad. "+
+      "Nada de felicitaciones genéricas.",
+      {modelTier:"default",
+       onText:function(ev){ out.innerHTML='<div class="respuesta"><p>'+
+         ev.text.replace(/[<>&]/g,function(c){return {"<":"&lt;",">":"&gt;","&":"&amp;"}[c];})
+         .replace(/\n/g,"<br>")+'</p></div>'; }}
+    );
+  }catch(e){ out.innerHTML='<p class="eaviso">'+copyErr(e)+'</p>'; }
+}
+
+/* ---- 5 · sincronizar Google Calendar ----
+   Solo la capa variable de la semana. Los eventos recurrentes que ya
+   existen no se tocan. Se guardan los ids creados para actualizar en
+   vez de duplicar en la siguiente sincronización. */
+const CAL = "Google Calendar", CAL_ID = "cingacordova@gmail.com";
+const DIA_OFFSET = {lun:0,mar:1,mie:2,jue:3,vie:4,sab:5,dom:6};
+
+/* El domingo Carlos planifica la semana QUE EMPIEZA, no la que termina:
+   ese día el ancla es el lunes siguiente. */
+function lunesObjetivo(){
+  const d=new Date(), wd=d.getDay();
+  if(wd===0){ d.setDate(d.getDate()+1); }        // domingo → lunes de mañana
+  else { d.setDate(d.getDate()-(wd-1)); }        // resto → lunes de esta semana
+  d.setHours(0,0,0,0); return d;
+}
+function etiquetaSemana(){
+  const a=lunesObjetivo(), b=new Date(a); b.setDate(b.getDate()+5);
+  const f=function(x){ return x.getDate()+"/"+(x.getMonth()+1); };
+  return f(a)+" al "+f(b);
+}
+function fechaISO(diaId, hhmm){
+  const d=lunesObjetivo();
+  d.setDate(d.getDate()+(DIA_OFFSET[diaId]||0));
+  const p=hhmm.split(":");
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+
+    String(d.getDate()).padStart(2,"0")+"T"+p[0].padStart(2,"0")+":"+p[1]+":00";
+}
+
+async function sincronizarCalendario(){
+  const out=document.getElementById("calOut");
+  const prog = CFG.programacion || [];
+  if(!prog.length){
+    out.innerHTML='<p class="why">Primero sube tu programación del domingo: es lo que hay que sincronizar.</p>';
+    return;
+  }
+  CFG.calIds = CFG.calIds || {};
+  pensando(out, "Sincronizando la semana del "+etiquetaSemana()+"…");
+  const hechas=[], fallos=[];
+  for(let i=0;i<prog.length;i++){
+    const r=prog[i];
+    const clave = r.dia+"|"+r.tipo+"|"+(Array.isArray(r.tiendas)?r.tiendas.join("-"):"");
+    const ini = r.horaFija || (r.dia==="mar" ? "14:45" : "09:00");
+    const mins = r.tipo==="capacitacion" ? 180
+               : r.tipo==="tienda-escuela" ? 240
+               : r.tipo==="oficina" ? 180
+               : 90*Math.max(1,(r.tiendas||[]).length);
+    const finM = toMin(ini)+mins;
+    const titulo = r.tipo==="visita" ? "Visita · "+(r.tiendas||[]).join(", ")
+                 : r.tipo==="capacitacion" ? "Capacitación"+(r.tiendas&&r.tiendas.length?" · "+r.tiendas.join(", "):"")
+                 : r.tipo==="tienda-escuela" ? "Tienda escuela" : "Proyecto en oficina";
+    const cuerpo = {
+      calendarId: CAL_ID,
+      summary: titulo,
+      description: (r.detalle||"")+"\n\nCreado desde Semana Blindada. Duración estimada en peor escenario.",
+      startTime: fechaISO(r.dia, ini),
+      endTime: fechaISO(r.dia, fmt(finM)),
+      timeZone: "America/Lima",
+      colorId: "10"
+    };
+    try{
+      if(CFG.calIds[clave]){
+        await mcpNs.callTool(CAL, "update_event",
+          Object.assign({eventId: CFG.calIds[clave]}, cuerpo));
+        hechas.push("Actualizado: "+titulo);
+      } else {
+        const res = await mcpNs.callTool(CAL, "create_event", cuerpo);
+        const id = res && res.payload && res.payload.id;
+        if(id) CFG.calIds[clave]=id;
+        hechas.push("Creado: "+titulo);
+      }
+    }catch(e){ fallos.push(titulo+" — "+copyErr(e)); }
+  }
+  pushCfg();
+  out.innerHTML = (hechas.length?'<div class="respuesta"><b>Listo</b><p>'+hechas.join("<br>")+'</p></div>':'')+
+    (fallos.length?'<p class="eaviso">'+fallos.join("<br>")+'</p>':'');
+}
+
+/* ---- arranque del asistente ---- */
+async function iniciarAsistente(){
+  try{ sampleFn = await window.claude.use("sample"); }catch(e){ sampleFn=null; }
+  if(sampleFn){
+    document.getElementById("asistente").hidden=false;
+    try{
+      sampleCaps = await sampleFn.limits();
+      if(sampleCaps && sampleCaps.images){
+        const c=document.getElementById("acFoto"); c.hidden=false;
+        const inp=document.getElementById("fotoIn");
+        if(sampleCaps.images.mediaTypes) inp.accept = sampleCaps.images.mediaTypes.join(",");
+      }
+    }catch(e){}
+    document.getElementById("fotoGo").addEventListener("click", leerFoto);
+    document.getElementById("tareaGo").addEventListener("click", ubicarTarea);
+    document.getElementById("tareaIn").addEventListener("keydown", function(e){ if(e.key==="Enter") ubicarTarea(); });
+    document.getElementById("preGo").addEventListener("click", preguntar);
+    document.getElementById("preIn").addEventListener("keydown", function(e){ if(e.key==="Enter") preguntar(); });
+    document.getElementById("preStop").addEventListener("click", function(){ if(preCtl) preCtl.abort(); });
+    document.getElementById("repGo").addEventListener("click", reporte);
+  }
+  try{ mcpNs = await window.claude.use("mcp"); }catch(e){ mcpNs=null; }
+  if(mcpNs){
+    document.getElementById("asistente").hidden=false;
+    document.getElementById("acCal").hidden=false;
+    document.getElementById("calSemana").innerHTML = "Se sincronizará la semana del <b>"+etiquetaSemana()+"</b>.";
+    document.getElementById("calGo").addEventListener("click", sincronizarCalendario);
+  }
+}
+
 /* ---------------- pendientes ---------------- */
 function renderPend(){
   const el=document.getElementById("pendList");
@@ -1468,6 +1872,7 @@ loadLocal();
 document.getElementById("weekLabel").textContent = "Semana "+WEEK;
 renderMeters(); renderTabs(); renderDay(); renderLegend();
 renderFutbol(); renderCartera(); renderPicker(); renderCalc(); renderPend();
+iniciarAsistente();
 
 // re-planificador
 document.getElementById("rToggle").addEventListener("click", function(){

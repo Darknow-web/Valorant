@@ -38,6 +38,38 @@ tardío del miércoles.
 Por eso el gym quedó viernes tarde, sábado y domingo por la mañana: son las únicas
 franjas que no le quitan horas al sueño.
 
+## Asistente en la página (capacidades `sample` + `mcp`)
+
+La operación semanal ya no pasa por el chat. La página declara:
+
+```
+capabilities: { db:{}, sample:{},
+  mcp:{ servers:[{ server:"Google Calendar",
+                   tools:["list_events","create_event","update_event"] }] } }
+```
+
+Cinco funciones, todas degradan a nada si el visor no concede la capacidad — el horario,
+el re-planificador y la calculadora son locales y siguen funcionando:
+
+1. **Foto del domingo** — `sample.json` con la imagen del plan de banca devuelve la
+   programación estructurada. **No se aplica**: pinta una pantalla de confirmación
+   editable, con lo de baja confianza resaltado. Solo aparece si `sample.limits()`
+   reporta `images`.
+2. **Ubicar una tarea** — texto libre → bloque propuesto y la razón. Si no cabe lo dice,
+   no comprime.
+3. **Preguntar sobre la semana** — respuesta en streaming con botón de parar.
+4. **Reporte de cumplimiento** — lee el histórico de `db` y señala qué bloques se caen
+   siempre.
+5. **Sincronizar Google Calendar** — solo la capa variable. Los ids creados se guardan en
+   `CFG.calIds` para actualizar en vez de duplicar.
+
+**Modelo de costo**: cada llamada manda el prompt más un resumen del horario
+(`contextoSemana()`, ~1 KB), no la conversación entera. Ese es el ahorro frente al chat.
+Gasta el uso de Claude del visor y pide su consentimiento en la primera llamada.
+
+`lunesObjetivo()` resuelve el caso que importa: **el domingo se planifica la semana que
+empieza**, no la que termina.
+
 ## Fútbol con hora variable
 
 Carlos juega **un partido de 40 min**: llega 20 antes y se va 15 después. Con traslado
