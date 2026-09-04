@@ -206,6 +206,51 @@ label.done input{accent-color:var(--accent); width:15px; height:15px; cursor:poi
 .plan .t{font-family:"JetBrains Mono",monospace; font-size:12.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; font-weight:500}
 .plan li.tr{color:var(--ink-3)}
 .plan li.tr .t{color:var(--ink-3)}
+.plan .pm{font-style:normal; font-size:11px; color:var(--ink-3); white-space:nowrap}
+
+/* ---------- cartera ---------- */
+.grupo{border:1px solid var(--line); border-radius:3px; background:var(--surface); margin-bottom:10px; overflow:hidden}
+.ghead{
+  display:flex; align-items:center; gap:8px; padding:9px 13px; background:var(--surface-2);
+  border-bottom:1px solid var(--line); font-family:"Bricolage Grotesque",sans-serif;
+  font-weight:700; font-size:14px; letter-spacing:-.01em;
+}
+.ghead i{width:9px; height:9px; border-radius:99px; flex:none}
+.ghead span{
+  margin-left:auto; font-family:"JetBrains Mono",monospace; font-size:11px;
+  color:var(--ink-3); font-weight:500; font-variant-numeric:tabular-nums;
+}
+.glist{list-style:none; margin:0; padding:0}
+.glist li{
+  display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 9px;
+  padding:7px 13px; border-bottom:1px solid var(--line); font-size:14px;
+}
+.glist li:last-child{border-bottom:0}
+.glist b{font-size:12px; font-weight:700; color:var(--ink-2); letter-spacing:-.02em}
+.glist .tn{font-weight:600}
+.glist .tz{font-size:12px; color:var(--ink-3)}
+.glist .tz.inf{color:var(--warn)}
+.cat{
+  margin-left:auto; font-family:"JetBrains Mono",monospace; font-size:9px;
+  letter-spacing:.1em; padding:1px 5px; border-radius:2px; font-weight:700;
+  border:1px solid var(--line-2); color:var(--ink-3);
+}
+.cat-platino{border-color:var(--c-u); color:var(--c-u)}
+.cat-oro{border-color:var(--c-cuerpo); color:var(--c-cuerpo)}
+
+/* ---------- picker ---------- */
+.picker{display:flex; flex-wrap:wrap; gap:6px}
+.pk{
+  font-family:"JetBrains Mono",monospace; font-size:11px; font-weight:700;
+  padding:6px 9px; border-radius:2px; cursor:pointer; letter-spacing:.02em;
+  border:1px solid var(--line-2); background:var(--bg); color:var(--ink-2);
+  display:inline-flex; align-items:baseline; gap:5px; line-height:1.3;
+}
+.pk span{font-family:"Public Sans",sans-serif; font-size:11.5px; font-weight:400; color:var(--ink-3)}
+.pk:hover{border-color:var(--pkc)}
+.pk.on{background:var(--pkc); border-color:var(--pkc); color:#fff}
+.pk.on span{color:#fff; opacity:.82}
+.pk:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
 
 /* ---------- pendientes ---------- */
 .addrow{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap}
@@ -317,14 +362,31 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
 </section>
 
 <section>
+  <div class="shead"><h2>Tu cartera</h2><span class="eyebrow">20 tiendas · todas en Lima</span></div>
+  <p class="sub" style="margin:0 0 12px">Agrupadas por conglomerado geográfico. Un día de ruta dentro de un mismo grupo cuesta la mitad que uno que los cruza — por eso la agrupación es la decisión que más tiempo te ahorra en la semana.</p>
+  <div id="cartera"></div>
+  <div class="card" style="margin-top:14px">
+    <h3>Cuánto dura cada tipo de día</h3>
+    <ul class="plain">
+      <li><b>Visita a tienda</b> · 90 min por tienda. Tú la resuelves más rápido, pero el horario se planifica con 90: el día que se complica, es lo que evita que todo se corra.</li>
+      <li><b>Capacitación</b> · 180 min. Es el único bloque que no se puede acortar.</li>
+      <li><b>Tienda escuela</b> · turno mañana o turno tarde completo.</li>
+      <li><b>MMEE / proyecto en oficina</b> · bloque de oficina, sin traslados entre paradas.</li>
+      <li><b>Correos de visitas</b> · domingo, todos de una vez.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
   <div class="shead"><h2>Modo día puntual</h2><span class="eyebrow">Cálculo hacia atrás</span></div>
-  <p class="sub" style="margin:0 0 12px">Tienes una hora tope y unas tiendas que visitar. La hora tope decide cuántas caben — no al revés.</p>
+  <p class="sub" style="margin:0 0 10px">Marca las tiendas de hoy y pon tu hora tope. La hora tope decide cuántas caben — no al revés.</p>
   <div class="calc">
-    <div class="frow">
+    <div class="eyebrow" style="margin-bottom:7px">Tiendas de hoy</div>
+    <div class="picker" id="picker"></div>
+    <div class="frow" style="margin-top:14px">
       <div class="field"><label for="cTope">En casa a las</label><input id="cTope" type="time" value="18:30"></div>
       <div class="field"><label for="cAhora">Sales a las</label><input id="cAhora" type="time" value="11:35"></div>
-      <div class="field"><label for="cN">Tiendas</label><input id="cN" type="number" min="1" max="6" step="1" value="2"></div>
-      <div class="field"><label for="cVisita">Min / visita</label><input id="cVisita" type="number" min="30" max="180" step="5" value="90"></div>
+      <div class="field"><label for="cVisita">Min / visita</label><input id="cVisita" type="number" min="30" max="240" step="5" value="90"></div>
       <div class="field"><label for="cIda">Casa → 1ª (min)</label><input id="cIda" type="number" min="5" max="180" step="5" value="45"></div>
       <div class="field"><label for="cEntre">Entre tiendas (min)</label><input id="cEntre" type="number" min="5" max="180" step="5" value="70"></div>
       <div class="field"><label for="cVuelta">Última → casa (min)</label><input id="cVuelta" type="number" min="5" max="180" step="5" value="45"></div>
@@ -385,9 +447,10 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
 </section>
 
 <footer>
-  <b>Supuestos de esta versión.</b> La jornada laboral está puesta como bloque parametrizable de ~7 h 25 más almuerzo, porque todavía no tengo tu cuadro de distribución con las carteras de tienda. Los traslados usan 45 min casa→trabajo, 55+10 casa→U y 30+10 casa→gym, siempre en peor escenario.
+  <b>Supuestos de esta versión.</b> La cartera sale de tu Matriz de Indicadores 2026, hoja de setiembre: 20 tiendas, todas en Lima. La jornada laboral sigue como bloque parametrizable de ~7 h 25 más almuerzo, porque tu carga varía cada semana entre visitas, capacitaciones, tienda escuela y oficina. Los traslados usan 45 min casa→trabajo, 55+10 casa→U y 30+10 casa→gym, siempre en peor escenario.
   <ul>
-    <li>Falta: el cuadro del horario laboral, tu distrito y la lista de tiendas con sus zonas.</li>
+    <li>Falta: <b>tu distrito</b> — sin él no se puede calcular ningún tramo de vuelta a casa — y la zona de <b>SP69 Paracas</b>, más la confirmación de SP15 Mayolo, SP55 El Ejército y SP20 Dos de Mayo.</li>
+    <li>Los tiempos entre conglomerados (25 min dentro, 55 min cruzando) son provisionales: se corrigen con los tiempos reales que vayas midiendo.</li>
     <li>El gym quedó viernes tarde, sábado y domingo por la mañana: son las únicas franjas que no le quitan horas a tu sueño.</li>
     <li>La noche del lunes al martes son 5 h 15 y no se puede arreglar moviendo bloques — sales de clase 22:40 y entras a las 7:30. Se compensa con la siesta del martes y el arranque tardío del miércoles.</li>
   </ul>
@@ -573,6 +636,50 @@ const METAS = [
   {tag:"gym",     nom:"Gym",     meta:270, cls:"gym", sesiones:3}
 ];
 
+/* ============================================================
+   CARTERA — 20 tiendas asignadas a Carlos Inga (Matriz de
+   Indicadores 2026, hoja SETIEMBRE). Todas en región Lima.
+   zona: distrito. conf=false → distrito inferido del nombre,
+   pendiente de que Carlos lo confirme.
+   ============================================================ */
+const GRUPOS = [
+  {id:"norte", nom:"Norte", color:"var(--c-u)", tiendas:[
+    ["SP33","Plaza Norte","Independencia","PLATINO",true],
+    ["SP56","Mega Plaza","Independencia","BRONCE",true],
+    ["SP44","Izaguirre","Los Olivos","BRONCE",true],
+    ["SP15","Mayolo","Los Olivos","BRONCE",false],
+    ["SP61","Minka","Callao","BRONCE",true]
+  ]},
+  {id:"este", nom:"Este", color:"var(--c-cuerpo)", tiendas:[
+    ["SP36","Real Plaza Puruchuco","Ate","PLATA",true],
+    ["SP66","Mall Santa Anita","Santa Anita","BRONCE",true],
+    ["SP25","SJL","San Juan de Lurigancho","BRONCE",true],
+    ["SP54","Mall Aventura SJL","San Juan de Lurigancho","BRONCE",true]
+  ]},
+  {id:"molina", nom:"La Molina", color:"var(--c-trabajo)", tiendas:[
+    ["SP03","La Molina","La Molina","PLATA",true],
+    ["SP16","La Planicie","La Molina","PLATA",true],
+    ["SP42","Portal La Molina","La Molina","BRONCE",true],
+    ["SP48","Molicentro","La Molina","BRONCE",true]
+  ]},
+  {id:"centro", nom:"Centro y oeste", color:"var(--c-mente)", tiendas:[
+    ["SP52","Real Plaza Salaverry","Jesús María","ORO",true],
+    ["SP55","El Ejército","Magdalena del Mar","BRONCE",false],
+    ["SP20","Dos de Mayo","San Isidro","PLATINO",false]
+  ]},
+  {id:"mira", nom:"Miraflores", color:"var(--c-vinculo)", tiendas:[
+    ["SP47","28 de Julio","Miraflores","PLATINO",true],
+    ["SP41","Aurora","Miraflores · Av. República de Panamá 5985","ORO",true],
+    ["SP12","Bajada Balta","Miraflores","PLATA",true]
+  ]},
+  {id:"sinzona", nom:"Sin zona confirmada", color:"var(--c-traslado)", tiendas:[
+    ["SP69","Paracas","por confirmar","BRONCE",false]
+  ]}
+];
+/* Traslados por conglomerado, peor escenario en scooter. Provisionales:
+   se corrigen con los tiempos reales que Carlos vaya midiendo. */
+const T_INTRA = 25, T_INTER = 55;
+
 const CATS = {
   trabajo:"Trabajo", u:"Universidad", cuerpo:"Cuerpo y comida",
   vinculo:"Vínculos", mente:"Mente", traslado:"Traslado", sueno:"Sueño"
@@ -725,16 +832,68 @@ function renderLegend(){
   }).join("");
 }
 
+/* ---------------- cartera ---------------- */
+let elegidas = [];   // códigos SP seleccionados para el día
+
+function tiendaPorCodigo(cod){
+  for(const g of GRUPOS){
+    for(const t of g.tiendas) if(t[0]===cod) return {g:g, t:t};
+  }
+  return null;
+}
+
+function renderCartera(){
+  document.getElementById("cartera").innerHTML = GRUPOS.map(function(g){
+    return '<div class="grupo"><div class="ghead"><i style="background:'+g.color+'"></i>'+
+      g.nom+' <span>'+g.tiendas.length+'</span></div><ul class="glist">'+
+      g.tiendas.map(function(t){
+        return '<li><b class="mono">'+t[0]+'</b> <span class="tn">'+t[1]+'</span>'+
+          '<span class="tz'+(t[4]?"":" inf")+'">'+t[2]+(t[4]?"":" ·  por confirmar")+'</span>'+
+          '<span class="cat cat-'+t[3].toLowerCase()+'">'+t[3]+'</span></li>';
+      }).join("")+'</ul></div>';
+  }).join("");
+}
+
+function renderPicker(){
+  document.getElementById("picker").innerHTML = GRUPOS.map(function(g){
+    return g.tiendas.map(function(t){
+      const on = elegidas.indexOf(t[0])>=0;
+      return '<button type="button" class="pk'+(on?" on":"")+'" data-cod="'+t[0]+'" '+
+        'style="--pkc:'+g.color+'" aria-pressed="'+on+'">'+t[0]+' <span>'+t[1]+'</span></button>';
+    }).join("");
+  }).join("");
+  document.getElementById("picker").querySelectorAll(".pk").forEach(function(b){
+    b.addEventListener("click", function(){
+      const c=b.dataset.cod, i=elegidas.indexOf(c);
+      if(i>=0) elegidas.splice(i,1); else elegidas.push(c);
+      renderPicker(); autoEntre(); renderCalc();
+    });
+  });
+}
+
+/* Rellena "entre tiendas" según los conglomerados elegidos. */
+function autoEntre(){
+  if(elegidas.length<2) return;
+  const gs = new Set(elegidas.map(function(c){ const r=tiendaPorCodigo(c); return r?r.g.id:"?"; }));
+  document.getElementById("cEntre").value = gs.size>1 ? T_INTER : T_INTRA;
+}
+
 /* ---------------- calculadora día puntual ---------------- */
-const calcIds=["cTope","cAhora","cN","cVisita","cIda","cEntre","cVuelta","cAlmuerzo"];
+const calcIds=["cTope","cAhora","cVisita","cIda","cEntre","cVuelta","cAlmuerzo"];
 
 function renderCalc(){
   const g=function(id){return document.getElementById(id).value;};
   const tope=toMin(g("cTope")), salida=toMin(g("cAhora"));
-  const n=Math.max(1,Math.min(6,+g("cN")||1));
+  const n=Math.max(1,elegidas.length);
   const visita=+g("cVisita")||90, ida=+g("cIda")||0, entre=+g("cEntre")||0,
         vuelta=+g("cVuelta")||0, alm=+g("cAlmuerzo")||0;
   const FRICCION=10;
+
+  if(!elegidas.length){
+    document.getElementById("calcOut").innerHTML =
+      '<p class="why" style="max-width:60ch">Marca arriba las tiendas que te tocan hoy y te digo si alcanzan antes de tu hora tope, en qué orden hacerlas y a qué hora tienes que salir.</p>';
+    return;
+  }
 
   const necesario = ida + n*visita + (n-1)*entre + vuelta + alm + n*FRICCION;
   let disponible = tope - salida; if(disponible<0) disponible+=1440;
@@ -754,24 +913,60 @@ function renderCalc(){
       Math.max(0,caben)+'</b> visita'+(caben===1?"":"s")+', no '+n+'. Reprograma la diferencia: comprimir una visita a la mitad te obliga a volver y te cuesta el doble.</p>';
   }
 
-  // cronograma hacia atrás desde la hora tope
-  let t = tope - vuelta;
-  const pasos = [];
-  for(let i=n; i>=1; i--){
-    pasos.unshift({t:fmt(t-visita)+" – "+fmt(t), n:"Visita "+i, tr:false});
-    t -= visita + FRICCION;
-    if(i>1){ pasos.unshift({t:fmt(t-entre)+" – "+fmt(t), n:"Traslado entre tiendas", tr:true}); t -= entre; }
+  // orden de ruta: se agrupan las tiendas del mismo conglomerado
+  const orden = elegidas.slice().sort(function(a,b){
+    const ra=tiendaPorCodigo(a), rb=tiendaPorCodigo(b);
+    return (ra?ra.g.id:"").localeCompare(rb?rb.g.id:"");
+  });
+  const grupos = new Set(orden.map(function(c){ const r=tiendaPorCodigo(c); return r?r.g.id:"?"; }));
+
+  if(grupos.size>1){
+    const noms = Array.from(grupos).map(function(id){
+      const g=GRUPOS.find(function(x){return x.id===id;}); return g?g.nom:id;
+    }).join(" y ");
+    out += '<p class="why" style="margin-top:10px;max-width:60ch"><b>Ruta que cruza conglomerados</b> ('+noms+
+      '). Cada cruce te cuesta cerca de '+T_INTER+' min en vez de '+T_INTRA+
+      '. Si estas visitas no son urgentes el mismo día, agruparlas por zona te devuelve casi una hora.</p>';
   }
-  if(alm>0){ pasos.splice(Math.min(2,pasos.length), 0, {t:"entre visitas", n:"Almuerzo · "+alm+" min", tr:false}); }
-  pasos.unshift({t:fmt(t-ida)+" – "+fmt(t), n:"Traslado casa → primera tienda", tr:true});
-  pasos.push({t:fmt(tope-vuelta)+" – "+fmt(tope), n:"Traslado última tienda → casa", tr:true});
+
+  const sinZona = orden.filter(function(c){ const r=tiendaPorCodigo(c); return r && !r.t[4]; });
+  if(sinZona.length){
+    out += '<p class="why" style="margin-top:8px;max-width:60ch">'+sinZona.join(", ")+
+      ': la zona todavía no está confirmada, así que el traslado es una estimación gruesa. Dime dónde queda y ajusto el cálculo.</p>';
+  }
+
+  /* Cronograma: la hora de salida sale de restar el total a la hora tope,
+     y desde ahí se camina hacia adelante para que cada minuto quede a la
+     vista y la cadena cierre exactamente en la hora tope. */
+  const arranque = tope - necesario;
+  let t = arranque;
+  const pasos = [];
+  const paso = function(mins, nombre, esTraslado){
+    pasos.push({t:fmt(t)+" – "+fmt(t+mins), n:nombre, tr:!!esTraslado, m:mins});
+    t += mins;
+  };
+
+  paso(ida, "Traslado casa → primera tienda", true);
+  for(let i=0; i<n; i++){
+    const r = tiendaPorCodigo(orden[i]);
+    paso(FRICCION, "Llegada, estacionar y saludar", true);
+    paso(visita, r ? r.t[0]+" "+r.t[1] : "Visita "+(i+1), false);
+    if(i===0 && alm>0) paso(alm, "Almuerzo", false);
+    if(i<n-1){
+      const ra=r, rb=tiendaPorCodigo(orden[i+1]);
+      const cruza = ra && rb && ra.g.id!==rb.g.id;
+      paso(entre, "Traslado"+(cruza?" · cruza de "+ra.g.nom+" a "+rb.g.nom:" dentro de la zona"), true);
+    }
+  }
+  paso(vuelta, "Traslado última tienda → casa", true);
 
   out += '<ul class="plan">'+pasos.map(function(p){
-    return '<li class="'+(p.tr?"tr":"")+'"><span class="t mono">'+p.t+'</span><span>'+p.n+'</span></li>';
+    return '<li class="'+(p.tr?"tr":"")+'"><span class="t mono">'+p.t+'</span>'+
+           '<span>'+p.n+' <em class="pm mono">'+p.m+' min</em></span></li>';
   }).join("")+'</ul>';
 
-  out += '<p class="why" style="margin-top:12px;max-width:60ch"><b>Sal a las '+fmt(tope - necesario + alm)+
-    '</b> como muy tarde si aún no has salido. La última tienda tiene que ser la más cercana a tu casa: '+
+  out += '<p class="why" style="margin-top:12px;max-width:60ch"><b>Sal a las '+fmt(arranque)+
+    '</b> como muy tarde. Reordena para que la última tienda sea la más cercana a tu casa: '+
     'terminar lejos en hora punta es lo que rompe la hora tope. Retraso de más de 20 min en una visita, cancelas la siguiente.</p>';
 
   document.getElementById("calcOut").innerHTML = out;
@@ -819,7 +1014,8 @@ function addPend(){
 /* ---------------- arranque ---------------- */
 loadLocal();
 document.getElementById("weekLabel").textContent = "Semana "+WEEK;
-renderMeters(); renderTabs(); renderDay(); renderLegend(); renderCalc(); renderPend();
+renderMeters(); renderTabs(); renderDay(); renderLegend();
+renderCartera(); renderPicker(); renderCalc(); renderPend();
 
 // el día de hoy, si estamos dentro de la semana
 (function(){

@@ -38,10 +38,30 @@ tardío del miércoles.
 Por eso el gym quedó viernes tarde, sábado y domingo por la mañana: son las únicas
 franjas que no le quitan horas al sueño.
 
+## Cartera (Matriz de Indicadores 2026, hoja SETIEMBRE)
+
+20 tiendas asignadas a Carlos Inga, todas en región Lima, agrupadas en la página por
+conglomerado geográfico. Un día que cruza conglomerados cuesta ~55 min por salto frente
+a ~25 min dentro del mismo grupo, así que la calculadora avisa cuando la ruta los cruza.
+
+| Grupo | Tiendas |
+|---|---|
+| Norte | SP33, SP56, SP44, SP15, SP61 |
+| Este | SP36, SP66, SP25, SP54 |
+| La Molina | SP03, SP16, SP42, SP48 |
+| Centro y oeste | SP52, SP55, SP20 |
+| Miraflores | SP47, SP41, SP12 |
+| Sin zona confirmada | SP69 Paracas |
+
+Tipos de día detectados en el plan de banca: visita a tienda (90 min), capacitación
+(180 min, no se acorta), tienda escuela (turno mañana o tarde), MMEE / proyecto en
+oficina, y los correos de visitas el domingo.
+
 ## Pendiente de incorporar
 
-- Cuadro de distribución del horario laboral con las carteras de tienda.
-- Distrito de la casa y lista de tiendas con sus zonas, para la tabla de traslados.
+- Distrito de la casa: sin él no se puede calcular ningún tramo de vuelta.
+- Zona de SP69 Paracas; confirmar SP15 Mayolo, SP55 El Ejército y SP20 Dos de Mayo.
+- Calibrar los tiempos entre conglomerados (hoy 25 min intra / 55 min inter, provisionales).
 - Capa opcional que consulte Google Maps Distance Matrix con `traffic_model=pessimistic`
   para calcular la ruta del día de visitas (requiere API key).
 
