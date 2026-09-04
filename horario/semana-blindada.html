@@ -1,0 +1,861 @@
+<title>Semana Blindada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+<style>
+:root{
+  --bg:#F1F3F0; --surface:#FFFFFF; --surface-2:#E7EBE6; --surface-3:#DDE3DE;
+  --ink:#16211D; --ink-2:#4A5A54; --ink-3:#7B8A84;
+  --line:#D3DAD5; --line-2:#C0C9C3;
+  --accent:#0F6B5C;
+  --c-trabajo:#0F6B5C; --c-u:#3F4FA0; --c-cuerpo:#B4651B;
+  --c-vinculo:#A33A5F; --c-mente:#6A4B9C; --c-traslado:#8A9891; --c-sueno:#33424C;
+  --warn:#B4651B; --bad:#A8332F; --good:#0F6B5C;
+  --shadow:0 1px 2px rgba(22,33,29,.06), 0 6px 18px -8px rgba(22,33,29,.16);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101614; --surface:#18201D; --surface-2:#212B27; --surface-3:#2A3531;
+    --ink:#E8EFEB; --ink-2:#A3B2AC; --ink-3:#74847E;
+    --line:#2C3833; --line-2:#3A4842;
+    --accent:#3FB09A;
+    --c-trabajo:#3FB09A; --c-u:#8494E8; --c-cuerpo:#E09A4E;
+    --c-vinculo:#E0708F; --c-mente:#A98EE2; --c-traslado:#74847E; --c-sueno:#93A7B1;
+    --warn:#E09A4E; --bad:#E8756F; --good:#3FB09A;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px -8px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101614; --surface:#18201D; --surface-2:#212B27; --surface-3:#2A3531;
+  --ink:#E8EFEB; --ink-2:#A3B2AC; --ink-3:#74847E;
+  --line:#2C3833; --line-2:#3A4842;
+  --accent:#3FB09A;
+  --c-trabajo:#3FB09A; --c-u:#8494E8; --c-cuerpo:#E09A4E;
+  --c-vinculo:#E0708F; --c-mente:#A98EE2; --c-traslado:#74847E; --c-sueno:#93A7B1;
+  --warn:#E09A4E; --bad:#E8756F; --good:#3FB09A;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px -8px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Public Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size:15px; line-height:1.55; -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:820px; margin:0 auto; padding:20px 16px 72px}
+
+/* ---------- typography ---------- */
+h1,h2,h3{font-family:"Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif; text-wrap:balance; margin:0}
+h1{font-size:clamp(30px,7vw,42px); font-weight:800; letter-spacing:-.025em; line-height:1.02}
+h2{font-size:19px; font-weight:700; letter-spacing:-.012em}
+h3{font-size:15px; font-weight:700; letter-spacing:-.008em}
+.eyebrow{
+  font-family:"JetBrains Mono", ui-monospace, monospace;
+  font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-3); font-weight:500;
+}
+.mono{font-family:"JetBrains Mono", ui-monospace, monospace; font-variant-numeric:tabular-nums}
+p{margin:0}
+
+/* ---------- header ---------- */
+header{padding-bottom:18px; border-bottom:2px solid var(--ink); margin-bottom:20px}
+.hgrid{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px 20px}
+.sub{color:var(--ink-2); font-size:14.5px; max-width:56ch; margin-top:8px}
+.stamp{
+  font-family:"JetBrains Mono", ui-monospace, monospace; font-size:11px;
+  color:var(--ink-3); text-align:right; line-height:1.7; font-variant-numeric:tabular-nums;
+}
+.stamp b{color:var(--ink); font-weight:700; display:block; font-size:12.5px}
+
+/* ---------- meters ---------- */
+.meters{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(138px,1fr));
+  gap:1px; background:var(--line); border:1px solid var(--line);
+  border-radius:3px; overflow:hidden; margin-bottom:8px;
+}
+.meter{background:var(--surface); padding:11px 13px 12px}
+.meter .lab{
+  font-family:"JetBrains Mono", ui-monospace, monospace; font-size:10px;
+  letter-spacing:.13em; text-transform:uppercase; color:var(--ink-3); font-weight:500;
+}
+.meter .val{
+  font-family:"Bricolage Grotesque", sans-serif; font-weight:700;
+  font-size:21px; letter-spacing:-.02em; margin-top:3px; font-variant-numeric:tabular-nums;
+}
+.meter .val small{font-size:12px; font-weight:500; color:var(--ink-3); letter-spacing:0}
+.bar{height:4px; background:var(--surface-3); border-radius:99px; margin-top:8px; overflow:hidden}
+.bar i{display:block; height:100%; border-radius:99px; background:var(--accent); transition:width .35s ease}
+.meter.tesis .bar i{background:var(--c-u)}
+.meter.lectura .bar i{background:var(--c-mente)}
+.meter.pareja .bar i{background:var(--c-vinculo)}
+.meter.gym .bar i{background:var(--c-cuerpo)}
+.metersNote{font-size:12.5px; color:var(--ink-3); margin-bottom:26px}
+
+/* ---------- section ---------- */
+section{margin-top:30px}
+.shead{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:12px}
+.shead .eyebrow{white-space:nowrap}
+
+/* ---------- day tabs ---------- */
+.tabs{
+  display:flex; gap:0; overflow-x:auto; border:1px solid var(--line);
+  border-radius:3px; background:var(--surface); margin-bottom:4px; scrollbar-width:thin;
+}
+.tab{
+  flex:1 1 0; min-width:0; padding:9px 4px 10px; background:none; border:0;
+  border-right:1px solid var(--line); cursor:pointer; color:var(--ink-2);
+  font-family:"JetBrains Mono", monospace; font-size:11px; letter-spacing:.09em;
+  text-transform:uppercase; font-weight:500; text-align:center; line-height:1.4;
+}
+.tab:last-child{border-right:0}
+.tab span{display:block; font-size:9.5px; color:var(--ink-3); letter-spacing:.05em; margin-top:2px}
+.tab[aria-selected="true"]{background:var(--ink); color:var(--bg)}
+.tab[aria-selected="true"] span{color:var(--bg); opacity:.62}
+.tab:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+
+/* ---------- day head ---------- */
+.dayhead{
+  display:flex; flex-wrap:wrap; gap:8px 16px; align-items:baseline;
+  padding:14px 0 12px; border-bottom:1px solid var(--line);
+}
+.dayhead h2{font-size:22px}
+.daystat{font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.daystat b{color:var(--ink-2); font-weight:700}
+.daynote{
+  font-size:13.5px; color:var(--ink-2); background:var(--surface-2);
+  border-left:3px solid var(--c-cuerpo); padding:9px 12px; margin:12px 0 4px; border-radius:0 3px 3px 0;
+}
+.daynote.alert{border-left-color:var(--bad); color:var(--ink)}
+
+/* ---------- timeline ---------- */
+.tl{list-style:none; margin:0; padding:0}
+.blk{
+  display:grid; grid-template-columns:52px 12px 1fr auto; gap:0 10px;
+  align-items:start; padding:9px 0; border-bottom:1px solid var(--line);
+}
+.blk:last-child{border-bottom:0}
+.blk .time{
+  font-family:"JetBrains Mono",monospace; font-size:12.5px; font-weight:500;
+  color:var(--ink-2); font-variant-numeric:tabular-nums; padding-top:1px; letter-spacing:-.02em;
+}
+.blk .time em{display:block; font-style:normal; font-size:10.5px; color:var(--ink-3)}
+.rail{width:4px; margin-left:4px; border-radius:99px; align-self:stretch; min-height:20px; background:var(--c-traslado)}
+.blk[data-c="trabajo"] .rail{background:var(--c-trabajo)}
+.blk[data-c="u"] .rail{background:var(--c-u)}
+.blk[data-c="cuerpo"] .rail{background:var(--c-cuerpo)}
+.blk[data-c="vinculo"] .rail{background:var(--c-vinculo)}
+.blk[data-c="mente"] .rail{background:var(--c-mente)}
+.blk[data-c="sueno"] .rail{background:var(--c-sueno)}
+.blk[data-c="traslado"] .rail{
+  background:repeating-linear-gradient(180deg,var(--c-traslado) 0 4px,transparent 4px 8px);
+}
+.blk[data-c="traslado"] .name{color:var(--ink-3); font-weight:400}
+.name{font-size:14.5px; font-weight:600; letter-spacing:-.005em; line-height:1.35}
+.why{font-size:12.5px; color:var(--ink-3); margin-top:2px; line-height:1.45; max-width:52ch}
+.dur{
+  font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--ink-3);
+  font-variant-numeric:tabular-nums; padding-top:3px; white-space:nowrap;
+}
+.chip{
+  display:inline-block; font-family:"JetBrains Mono",monospace; font-size:9.5px;
+  letter-spacing:.1em; text-transform:uppercase; font-weight:700;
+  padding:1px 5px; border-radius:2px; margin-left:7px; vertical-align:1.5px;
+  border:1px solid currentColor;
+}
+.chip.blindado{color:var(--c-vinculo)}
+.chip.corta{color:var(--bad)}
+.blk .tick{grid-column:1 / -1; margin-top:6px}
+label.done{
+  display:inline-flex; align-items:center; gap:7px; cursor:pointer;
+  font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--ink-3); user-select:none;
+}
+label.done input{accent-color:var(--accent); width:15px; height:15px; cursor:pointer; margin:0}
+.blk.checked .name{text-decoration:line-through; text-decoration-thickness:1px; color:var(--ink-3)}
+
+/* ---------- legend ---------- */
+.legend{display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line)}
+.lg{display:flex; align-items:center; gap:6px; font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3)}
+.lg i{width:11px; height:4px; border-radius:99px; display:block}
+
+/* ---------- calculator ---------- */
+.calc{background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:16px; box-shadow:var(--shadow)}
+.frow{display:grid; grid-template-columns:repeat(auto-fit,minmax(126px,1fr)); gap:12px}
+.field{display:flex; flex-direction:column; gap:5px}
+.field label{font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-3); font-weight:500}
+.field input, .field select{
+  font-family:"JetBrains Mono",monospace; font-size:14px; padding:8px 9px;
+  border:1px solid var(--line-2); border-radius:2px; background:var(--bg); color:var(--ink);
+  font-variant-numeric:tabular-nums; width:100%;
+}
+.field input:focus-visible, .field select:focus-visible{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent)}
+.calcOut{margin-top:16px; border-top:1px solid var(--line); padding-top:14px}
+.verdict{
+  font-family:"Bricolage Grotesque",sans-serif; font-weight:700; font-size:17px;
+  letter-spacing:-.015em; display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;
+}
+.verdict.ok{color:var(--good)} .verdict.tight{color:var(--warn)} .verdict.no{color:var(--bad)}
+.verdict small{font-family:"JetBrains Mono",monospace; font-size:11.5px; font-weight:500; color:var(--ink-3); letter-spacing:0}
+.plan{list-style:none; margin:13px 0 0; padding:0; display:flex; flex-direction:column; gap:0}
+.plan li{
+  display:grid; grid-template-columns:104px 1fr; gap:10px; padding:6px 0;
+  border-bottom:1px dotted var(--line-2); font-size:14px;
+}
+.plan li:last-child{border-bottom:0}
+.plan .t{font-family:"JetBrains Mono",monospace; font-size:12.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; font-weight:500}
+.plan li.tr{color:var(--ink-3)}
+.plan li.tr .t{color:var(--ink-3)}
+
+/* ---------- pendientes ---------- */
+.addrow{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap}
+.addrow input[type="text"]{
+  flex:1 1 180px; font-family:inherit; font-size:14.5px; padding:9px 11px;
+  border:1px solid var(--line-2); border-radius:2px; background:var(--surface); color:var(--ink);
+}
+.addrow input[type="number"]{
+  width:82px; font-family:"JetBrains Mono",monospace; font-size:14px; padding:9px;
+  border:1px solid var(--line-2); border-radius:2px; background:var(--surface); color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+.addrow input:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+button.btn{
+  font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.11em;
+  text-transform:uppercase; font-weight:700; padding:9px 15px; border-radius:2px;
+  border:1px solid var(--ink); background:var(--ink); color:var(--bg); cursor:pointer;
+}
+button.btn:hover{opacity:.86}
+button.btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+button.btn.ghost{background:none; color:var(--ink-2); border-color:var(--line-2)}
+.pend{list-style:none; margin:0; padding:0; border:1px solid var(--line); border-radius:3px; overflow:hidden}
+.pend li{
+  display:flex; align-items:flex-start; gap:10px; padding:10px 12px;
+  background:var(--surface); border-bottom:1px solid var(--line); font-size:14.5px;
+}
+.pend li:last-child{border-bottom:0}
+.pend li.hecho .txt{text-decoration:line-through; color:var(--ink-3)}
+.pend .txt{flex:1; line-height:1.4}
+.pend .min{font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--ink-3); font-variant-numeric:tabular-nums; white-space:nowrap; padding-top:2px}
+.pend input[type="checkbox"]{accent-color:var(--accent); width:16px; height:16px; margin:3px 0 0; cursor:pointer; flex:none}
+.pend .del{background:none; border:0; color:var(--ink-3); cursor:pointer; font-size:16px; line-height:1; padding:2px 4px}
+.pend .del:hover{color:var(--bad)}
+.empty{padding:16px 12px; background:var(--surface); color:var(--ink-3); font-size:13.5px; text-align:center}
+
+/* ---------- protocol ---------- */
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:15px 16px}
+.card h3{margin-bottom:8px; display:flex; align-items:center; gap:8px}
+.card h3::before{content:""; width:8px; height:8px; border-radius:99px; background:var(--accent); flex:none}
+.card.rule h3::before{background:var(--c-mente)}
+.card.alert h3::before{background:var(--bad)}
+.card.land h3::before{background:var(--c-vinculo)}
+.card p, .card li{font-size:13.5px; color:var(--ink-2); line-height:1.55}
+.card ul{margin:0; padding-left:17px; display:flex; flex-direction:column; gap:5px}
+.card ul.plain{list-style:none; padding-left:0}
+.card ul.plain li{padding-left:15px; position:relative}
+.card ul.plain li::before{content:"—"; position:absolute; left:0; color:var(--ink-3)}
+
+/* ---------- contingency ---------- */
+.order{list-style:none; margin:0; padding:0; counter-reset:o}
+.order li{
+  counter-increment:o; display:grid; grid-template-columns:30px 1fr; gap:12px;
+  padding:11px 0; border-bottom:1px solid var(--line); font-size:14.5px; align-items:baseline;
+}
+.order li:last-child{border-bottom:0}
+.order li::before{
+  content:counter(o); font-family:"JetBrains Mono",monospace; font-size:11px; font-weight:700;
+  color:var(--bg); background:var(--ink); width:20px; height:20px; border-radius:2px;
+  display:grid; place-items:center; align-self:start; margin-top:2px;
+}
+.order b{font-weight:600}
+.order .why{margin-top:2px}
+
+/* ---------- footer ---------- */
+footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-3)}
+footer b{color:var(--ink-2)}
+footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column; gap:4px}
+.savestate{
+  font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--ink-3);
+}
+.savestate.on{color:var(--good)}
+
+@media (max-width:560px){
+  .blk{grid-template-columns:48px 10px 1fr; gap:0 8px}
+  .dur{grid-column:3; padding-top:3px}
+  .plan li{grid-template-columns:96px 1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="hgrid">
+    <div>
+      <div class="eyebrow">Horario operativo · Lima</div>
+      <h1>Semana Blindada</h1>
+      <p class="sub">Cada minuto contado en el peor escenario. Los traslados son bloques, no supuestos. Lo que sostiene tu cabeza está protegido antes de repartir lo demás.</p>
+    </div>
+    <div class="stamp">
+      <b id="weekLabel">—</b>
+      v1 · base parametrizable<br>
+      <span id="saveState" class="savestate">estado local</span>
+    </div>
+  </div>
+</header>
+
+<div class="eyebrow" style="margin-bottom:9px">Innegociables de la semana</div>
+<div class="meters" id="meters"></div>
+<p class="metersNote" id="metersNote"></p>
+
+<section>
+  <div class="shead"><h2>El día, minuto a minuto</h2><span class="eyebrow">Peor escenario</span></div>
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <div id="dayPane"></div>
+  <div class="legend" id="legend"></div>
+</section>
+
+<section>
+  <div class="shead"><h2>Modo día puntual</h2><span class="eyebrow">Cálculo hacia atrás</span></div>
+  <p class="sub" style="margin:0 0 12px">Tienes una hora tope y unas tiendas que visitar. La hora tope decide cuántas caben — no al revés.</p>
+  <div class="calc">
+    <div class="frow">
+      <div class="field"><label for="cTope">En casa a las</label><input id="cTope" type="time" value="18:30"></div>
+      <div class="field"><label for="cAhora">Sales a las</label><input id="cAhora" type="time" value="11:35"></div>
+      <div class="field"><label for="cN">Tiendas</label><input id="cN" type="number" min="1" max="6" step="1" value="2"></div>
+      <div class="field"><label for="cVisita">Min / visita</label><input id="cVisita" type="number" min="30" max="180" step="5" value="90"></div>
+      <div class="field"><label for="cIda">Casa → 1ª (min)</label><input id="cIda" type="number" min="5" max="180" step="5" value="45"></div>
+      <div class="field"><label for="cEntre">Entre tiendas (min)</label><input id="cEntre" type="number" min="5" max="180" step="5" value="70"></div>
+      <div class="field"><label for="cVuelta">Última → casa (min)</label><input id="cVuelta" type="number" min="5" max="180" step="5" value="45"></div>
+      <div class="field"><label for="cAlmuerzo">Almuerzo (min)</label><input id="cAlmuerzo" type="number" min="0" max="90" step="5" value="35"></div>
+    </div>
+    <div class="calcOut" id="calcOut"></div>
+  </div>
+</section>
+
+<section>
+  <div class="shead"><h2>Pendientes sueltos</h2><span class="eyebrow">Sácalos de tu cabeza</span></div>
+  <p class="sub" style="margin:0 0 12px">Todo lo que aparece durante el día entra aquí con su estimación en minutos. Lo que no tiene minutos asignados no es una tarea, es una preocupación.</p>
+  <div class="addrow">
+    <input id="pTxt" type="text" placeholder="Qué hay que hacer" maxlength="140">
+    <input id="pMin" type="number" placeholder="min" min="5" max="480" step="5" value="30" aria-label="Minutos estimados">
+    <button class="btn" id="pAdd">Agregar</button>
+  </div>
+  <ul class="pend" id="pendList"></ul>
+</section>
+
+<section>
+  <div class="shead"><h2>Protocolo de cabeza</h2><span class="eyebrow">Antes de que se rompa</span></div>
+  <div class="cards">
+    <div class="card rule">
+      <h3>Regla del 80 %</h3>
+      <p>Si el miércoles vas por debajo del 80 % de los bloques marcados, <b>recortas alcance, nunca sueño</b>. Sacrificas tareas, no horas de dormir. El sueño es lo que hace que la semana siguiente exista.</p>
+    </div>
+    <div class="card">
+      <h3>Descompresión diaria</h3>
+      <p>Los 20 minutos al llegar a casa, sin celular, no son tiempo muerto: son lo que impide que el día laboral se filtre a la noche. Es el bloque que más rápido querrás saltarte y el que menos deberías.</p>
+    </div>
+    <div class="card alert">
+      <h3>Señales de alerta</h3>
+      <ul class="plain">
+        <li>Dos noches seguidas bajo 6 h → cancela el fútbol de esa semana.</li>
+        <li>Te saltas la descompresión 3 días → recorta un bloque de trabajo, no la lectura.</li>
+        <li>Irritabilidad con tu enamorada o con los gatos → es fatiga, no es la relación.</li>
+        <li>La tesis lleva 2 semanas sin avanzar → el problema es el horario, no tu voluntad. Reescríbelo.</li>
+      </ul>
+    </div>
+    <div class="card land">
+      <h3>Día de aterrizaje</h3>
+      <p>Un domingo al mes: sin correos, sin tesis, sin planificación. Solo gym, comida y tu gente. No es premio por rendimiento — va en el calendario aunque la semana haya salido mal. Sobre todo si salió mal.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="shead"><h2>Cuando la semana se rompe</h2><span class="eyebrow">Orden de sacrificio</span></div>
+  <p class="sub" style="margin:0 0 12px">Escrito ahora, con la cabeza descansada, para no decidirlo a las 11 de la noche. Se sacrifica de arriba hacia abajo, nunca salteado.</p>
+  <ol class="order">
+    <li><div><b>Lectura del día</b><div class="why">Se recupera el fin de semana sin costo. Es el amortiguador barato.</div></div></li>
+    <li><div><b>Un bloque de trabajo adelantado</b><div class="why">Lo que ibas a adelantar, no lo que vence. Se corre al día siguiente.</div></div></li>
+    <li><div><b>El fútbol de esa noche</b><div class="why">Duele, pero recuperas 2 h 20 completas incluyendo traslados. Es la palanca más grande de la semana.</div></div></li>
+    <li><div><b>Una sesión de gym</b><div class="why">Solo si ya sacrificaste el fútbol y sigue sin alcanzar. Nunca las tres.</div></div></li>
+    <li><div><b>Nada más</b><div class="why">Tesis, pareja, sueño y descompresión no entran en esta lista. Si llegaste hasta aquí, el problema es la carga, no el horario: hay que sacar algo de la semana, no comprimirlo.</div></div></li>
+  </ol>
+</section>
+
+<footer>
+  <b>Supuestos de esta versión.</b> La jornada laboral está puesta como bloque parametrizable de ~7 h 25 más almuerzo, porque todavía no tengo tu cuadro de distribución con las carteras de tienda. Los traslados usan 45 min casa→trabajo, 55+10 casa→U y 30+10 casa→gym, siempre en peor escenario.
+  <ul>
+    <li>Falta: el cuadro del horario laboral, tu distrito y la lista de tiendas con sus zonas.</li>
+    <li>El gym quedó viernes tarde, sábado y domingo por la mañana: son las únicas franjas que no le quitan horas a tu sueño.</li>
+    <li>La noche del lunes al martes son 5 h 15 y no se puede arreglar moviendo bloques — sales de clase 22:40 y entras a las 7:30. Se compensa con la siesta del martes y el arranque tardío del miércoles.</li>
+  </ul>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   DATOS — la semana base. Minutos verificados, peor escenario.
+   tag: cuenta para los innegociables.
+   ============================================================ */
+const DIAS = [
+  {
+    id:"lun", nom:"Lunes", corto:"Lun", res:"Trabajo + clase de noche",
+    nota:{txt:"Terminas la clase 22:40 y llegas 23:45. Mañana entras a la U a las 7:30. Esta noche es corta por diseño de tus horarios, no por mala planificación — no le agregues nada.", alert:true},
+    b:[
+      ["07:00","07:15","Areneros de los gatos","vinculo","",""],
+      ["07:15","07:35","Aseo y vestirse","cuerpo","",""],
+      ["07:35","08:05","Desayuno","cuerpo","",""],
+      ["08:05","08:15","Táper, mochila y salida","cuerpo","Dejar listo lo de la noche: la clase termina tarde",""],
+      ["08:15","09:00","Traslado a la primera parada","traslado","Audiolibro si vas en auto. En scooter, silencio: también cuenta.",""],
+      ["09:00","13:00","Trabajo · bloque 1","trabajo","",""],
+      ["13:00","13:35","Almuerzo","cuerpo","",""],
+      ["13:35","17:00","Trabajo · bloque 2","trabajo","",""],
+      ["17:00","17:45","Tesis","u","Aprovechas que la cabeza ya está en modo trabajo, antes de moverte","tesis"],
+      ["17:45","18:55","Traslado a la universidad","traslado","",""],
+      ["18:55","19:30","Cena ligera y lectura","mente","La espera antes de clase es tu bloque de lectura más fácil de sostener","lectura"],
+      ["19:30","22:40","Clase presencial","u","",""],
+      ["22:40","23:45","Traslado a casa","traslado","",""],
+      ["23:45","00:05","Descompresión sin celular","mente","",""],
+      ["00:05","00:15","Captura de pendientes","mente","Todo lo suelto va a la lista. Nada se queda en tu cabeza.",""],
+      ["00:15","05:30","Dormir","sueno","5 h 15. La única noche corta de la semana.",""]
+    ]
+  },
+  {
+    id:"mar", nom:"Martes", corto:"Mar", res:"Clase de mañana + fútbol",
+    nota:{txt:"El día más pesado. La jornada laboral va corta a propósito y la siesta de la tarde no es opcional: dormiste 5 h 15.", alert:false},
+    b:[
+      ["05:30","05:45","Areneros de los gatos","vinculo","",""],
+      ["05:45","06:05","Aseo y vestirse","cuerpo","",""],
+      ["06:05","06:15","Desayuno rápido","cuerpo","",""],
+      ["06:15","07:20","Traslado a la universidad","traslado","55 min reales + 10 de margen. Sales 6:15, no 6:30.",""],
+      ["07:30","12:40","Clase presencial","u","",""],
+      ["12:40","13:15","Almuerzo cerca de la U","cuerpo","No vuelvas a casa: son 55 min que no tienes",""],
+      ["13:15","13:40","Siesta de recuperación","cuerpo","25 minutos, no más. Es lo que sostiene el resto del día.",""],
+      ["13:40","14:45","Traslado a oficina o tienda","traslado","",""],
+      ["14:45","19:00","Trabajo · jornada corta","trabajo","4 h 15. Hoy no se recupera lo que falta: se reparte al resto de la semana.",""],
+      ["19:00","19:45","Traslado a casa","traslado","",""],
+      ["19:45","20:25","Cena y cambio","cuerpo","",""],
+      ["20:25","20:40","Traslado a la cancha","traslado","",""],
+      ["20:40","23:00","Fútbol · ventana completa","cuerpo","Juegas 30 min; el resto es espera. Lleva el libro o duerme en el carro.",""],
+      ["23:00","23:40","Traslado a casa","traslado","",""],
+      ["23:40","00:00","Descompresión y areneros","mente","",""],
+      ["00:00","07:00","Dormir","sueno","7 h. Recuperas.",""]
+    ]
+  },
+  {
+    id:"mie", nom:"Miércoles", corto:"Mié", res:"Trabajo + reunión de grupo",
+    nota:{txt:"Arranque tardío a propósito: es tu primera noche completa de la semana. La reunión es desde casa, así que la tarde queda libre para tesis.", alert:false},
+    b:[
+      ["07:00","07:15","Areneros de los gatos","vinculo","",""],
+      ["07:15","07:35","Aseo y vestirse","cuerpo","",""],
+      ["07:35","08:05","Desayuno","cuerpo","",""],
+      ["08:05","08:15","Táper y salida","cuerpo","",""],
+      ["08:15","09:00","Traslado a la primera parada","traslado","",""],
+      ["09:00","13:00","Trabajo · bloque 1","trabajo","",""],
+      ["13:00","13:35","Almuerzo","cuerpo","",""],
+      ["13:35","17:00","Trabajo · bloque 2","trabajo","",""],
+      ["17:00","17:45","Traslado a casa","traslado","",""],
+      ["17:45","18:05","Descompresión sin celular","mente","",""],
+      ["18:05","19:00","Tesis","u","","tesis"],
+      ["19:00","19:45","Cena","cuerpo","",""],
+      ["19:45","20:00","Preparar la reunión","u","Llega con tu parte lista: acorta la reunión para todos",""],
+      ["20:00","22:00","Reunión · Lanzamiento de producto y marca","u","",""],
+      ["22:00","22:20","Areneros y captura de pendientes","vinculo","",""],
+      ["22:20","22:55","Lectura","mente","","lectura"],
+      ["22:55","23:00","Dejar listo lo de mañana","cuerpo","",""],
+      ["23:00","06:00","Dormir","sueno","",""]
+    ]
+  },
+  {
+    id:"jue", nom:"Jueves", corto:"Jue", res:"Jornada completa + fútbol",
+    nota:{txt:"Tu día de trabajo más largo y el único con margen real por la tarde. Aquí es donde entra la tesis entre semana.", alert:false},
+    b:[
+      ["06:00","06:15","Areneros de los gatos","vinculo","",""],
+      ["06:15","06:35","Aseo y vestirse","cuerpo","",""],
+      ["06:35","07:05","Desayuno","cuerpo","",""],
+      ["07:05","07:15","Táper y salida","cuerpo","",""],
+      ["07:15","08:00","Traslado a la primera parada","traslado","",""],
+      ["08:00","12:30","Trabajo · bloque 1","trabajo","",""],
+      ["12:30","13:05","Almuerzo","cuerpo","",""],
+      ["13:05","16:30","Trabajo · bloque 2","trabajo","",""],
+      ["16:30","17:15","Traslado a casa","traslado","",""],
+      ["17:15","17:35","Descompresión sin celular","mente","",""],
+      ["17:35","18:35","Tesis","u","","tesis"],
+      ["18:35","19:15","Cena","cuerpo","",""],
+      ["19:15","19:50","Lectura","mente","","lectura"],
+      ["19:50","20:00","Cambio y salida","cuerpo","",""],
+      ["20:00","20:40","Traslado a la cancha","traslado","",""],
+      ["20:40","23:00","Fútbol · ventana completa","cuerpo","",""],
+      ["23:00","23:40","Traslado a casa","traslado","",""],
+      ["23:40","00:00","Descompresión y areneros","mente","",""],
+      ["00:00","07:00","Dormir","sueno","",""]
+    ]
+  },
+  {
+    id:"vie", nom:"Viernes", corto:"Vie", res:"Gym + tu única noche libre",
+    nota:{txt:"La noche del viernes alterna entre salir con tu enamorada y un bloque profundo de tesis. Decide el lunes cuál toca, no el viernes a las 8.", alert:false},
+    b:[
+      ["07:00","07:15","Areneros de los gatos","vinculo","",""],
+      ["07:15","07:35","Aseo y vestirse","cuerpo","",""],
+      ["07:35","08:05","Desayuno","cuerpo","",""],
+      ["08:05","08:15","Ropa de gym en la mochila y salida","cuerpo","Si la ropa no sale contigo en la mañana, no vas al gym",""],
+      ["08:15","09:00","Traslado a la primera parada","traslado","",""],
+      ["09:00","13:00","Trabajo · bloque 1","trabajo","",""],
+      ["13:00","13:35","Almuerzo","cuerpo","",""],
+      ["13:35","17:00","Trabajo · bloque 2","trabajo","",""],
+      ["17:00","17:40","Traslado al gym","traslado","Directo desde el trabajo, sin pasar por casa",""],
+      ["17:40","19:10","Gym","cuerpo","","gym"],
+      ["19:10","19:50","Traslado a casa","traslado","",""],
+      ["19:50","20:35","Ducha y cena","cuerpo","",""],
+      ["20:35","22:45","Noche libre · pareja o tesis profunda","vinculo","Alterna semana a semana. Es el único bloque flexible grande que tienes.",""],
+      ["22:45","23:00","Areneros y captura","vinculo","",""],
+      ["23:00","23:30","Lectura","mente","","lectura"],
+      ["23:30","06:30","Dormir","sueno","",""]
+    ]
+  },
+  {
+    id:"sab", nom:"Sábado", corto:"Sáb", res:"Gym + media jornada + pareja",
+    nota:{txt:"El bloque grande con tu enamorada va aquí, protegido: casi 6 horas seguidas. No lo piques con pendientes de trabajo.", alert:false},
+    b:[
+      ["06:30","06:45","Areneros de los gatos","vinculo","",""],
+      ["06:45","07:05","Aseo y pre-entreno","cuerpo","",""],
+      ["07:05","07:45","Traslado al gym","traslado","",""],
+      ["07:45","09:15","Gym","cuerpo","","gym"],
+      ["09:15","09:55","Traslado a casa","traslado","",""],
+      ["09:55","10:35","Ducha y desayuno","cuerpo","",""],
+      ["10:35","11:20","Traslado al trabajo","traslado","",""],
+      ["11:20","15:00","Trabajo · media jornada","trabajo","",""],
+      ["15:00","15:35","Almuerzo","cuerpo","",""],
+      ["15:35","16:20","Traslado a casa","traslado","",""],
+      ["16:20","16:40","Descompresión sin celular","mente","",""],
+      ["16:40","17:10","Arreglarse","cuerpo","",""],
+      ["17:10","23:00","Salida con tu enamorada","vinculo","Sin revisar el correo del trabajo. Ese es el punto del bloque.","pareja"],
+      ["23:00","23:15","Areneros y captura","vinculo","",""],
+      ["23:15","23:45","Lectura","mente","","lectura"],
+      ["23:45","06:45","Dormir","sueno","",""]
+    ]
+  },
+  {
+    id:"dom", nom:"Domingo", corto:"Dom", res:"Correos, tesis, cocina y planificación",
+    nota:{txt:"El día que hace posible la semana: correos de visitas, compras, tápers y el bloque profundo de tesis. Termina con tu enamorada y con 8 h de sueño para arrancar el lunes entero.", alert:false},
+    b:[
+      ["06:45","07:00","Areneros de los gatos","vinculo","",""],
+      ["07:00","07:20","Aseo y pre-entreno","cuerpo","",""],
+      ["07:20","08:00","Traslado al gym","traslado","",""],
+      ["08:00","09:30","Gym","cuerpo","","gym"],
+      ["09:30","10:10","Traslado a casa","traslado","",""],
+      ["10:10","10:50","Ducha y desayuno","cuerpo","",""],
+      ["10:50","12:50","Correos de las visitas de la semana","trabajo","Todos de una. Repartirlos en la semana te cuesta el triple por el cambio de contexto.",""],
+      ["12:50","14:00","Compras del mercado","cuerpo","",""],
+      ["14:00","14:40","Almuerzo","cuerpo","",""],
+      ["14:40","16:10","Cocina batch · tápers de la semana","cuerpo","Esto es lo que te quita de encima la decisión diaria de qué comer. Es fatiga mental disfrazada de logística.",""],
+      ["16:10","18:30","Tesis · bloque profundo","u","Cabeza descansada y sin interrupciones: aquí avanza de verdad la tesis.","tesis"],
+      ["18:30","18:50","Descompresión sin celular","mente","",""],
+      ["18:50","21:00","Tiempo con tu enamorada","vinculo","","pareja"],
+      ["21:00","21:40","Cena","cuerpo","",""],
+      ["21:40","22:00","Areneros y planificación de la semana","mente","Me pasas la programación de tiendas y tus pendientes de la U; yo reacomodo el horario.",""],
+      ["22:00","22:45","Lectura","mente","","lectura"],
+      ["22:45","23:00","Dejar listo el lunes","cuerpo","",""],
+      ["23:00","07:00","Dormir","sueno","8 h. La noche larga que paga el lunes.",""]
+    ]
+  }
+];
+
+const METAS = [
+  {tag:"tesis",   nom:"Tesis",   meta:300, cls:"tesis"},
+  {tag:"lectura", nom:"Lectura", meta:210, cls:"lectura"},
+  {tag:"pareja",  nom:"Pareja",  meta:480, cls:"pareja"},
+  {tag:"gym",     nom:"Gym",     meta:270, cls:"gym", sesiones:3}
+];
+
+const CATS = {
+  trabajo:"Trabajo", u:"Universidad", cuerpo:"Cuerpo y comida",
+  vinculo:"Vínculos", mente:"Mente", traslado:"Traslado", sueno:"Sueño"
+};
+
+/* ---------------- utilidades de tiempo ---------------- */
+function toMin(hhmm){const p=hhmm.split(":");return (+p[0])*60+(+p[1]);}
+function fmt(m){m=((m%1440)+1440)%1440;const h=Math.floor(m/60),mm=m%60;return String(h).padStart(2,"0")+":"+String(mm).padStart(2,"0");}
+function dur(a,b){let d=toMin(b)-toMin(a);if(d<=0)d+=1440;return d;}
+function hm(m){const h=Math.floor(m/60),mm=m%60;if(h===0)return mm+" min";if(mm===0)return h+" h";return h+" h "+String(mm).padStart(2,"0");}
+
+function weekId(d){
+  const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  const day=t.getUTCDay()||7; t.setUTCDate(t.getUTCDate()+4-day);
+  const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));
+  const wk=Math.ceil((((t-y0)/86400000)+1)/7);
+  return t.getUTCFullYear()+"-W"+String(wk).padStart(2,"0");
+}
+
+/* ---------------- estado ---------------- */
+const WEEK = weekId(new Date());
+let hechos = {};           // blockKey -> true
+let pendientes = [];       // {id,txt,min,hecho}
+let db = null;             // capacidad db, si está disponible
+const LS_H = "sb.hechos."+WEEK, LS_P = "sb.pend";
+
+function loadLocal(){
+  try{ hechos = JSON.parse(localStorage.getItem(LS_H) || "{}") || {}; }catch(e){ hechos = {}; }
+  try{ pendientes = JSON.parse(localStorage.getItem(LS_P) || "[]") || []; }catch(e){ pendientes = []; }
+}
+function saveLocal(){
+  try{ localStorage.setItem(LS_H, JSON.stringify(hechos)); }catch(e){}
+  try{ localStorage.setItem(LS_P, JSON.stringify(pendientes)); }catch(e){}
+}
+function pushHechos(){
+  saveLocal();
+  if(db){ db.doc("semanas/"+WEEK).set({hechos:hechos, actualizado:new Date().toISOString()}).catch(function(){}); }
+}
+function pushPend(){
+  saveLocal();
+  if(db){ db.doc("listas/pendientes").set({items:pendientes, actualizado:new Date().toISOString()}).catch(function(){}); }
+}
+
+/* ---------------- render: medidores ---------------- */
+function renderMeters(){
+  const el=document.getElementById("meters");
+  let out="";
+  METAS.forEach(function(m){
+    let plan=0, hecho=0, sesPlan=0, sesHecho=0;
+    DIAS.forEach(function(d){
+      d.b.forEach(function(b,i){
+        if(b[5]!==m.tag) return;
+        const mins=dur(b[0],b[1]);
+        plan+=mins; sesPlan++;
+        if(hechos[d.id+"-"+i]){ hecho+=mins; sesHecho++; }
+      });
+    });
+    const pct = plan ? Math.round(hecho/plan*100) : 0;
+    const val = m.sesiones
+      ? sesHecho+" <small>de "+sesPlan+" sesiones</small>"
+      : hm(hecho)+" <small>de "+hm(plan)+"</small>";
+    out+='<div class="meter '+m.cls+'"><div class="lab">'+m.nom+'</div>'+
+         '<div class="val">'+val+'</div>'+
+         '<div class="bar"><i style="width:'+pct+'%"></i></div></div>';
+  });
+
+  // traslado + sueño: informativos, no metas
+  let tras=0, noches=[];
+  DIAS.forEach(function(d){
+    d.b.forEach(function(b){
+      if(b[3]==="traslado") tras+=dur(b[0],b[1]);
+      if(b[3]==="sueno") noches.push(dur(b[0],b[1]));
+    });
+  });
+  const prom = Math.round(noches.reduce(function(a,b){return a+b;},0)/noches.length);
+  out+='<div class="meter"><div class="lab">Traslados</div><div class="val">'+hm(tras)+' <small>por semana</small></div>'+
+       '<div class="bar"><i style="width:100%;background:var(--c-traslado)"></i></div></div>';
+  out+='<div class="meter"><div class="lab">Sueño promedio</div><div class="val">'+hm(prom)+' <small>por noche</small></div>'+
+       '<div class="bar"><i style="width:'+Math.min(100,Math.round(prom/420*100))+'%;background:var(--c-sueno)"></i></div></div>';
+  el.innerHTML=out;
+
+  document.getElementById("metersNote").textContent =
+    "Los traslados son "+hm(tras)+" a la semana. No es tiempo que puedas recuperar organizándote mejor: es tiempo que hay que planificar como cualquier otro bloque.";
+}
+
+/* ---------------- render: día ---------------- */
+let activo = 0;
+
+function renderTabs(){
+  const el=document.getElementById("tabs");
+  el.innerHTML = DIAS.map(function(d,i){
+    return '<button class="tab" role="tab" id="tab-'+d.id+'" aria-selected="'+(i===activo)+'" data-i="'+i+'">'+
+           d.corto+'<span>'+d.b[0][0]+'</span></button>';
+  }).join("");
+  el.querySelectorAll(".tab").forEach(function(t){
+    t.addEventListener("click", function(){ activo=+t.dataset.i; renderTabs(); renderDay(); });
+  });
+}
+
+function renderDay(){
+  const d=DIAS[activo];
+  let despierto=0, trab=0, tras=0, suenoMin=0;
+  d.b.forEach(function(b){
+    const m=dur(b[0],b[1]);
+    if(b[3]==="sueno"){ suenoMin=m; return; }
+    despierto+=m;
+    if(b[3]==="trabajo") trab+=m;
+    if(b[3]==="traslado") tras+=m;
+  });
+
+  let html='<div class="dayhead"><h2>'+d.nom+'</h2>'+
+    '<div class="daystat">'+d.res+'</div>'+
+    '<div class="daystat" style="margin-left:auto">Despierto <b>'+hm(despierto)+'</b> · Trabajo <b>'+hm(trab)+'</b> · Traslado <b>'+hm(tras)+'</b> · Sueño <b>'+hm(suenoMin)+'</b></div></div>';
+
+  if(d.nota) html+='<div class="daynote'+(d.nota.alert?" alert":"")+'">'+d.nota.txt+'</div>';
+
+  html+='<ul class="tl">';
+  d.b.forEach(function(b,i){
+    const key=d.id+"-"+i, done=!!hechos[key], m=dur(b[0],b[1]);
+    const marcable = b[3]!=="sueno" && b[3]!=="traslado";
+    let chip="";
+    if(b[5]) chip='<span class="chip blindado">'+b[5]+'</span>';
+    if(b[3]==="sueno" && m<390) chip='<span class="chip corta">noche corta</span>';
+    html+='<li class="blk'+(done?" checked":"")+'" data-c="'+b[3]+'">'+
+      '<div class="time">'+b[0]+'<em>'+(b[3]==="sueno"?"→ "+b[1]:b[1])+'</em></div>'+
+      '<div class="rail"></div>'+
+      '<div><div class="name">'+b[2]+chip+'</div>'+(b[4]?'<div class="why">'+b[4]+'</div>':'')+'</div>'+
+      '<div class="dur">'+hm(m)+'</div>'+
+      (marcable?'<div class="tick"><label class="done"><input type="checkbox" data-k="'+key+'"'+(done?" checked":"")+'> hecho</label></div>':'')+
+      '</li>';
+  });
+  html+='</ul>';
+
+  const pane=document.getElementById("dayPane");
+  pane.innerHTML=html;
+  pane.querySelectorAll('input[type="checkbox"][data-k]').forEach(function(c){
+    c.addEventListener("change", function(){
+      if(c.checked) hechos[c.dataset.k]=true; else delete hechos[c.dataset.k];
+      pushHechos(); renderDay(); renderMeters();
+    });
+  });
+}
+
+function renderLegend(){
+  document.getElementById("legend").innerHTML = Object.keys(CATS).map(function(k){
+    const bg = k==="traslado"
+      ? "repeating-linear-gradient(90deg,var(--c-traslado) 0 3px,transparent 3px 6px)"
+      : "var(--c-"+k+")";
+    return '<span class="lg"><i style="background:'+bg+'"></i>'+CATS[k]+'</span>';
+  }).join("");
+}
+
+/* ---------------- calculadora día puntual ---------------- */
+const calcIds=["cTope","cAhora","cN","cVisita","cIda","cEntre","cVuelta","cAlmuerzo"];
+
+function renderCalc(){
+  const g=function(id){return document.getElementById(id).value;};
+  const tope=toMin(g("cTope")), salida=toMin(g("cAhora"));
+  const n=Math.max(1,Math.min(6,+g("cN")||1));
+  const visita=+g("cVisita")||90, ida=+g("cIda")||0, entre=+g("cEntre")||0,
+        vuelta=+g("cVuelta")||0, alm=+g("cAlmuerzo")||0;
+  const FRICCION=10;
+
+  const necesario = ida + n*visita + (n-1)*entre + vuelta + alm + n*FRICCION;
+  let disponible = tope - salida; if(disponible<0) disponible+=1440;
+  const holgura = disponible - necesario;
+
+  let cls="ok", txt="Sí alcanza";
+  if(holgura < 0){ cls="no"; txt="No alcanza"; }
+  else if(holgura < 30){ cls="tight"; txt="Alcanza justo"; }
+
+  let out='<div class="verdict '+cls+'">'+txt+
+    ' <small>necesitas '+hm(necesario)+' · tienes '+hm(disponible)+' · '+
+    (holgura<0?"te faltan "+hm(-holgura):"holgura "+hm(holgura))+'</small></div>';
+
+  if(holgura < 0){
+    const caben = Math.floor((disponible - ida - vuelta - alm + entre) / (visita + entre + FRICCION));
+    out += '<p class="why" style="margin-top:10px;max-width:60ch">Con esta hora tope caben <b>'+
+      Math.max(0,caben)+'</b> visita'+(caben===1?"":"s")+', no '+n+'. Reprograma la diferencia: comprimir una visita a la mitad te obliga a volver y te cuesta el doble.</p>';
+  }
+
+  // cronograma hacia atrás desde la hora tope
+  let t = tope - vuelta;
+  const pasos = [];
+  for(let i=n; i>=1; i--){
+    pasos.unshift({t:fmt(t-visita)+" – "+fmt(t), n:"Visita "+i, tr:false});
+    t -= visita + FRICCION;
+    if(i>1){ pasos.unshift({t:fmt(t-entre)+" – "+fmt(t), n:"Traslado entre tiendas", tr:true}); t -= entre; }
+  }
+  if(alm>0){ pasos.splice(Math.min(2,pasos.length), 0, {t:"entre visitas", n:"Almuerzo · "+alm+" min", tr:false}); }
+  pasos.unshift({t:fmt(t-ida)+" – "+fmt(t), n:"Traslado casa → primera tienda", tr:true});
+  pasos.push({t:fmt(tope-vuelta)+" – "+fmt(tope), n:"Traslado última tienda → casa", tr:true});
+
+  out += '<ul class="plan">'+pasos.map(function(p){
+    return '<li class="'+(p.tr?"tr":"")+'"><span class="t mono">'+p.t+'</span><span>'+p.n+'</span></li>';
+  }).join("")+'</ul>';
+
+  out += '<p class="why" style="margin-top:12px;max-width:60ch"><b>Sal a las '+fmt(tope - necesario + alm)+
+    '</b> como muy tarde si aún no has salido. La última tienda tiene que ser la más cercana a tu casa: '+
+    'terminar lejos en hora punta es lo que rompe la hora tope. Retraso de más de 20 min en una visita, cancelas la siguiente.</p>';
+
+  document.getElementById("calcOut").innerHTML = out;
+}
+
+/* ---------------- pendientes ---------------- */
+function renderPend(){
+  const el=document.getElementById("pendList");
+  if(!pendientes.length){
+    el.innerHTML='<li class="empty">Nada suelto. Si algo te está dando vueltas en la cabeza, escríbelo aquí con sus minutos.</li>';
+    return;
+  }
+  const total=pendientes.filter(function(p){return !p.hecho;}).reduce(function(a,p){return a+(+p.min||0);},0);
+  el.innerHTML = pendientes.map(function(p){
+    return '<li class="'+(p.hecho?"hecho":"")+'">'+
+      '<input type="checkbox" data-id="'+p.id+'"'+(p.hecho?" checked":"")+' aria-label="Marcar hecho">'+
+      '<span class="txt">'+p.txt.replace(/[<>&]/g,function(c){return {"<":"&lt;",">":"&gt;","&":"&amp;"}[c];})+'</span>'+
+      '<span class="min">'+p.min+' min</span>'+
+      '<button class="del" data-del="'+p.id+'" aria-label="Eliminar">×</button></li>';
+  }).join("") + '<li class="empty" style="border-top:1px solid var(--line)"><b>'+hm(total)+
+    '</b> por colocar. Los huecos reales están el jueves por la tarde y el domingo.</li>';
+
+  el.querySelectorAll('input[data-id]').forEach(function(c){
+    c.addEventListener("change", function(){
+      const p=pendientes.find(function(x){return x.id===c.dataset.id;});
+      if(p){ p.hecho=c.checked; pushPend(); renderPend(); }
+    });
+  });
+  el.querySelectorAll('button[data-del]').forEach(function(b){
+    b.addEventListener("click", function(){
+      pendientes=pendientes.filter(function(x){return x.id!==b.dataset.del;});
+      pushPend(); renderPend();
+    });
+  });
+}
+
+function addPend(){
+  const t=document.getElementById("pTxt"), m=document.getElementById("pMin");
+  const txt=t.value.trim(); if(!txt) { t.focus(); return; }
+  pendientes.unshift({id:String(Date.now())+Math.random().toString(36).slice(2,6), txt:txt, min:Math.max(5,+m.value||30), hecho:false});
+  t.value=""; m.value=30; t.focus();
+  pushPend(); renderPend();
+}
+
+/* ---------------- arranque ---------------- */
+loadLocal();
+document.getElementById("weekLabel").textContent = "Semana "+WEEK;
+renderMeters(); renderTabs(); renderDay(); renderLegend(); renderCalc(); renderPend();
+
+// el día de hoy, si estamos dentro de la semana
+(function(){
+  const jsDay=new Date().getDay();           // 0 dom … 6 sáb
+  const idx = jsDay===0 ? 6 : jsDay-1;
+  if(idx>=0 && idx<7){ activo=idx; renderTabs(); renderDay(); }
+})();
+
+calcIds.forEach(function(id){
+  const el=document.getElementById(id);
+  el.addEventListener("input", renderCalc);
+  el.addEventListener("change", renderCalc);
+});
+document.getElementById("pAdd").addEventListener("click", addPend);
+document.getElementById("pTxt").addEventListener("keydown", function(e){ if(e.key==="Enter") addPend(); });
+
+// persistencia compartida, si el visor la concede
+(async function(){
+  try{
+    const cap = await window.claude.use("db");
+    if(!cap) return;
+    db = cap;
+    const st=document.getElementById("saveState");
+    st.textContent="guardado en la nube"; st.classList.add("on");
+
+    db.doc("semanas/"+WEEK).onSnapshot(function(snap){
+      if(!snap.exists) return;
+      const d=snap.data()||{};
+      if(d.hechos && typeof d.hechos==="object"){ hechos=Object.assign({},d.hechos); saveLocal(); renderDay(); renderMeters(); }
+    }, function(){ st.textContent="estado local"; st.classList.remove("on"); });
+
+    db.doc("listas/pendientes").onSnapshot(function(snap){
+      if(!snap.exists) return;
+      const d=snap.data()||{};
+      if(Array.isArray(d.items)){ pendientes=d.items.slice(); saveLocal(); renderPend(); }
+    }, function(){});
+  }catch(e){ /* sin db: el horario funciona igual con estado local */ }
+})();
+</script>
