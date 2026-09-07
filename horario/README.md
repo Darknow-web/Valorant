@@ -118,6 +118,27 @@ funcionaba. Las dos veces el error fue de método, no de código:
 
 Cualquier cambio a la edición manual se verifica con las tres condiciones a la vez.
 
+### El plegado se tragaba el bloque que estabas editando
+
+La causa que de verdad veía Carlos, encontrada leyendo **su base de datos real** en vez de
+teorizar: sus toques SÍ se guardaban (`ajustes.lun` tenía `dm:315`, y el documento iba por la
+revisión 86). Lo que fallaba era la pantalla.
+
+A las 14:22 hora de Lima, su turno completo iba de 09:26 a 14:26. Al tocar `−15` pasaba a
+terminar **14:11 — en el pasado**, y el plegado automático de «lo que ya pasó» se lo tragaba
+entero, con panel y todo. El botón había funcionado; el bloque se había ido de la pantalla.
+
+Por eso ningún control funcionaba **en el día de hoy**, que es el único que él mira. Mis
+pruebas usaban miércoles y jueves, días futuros donde no hay nada plegado.
+
+Ahora el bloque con el panel abierto **nunca se pliega**, y un bloque de hoy que ya terminó
+lleva la etiqueta «ya pasó» en vez de desaparecer.
+
+`prueba-estado-real.mjs` + `estado-real.json` congelan esa lección: se prueba con **el estado
+guardado de Carlos**, no con la semilla limpia del código. Su `cfg` acumula decenas de
+revisiones y **pisa los valores por defecto** —`Object.assign(CFG, guardado)`—, así que un
+cambio en la semilla del código nunca llega solo a su teléfono.
+
 ### El orden del pipeline ERA el bug
 
 `componerDia` aplicaba los ajustes manuales en el paso 5, pero los bloques de hábito se

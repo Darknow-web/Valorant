@@ -1766,6 +1766,14 @@ function renderDay(){
       if(bs[i][3]==="sueno") break;
       if(iniAbs(bs,i)+dur(bs[i][0],bs[i][1]) <= t) corte = k;
     }
+    // El bloque que estás editando NUNCA se pliega. Recortar un bloque del día
+    // de hoy movía su hora de fin al pasado y el plegado se lo tragaba entero,
+    // con panel y todo: el botón parecía muerto cuando en realidad había
+    // funcionado y el bloque se había ido de la pantalla.
+    if(_editorAbierto){
+      const k = orden.findIndex(function(i){ return bs[i].clave === _editorAbierto; });
+      if(k >= 0 && k <= corte) corte = k - 1;
+    }
   }
   if(corte >= 0){
     let hp=0; for(let k=0;k<=corte;k++) if(hechos[d.id+"-"+orden[k]]) hp++;
@@ -1805,6 +1813,8 @@ function renderDay(){
 
     if(b.pisa) chip += '<span class="chip corta">se corrió</span>';
     if(b.recortado) chip += '<span class="chip corta">−'+b.recortado+' min</span>';
+    if(esHoy(d) && b[3]!=="sueno" && iniAbs(bs,i)+m <= minutosAhora())
+      chip += '<span class="chip fija">ya pasó</span>';
     html += '<li class="blk'+(done?" hecho":"")+(cambio?" entra":"")+(b.pisa?" corrido":"")+
       '" data-clave="'+esc(b.clave)+'" data-c="'+b[3]+
       '" data-fijo="'+fijo+'" data-i="'+i+'">'+
