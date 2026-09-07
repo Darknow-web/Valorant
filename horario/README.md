@@ -54,24 +54,46 @@ La página se usa a una mano, en la calle, en cinco segundos. Cinco destinos:
 hoy (`esHoy()`); en cualquier otro día se ve el plan completo. `bloqueActual()` devuelve
 -1 si el día no arrancó y -2 si ya terminó.
 
-## Traslados desde casa
+## Traslados desde casa — medidos, no estimados
 
-**Casa: Las Gladiolas 125, Independencia.** Minutos puerta a puerta en scooter, peor
-escenario, +10 de margen. Son estimaciones: se corrigen con los tiempos reales medidos.
+**Casa: Las Gladiolas 125, Independencia.** Los minutos ya no son suposiciones: las 20
+direcciones reales se sacaron de `superpet.pe`, se geocodificaron con Nominatim y se
+rutearon con OSRM. Sobre el tiempo de flujo libre se aplica un factor de hora punta de
+Lima (**x2.2**) más **10 min** de margen fijo.
 
 | Conglomerado | Min | Tiendas |
 |---|---|---|
-| Norte | 15 | SP33, SP56 (Independencia) · SP44, SP15 (Los Olivos) · SP61 (Callao) |
-| Centro y oeste | 50 | SP52, SP55, SP20 |
-| Este · SJL y Santa Anita | 60 | SP25, SP54, SP66 |
-| Miraflores | 70 | SP47, SP41, SP12 |
-| Este · Ate | 75 | SP36 Puruchuco, SP69 Paracas |
-| La Molina | 85 | SP03, SP16, SP42, SP48 |
+| Norte | 27–30 | SP33, SP56 (Independencia) · SP44, SP15 (Los Olivos) |
+| Callao | 60 | SP61 Minka |
+| Centro y oeste | 58–61 | SP52 Salaverry, SP20 Dos de Mayo |
+| San Juan de Lurigancho | 55–66 | SP25, SP54 |
+| Miraflores | 65–68 | SP47, SP41, SP12, **SP55 Ejército 2** |
+| Ate y Santa Anita | 65–72 | SP36 Puruchuco, SP69 Paracas, SP66 Santa Anita |
+| La Molina | 78–90 | SP03, SP42, SP16, SP48 |
 
-`autoEntre()` rellena «casa → 1ª» y «última → casa» con el `min` del conglomerado, tras
-ordenar la ruta igual que `renderCalc()` — agrupando por zona, de modo que la última tienda
-sea la más cercana a casa. El Norte es el día barato de la semana: cinco tiendas a 15 min o
-menos. Cruzar del Norte al Sur o al Este cuesta ~55 min por salto.
+Entre tiendas: mediana **23 min** dentro del mismo grupo, **57 min** cruzando grupos.
+`ENTRE` guarda los 190 pares medidos, así que la calculadora usa el salto real de cada
+ruta, no un promedio.
+
+`ordenarRuta()` ordena de la tienda más lejana a la más cercana a casa: el último tramo,
+el que cae en hora punta, es el más corto.
+
+### Correcciones que trajo la medición
+
+- **SP69 Paracas: Av. Paracas 236, Ate** — confirmado en la ficha de la tienda.
+- **SP55 «El Ejército» está en Miraflores**, no en Magdalena como se había inferido.
+- **El Norte costaba el doble de lo estimado**: 27–30 min, no 15. Sigue siendo con
+  diferencia el día más barato, pero no es gratis.
+- **SP61 Minka: 60 min, no 30.** Son 14 km hasta el Callao.
+
+### Límites conocidos
+
+- El punto de casa es el **centroide de Independencia**: la calle exacta no está indexada
+  en OpenStreetMap. Añade unos minutos de incertidumbre propia.
+- OSRM da flujo libre; el x2.2 es un factor de tráfico, no una medición. Se recalibra con
+  los tiempos reales que Carlos vaya midiendo.
+- Los datos crudos quedan en `tiendas-direcciones.json` y `tiendas-matriz-osrm.json` para
+  poder recalcular sin volver a consultar los servicios.
 
 ## Asistente en la página (capacidades `sample` + `mcp`)
 
@@ -151,10 +173,8 @@ oficina, y los correos de visitas el domingo.
 
 ## Pendiente de incorporar
 
-- Confirmar los distritos de SP15 Mayolo, SP55 El Ejército y SP20 Dos de Mayo, inferidos
-  del nombre y marcados como tales en la página.
-- Calibrar los minutos por conglomerado con los tiempos reales que Carlos vaya midiendo:
-  hoy son estimaciones, y la calculadora lo dice.
+- Recalibrar el factor de hora punta (hoy x2.2) con los tiempos reales que Carlos mida.
+- Geocodificar la casa con precisión de calle si aparece en OpenStreetMap.
 - Capa opcional que consulte Google Maps Distance Matrix con `traffic_model=pessimistic`
   para calcular la ruta del día de visitas (requiere API key).
 
