@@ -38,6 +38,34 @@ tardío del miércoles.
 Por eso el gym quedó viernes tarde, sábado y domingo por la mañana: son las únicas
 franjas que no le quitan horas al sueño.
 
+## El itinerario se compone, no es una plantilla
+
+Hasta la v6 `DIAS` era una plantilla estática: la programación del domingo se guardaba pero
+nunca tocaba el horario, y las tareas "ubicadas" solo eran una línea de texto. `bloquesDe()`
+ahora llama a `componerDia()`, que arma cada día en capas:
+
+1. **Base** — anclas, innegociables y rutina (`DIAS`, más `tardeFutbol()` los días de
+   fútbol). Toda ancla guarda su hora original en `meta.ancla` antes de que nada se mueva.
+2. **Programación** — `bloquesProgramacion()` reemplaza el tramo genérico de trabajo
+   (`segmentoTrabajo()`) por las visitas reales: traslado medido a cada tienda, 90 min de
+   visita, 10 de llegada, y el salto real entre paradas desde `ENTRE`.
+3. **Tareas** — `CFG.tareas` se insertan tras el bloque que indicó el asistente, o en el
+   primer hueco flexible del día.
+4. **Reencadenado** — `reencadenar()` recalcula todas las horas en cadena. Cada bloque
+   lleva su duración en `b.dm` antes de mover nada, para que insertar no desalinee al resto.
+
+Cuando un ancla obliga a esperar, el hueco se hace visible como **Margen libre** y se coloca
+en casa —después del traslado de vuelta— en vez de pegado al ancla: nadie quiere esperar dos
+horas en la puerta del aula.
+
+`bs.desborde` mide lo que la carga de esta semana quita **frente al sueño base de ese día**,
+no contra un umbral fijo: las 5 h 15 del lunes son estructurales y no deben marcarse como
+problema nuevo. Si hay desborde, la vista del día lo dice y ofrece los escenarios ya
+existentes en vez de recortar por su cuenta.
+
+El resultado se memoiza en `_cache`, invalidado por `invalidar()` desde `pushCfg()` y
+`pushPend()`.
+
 ## Navegación
 
 La página se usa a una mano, en la calle, en cinco segundos. Cinco destinos:

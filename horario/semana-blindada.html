@@ -1105,11 +1105,160 @@ let CFG = {                // configuración de la semana en curso
   ajuste: null             // re-planificación activa: {dia, desde, escenario, caidos:[]}
 };
 
-/* Devuelve los bloques del día, generándolos si dependen de la
-   configuración (los días de fútbol). */
+/* ============================================================
+   COMPOSICIÓN DEL ITINERARIO
+   El horario no es una plantilla: se compone cada vez, en capas.
+     1 · base        anclas, innegociables y rutina
+     2 · programación  la foto del domingo se vuelve bloques reales,
+                       con los traslados medidos de cada tienda
+     3 · tareas      lo que Carlos agrega entra donde corresponde
+     4 · reencadenado  todo se recalcula en cadena, sin huecos ni solapes
+   Si el día resultante no cabe, se marca y se ofrecen escenarios.
+   ============================================================ */
+let _cache = {}, _sello = 0;
+function invalidar(){ _cache = {}; _sello++; }
+
 function bloquesDe(d){
-  return typeof d.b === "function" ? d.b(CFG) : d.b;
+  const k = d.id+"@"+_sello;
+  if(!_cache[k]) _cache[k] = componerDia(d);
+  return _cache[k];
 }
+
+/* Tramo del día ocupado por el trabajo: desde el traslado que lleva a la
+   primera parada hasta el traslado de vuelta a casa, ambos incluidos. */
+function segmentoTrabajo(bs){
+  let pri=-1, ult=-1;
+  bs.forEach(function(b,i){ if(b[3]==="trabajo"){ if(pri<0) pri=i; ult=i; } });
+  if(pri<0) return null;
+  let ini=pri; while(ini>0 && bs[ini-1][3]==="traslado") ini--;
+  let fin=ult; while(fin<bs.length-1 && bs[fin+1][3]==="traslado") fin++;
+  return {ini:ini, fin:fin};
+}
+
+const DUR_ACT = {capacitacion:180, "tienda-escuela":240, oficina:180};
+
+/* Convierte la programación de un día en bloques reales con los minutos
+   medidos. Devuelve null si ese día no tiene programación cargada. */
+function bloquesProgramacion(diaId, almuerzo){
+  const prog = (CFG.programacion||[]).filter(function(r){ return r.dia===diaId; });
+  if(!prog.length) return null;
+  const out=[];
+  const push=function(m,n,c,nota,meta){ out.push(["","",n,c,nota||"","",meta||{}]); out[out.length-1].dm=m; };
+
+  const visitas = prog.filter(function(r){ return r.tipo==="visita"; });
+  const tiendas = ordenarRuta([].concat.apply([], visitas.map(function(r){ return r.tiendas||[]; })));
+  const otras = prog.filter(function(r){ return r.tipo!=="visita"; });
+
+  if(tiendas.length){
+    push(minsCasa(tiendas[0]), "Traslado a "+tiendas[0], "traslado", "", {});
+    tiendas.forEach(function(cod,i){
+      const r=tiendaPorCodigo(cod);
+      push(10, "Llegada y saludo", "traslado", "", {min:6});
+      push(90, "Visita "+cod+(r?" · "+r.t[1]:""), "trabajo",
+        r?r.t[2]:"", {prio:2});
+      if(i===0 && almuerzo) push(almuerzo, "Almuerzo", "cuerpo", "", {min:25});
+      if(i<tiendas.length-1){
+        const v=minsEntre(cod,tiendas[i+1]) || T_INTRA;
+        push(v, "Traslado a "+tiendas[i+1], "traslado", "", {});
+      }
+    });
+    push(minsCasa(tiendas[tiendas.length-1]), "Traslado a casa", "traslado", "", {});
+  }
+  otras.forEach(function(r,i){
+    const nom = r.tipo==="capacitacion" ? "Capacitación"+(r.tiendas&&r.tiendas.length?" · "+r.tiendas.join(", "):"")
+              : r.tipo==="tienda-escuela" ? "Tienda escuela" : "Proyecto en oficina";
+    if(!tiendas.length && i===0) push(45, "Traslado a la primera parada", "traslado", "", {});
+    push(DUR_ACT[r.tipo]||180, nom, "trabajo", r.detalle||"", {prio:2});
+    if(!tiendas.length && i===0 && almuerzo) push(almuerzo, "Almuerzo", "cuerpo", "", {min:25});
+  });
+  if(!tiendas.length && otras.length) push(45, "Traslado a casa", "traslado", "", {});
+  return out.length ? out : null;
+}
+
+function componerDia(d){
+  const crudo = (typeof d.b === "function" ? d.b(CFG) : d.b).map(function(b){
+    const c = b.slice();
+    if(c[6] && c[6].fijo) c[6] = Object.assign({}, c[6], {ancla: toMin(c[0])});
+    return c;
+  });
+  const base = reencadenar(crudo.map(function(b){ return b.slice(); }), d).horasSueno;
+  let bs = crudo.map(function(b){ return b.slice(); });
+
+  // 2 · la programación real reemplaza el tramo de trabajo genérico
+  const seg = segmentoTrabajo(bs);
+  if(seg){
+    const alm = bs.slice(seg.ini,seg.fin+1).find(function(b){ return /Almuerzo/.test(b[2]); });
+    const nuevos = bloquesProgramacion(d.id, alm?dur(alm[0],alm[1]):0);
+    if(nuevos){
+      const dm = nuevos.map(function(b){ return b.dm; });
+      bs = bs.slice(0,seg.ini).concat(nuevos).concat(bs.slice(seg.fin+1));
+      nuevos.forEach(function(b,i){ b.dm = dm[i]; });
+    }
+  }
+
+  // 3 · las tareas colocadas entran donde corresponde
+  (CFG.tareas||[]).filter(function(t){ return t.dia===d.id; }).forEach(function(t){
+    const blk = ["","",t.txt,"trabajo","Tarea que agregaste","",{prio:2,tarea:t.id}];
+    blk.dm = Math.max(5, t.min||30);
+    let at = bs.findIndex(function(b){ return t.tras && b[2]===t.tras; });
+    if(at<0){
+      at = bs.findIndex(function(b){ return /flexible|Pendientes|Margen/.test(b[2]); });
+      if(at<0) at = bs.findIndex(function(b){ return b[3]==="mente" && /Descompresión/.test(b[2]); }) - 1;
+    }
+    if(at<0) at = bs.length-2;
+    bs.splice(at+1, 0, blk);
+  });
+
+  return reencadenar(bs, d, base);
+}
+
+/* Recalcula todas las horas en cadena desde el arranque del día,
+   respetando las anclas fijas. Marca el día si desborda el sueño. */
+function reencadenar(bs, d, base){
+  // Cada bloque lleva su propia duración antes de mover nada: así insertar
+  // un margen no desalinea al resto.
+  bs.forEach(function(b){
+    if(typeof b.dm !== "number") b.dm = (b[0] && b[1]) ? dur(b[0],b[1]) : 0;
+  });
+  const arranque = toMin(bs[0][0]);
+  let t = arranque, i = 0;
+  while(i < bs.length){
+    const b = bs[i], m = b[6] || {};
+    if(b[3] === "sueno") break;
+    if(m.fijo && m.ancla != null){
+      let ini = m.ancla; if(ini < arranque) ini += 1440;
+      if(t < ini - 9){
+        // El hueco va lo más temprano posible —en casa, después del
+        // trabajo— y no pegado al ancla: nadie quiere esperar dos horas
+        // sentado en la puerta del aula.
+        let at = i;
+        while(at > 0 && !/trabajo/.test(bs[at-1][3]) && !/a casa/i.test(bs[at-1][2])) at--;
+        const hueco = ["","","Margen libre","mente",
+          "Se abrió al reacomodar el día. Úsalo, adelanta algo o descansa.","",{prio:3}];
+        hueco.dm = ini - t;
+        bs.splice(at, 0, hueco);
+        // recalcular desde el hueco: los bloques posteriores se corren
+        i = at; t = toMin(bs[at][0] || fmt(t));
+        if(at > 0) t = toMin(bs[at-1][1]);
+        continue;
+      }
+      if(t < ini) t = ini;
+    }
+    b[0] = fmt(t); b[1] = fmt(t + b.dm); t += b.dm; i++;
+  }
+  const dm = bs[bs.length-1];
+  if(dm && dm[3] === "sueno"){
+    let h = toMin(dm[1]) - t; if(h <= 0) h += 1440;
+    dm[0] = fmt(t);
+    bs.horasSueno = h;
+    // Solo cuenta como desborde lo que la carga de ESTA semana te quita
+    // frente al plan base: las 5 h 15 del lunes son estructurales.
+    const ref = (typeof base === "number") ? base : h;
+    bs.desborde = h < ref ? ref - h : 0;
+  }
+  return bs;
+}
+
 let db = null;             // capacidad db, si está disponible
 const LS_H = "sb.hechos."+WEEK, LS_P = "sb.pend", LS_C = "sb.cfg."+WEEK;
 
@@ -1127,7 +1276,7 @@ function saveLocal(){
   try{ localStorage.setItem(LS_C, JSON.stringify(CFG)); }catch(e){}
 }
 function pushCfg(){
-  saveLocal();
+  invalidar(); saveLocal();
   if(db){ db.doc("semanas/"+WEEK).update({cfg:CFG, actualizado:new Date().toISOString()})
     .catch(function(){ db.doc("semanas/"+WEEK).set({hechos:hechos, cfg:CFG}).catch(function(){}); }); }
   renderDay(); renderMeters(); renderFutbol(); renderAhora();
@@ -1137,7 +1286,7 @@ function pushHechos(){
   if(db){ db.doc("semanas/"+WEEK).set({hechos:hechos, actualizado:new Date().toISOString()}).catch(function(){}); }
 }
 function pushPend(){
-  saveLocal();
+  invalidar(); saveLocal();
   if(db){ db.doc("listas/pendientes").set({items:pendientes, actualizado:new Date().toISOString()}).catch(function(){}); }
 }
 
@@ -1213,6 +1362,14 @@ function renderDay(){
     '<div class="daystat" style="margin-left:auto">Despierto <b>'+hm(despierto)+'</b> · Trabajo <b>'+hm(trab)+'</b> · Traslado <b>'+hm(tras)+'</b> · Sueño <b>'+hm(suenoMin)+'</b></div></div>';
 
   if(d.nota) html+='<div class="daynote'+(d.nota.alert?" alert":"")+'">'+d.nota.txt+'</div>';
+
+  // El día compuesto no cabe: se ofrecen escenarios, no se recorta solo
+  const bsComp = bloquesDe(d);
+  if(bsComp.desborde){
+    html += '<div class="daynote alert">Con lo que tienes programado, este día te deja '+
+      hm(bsComp.horasSueno)+' de sueño. Faltan <b>'+hm(bsComp.desborde)+
+      '</b> para tus 7 h. <button class="lnk" id="verEsc">Ver opciones</button></div>';
+  }
 
   // Ajuste activo: el día se re-dibuja desde la hora reportada
   const aj = (CFG.ajuste && CFG.ajuste.dia===d.id) ? CFG.ajuste : null;
@@ -1294,6 +1451,18 @@ function renderDay(){
     const abrir=function(){ const w=c.querySelector(".why"); if(w) w.hidden=!w.hidden; c.classList.toggle("abierto"); };
     c.addEventListener("click", function(e){ if(e.target.tagName!=="INPUT") abrir(); });
     c.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); abrir(); } });
+  });
+  const ve=document.getElementById("verEsc");
+  if(ve) ve.addEventListener("click", function(){
+    const body=document.getElementById("rBody");
+    body.hidden=false;
+    document.getElementById("rToggle").textContent="Cerrar";
+    rModo="donde"; renderRetrasoInputs();
+    const seg=segmentoTrabajo(bloquesDe(DIAS[activo]));
+    const sel=document.getElementById("rBloque");
+    if(sel && seg) sel.value=String(seg.ini);
+    renderRetrasoOut();
+    body.scrollIntoView({behavior:"smooth", block:"start"});
   });
   const vp=document.getElementById("verPasado");
   if(vp) vp.addEventListener("click", function(){ verPasado=true; renderDay(); });
@@ -1898,8 +2067,8 @@ function renderConfirmacion(prop){
   document.getElementById("confOk").addEventListener("click", function(){
     CFG.programacion = filas.filter(Boolean);
     pushCfg();
-    out.innerHTML='<p class="ok">Programación guardada: '+CFG.programacion.length+
-      ' actividades. Ya la uso para ubicar tus tareas y sugerir rutas.</p>';
+    out.innerHTML='<p class="ok">Aplicada: '+CFG.programacion.length+
+      ' actividades. Tu semana ya está rearmada con tus visitas reales y los traslados medidos.</p>';
   });
 }
 
@@ -1926,10 +2095,18 @@ async function ubicarTarea(){
       (r.cabe===false?'':'<div class="addrow" style="margin-top:10px"><button class="btn" id="tOk">Guardar en pendientes</button></div>');
     const ok=document.getElementById("tOk");
     if(ok) ok.addEventListener("click", function(){
-      pendientes.unshift({id:String(Date.now()), txt:(r.titulo||txt)+" — "+(dias[r.dia]||"")+" "+(r.bloque||""),
-        min:Math.max(5,+r.minutos||30), hecho:false});
-      pushPend(); renderPend(); inp.value="";
-      out.innerHTML='<p class="ok">Guardada en tus pendientes.</p>';
+      const id=String(Date.now());
+      CFG.tareas = (CFG.tareas||[]).concat([{
+        id:id, txt:(r.titulo||txt), min:Math.max(5,+r.minutos||30),
+        dia:r.dia, tras:r.bloque||null
+      }]);
+      pushCfg(); renderPend(); inp.value="";
+      out.innerHTML='<p class="ok">Metida en tu '+(dias[r.dia]||r.dia)+
+        '. <button class="lnk" id="tUndo">Deshacer</button></p>';
+      document.getElementById("tUndo").addEventListener("click", function(){
+        CFG.tareas = CFG.tareas.filter(function(x){ return x.id!==id; });
+        pushCfg(); out.innerHTML='<p class="why">Deshecho: la tarea no entró al horario.</p>';
+      });
     });
   }catch(e){ out.innerHTML='<p class="eaviso">'+copyErr(e)+'</p>'; }
 }
