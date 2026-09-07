@@ -21,6 +21,6 @@ const i = html.indexOf("\n<div class=\"wrap\">");
 
 writeFileSync("semana-blindada.html",
   html.slice(0, i) + "\n<style>\n" + css.trim() + "\n</style>\n" +
-  html.slice(i) + "\n<script>\n" + js + "\n</script>\n");
+  html.slice(i) + "\n<script>\n\"use strict\";\n" + js + "\n</script>\n");
 
 console.log("semana-blindada.html ·", readFileSync("semana-blindada.html","utf8").length, "bytes");

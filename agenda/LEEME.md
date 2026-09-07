@@ -60,18 +60,40 @@ pruebas/             motor.test.mjs (Node) · vista.test.mjs (Playwright)
 datos/               lo medido: direcciones, matriz OSRM cruda, horarios de tienda
 ```
 
+## La causa raíz de toda la saga
+
+Siete reportes del mismo síntoma, en dos apps, y la explicación final cubre todos — incluido
+el dato más raro, 40 escrituras seguidas con el valor clavado en 315.
+
+El contrato de la capacidad `db` dice: *«Delivered snapshots and their `data()` are frozen…
+clone a body before editing it».* `migrar()` hacía `Object.assign(estadoVacio(), snapshot)`,
+que copia solo el primer nivel: `estado.ajustes`, `estado.hechos` y `estado.real` quedaban
+como **referencias a objetos congelados del servidor**. Y el HTML empaquetado corría en modo
+no estricto, donde escribir sobre un objeto congelado **falla en silencio**.
+
+El ciclo exacto: tocas `−15` → la asignación no hace nada → `rev` sube (es un campo del
+objeto nuevo, sí escribible) → se guarda el mismo valor → el eco lo confirma.
+
+Por qué nunca apareció en local: en `file://` no hay `db`, y la `db` simulada devolvía
+copias editables. Faltaba la **quinta condición** de prueba: snapshots congelados.
+
+La corrección son cuatro líneas: `migrar()` clona en profundidad, `guardar()` reemplaza
+cualquier contenedor congelado antes de mutar, el empaquetado emite `"use strict"` para que
+lo que falle **lance** en vez de callar, y la `db` de prueba entrega snapshots congelados.
+
 ## Cómo se prueba
 
 **Motor, en Node:** `node pruebas/motor.test.mjs` — 18 casos, incluido el que originó todo
 (con 5 h 30 de retraso reportado la clase del lunes sigue en 19:30–22:40 y sale el conflicto).
 
-**Interfaz, con Playwright:** `node pruebas/vista.test.mjs` — 15 casos con las **cuatro
-condiciones** que faltaron durante cinco rondas y sin las cuales la prueba no vale:
+**Interfaz, con Playwright:** `node pruebas/vista.test.mjs` — 15 casos con las **cinco
+condiciones** que faltaron durante siete rondas y sin las cuales la prueba no vale:
 
 1. **Toques reales**, no `evaluate`.
 2. **`db` simulada**, con eco del documento anterior después de cada escritura.
 3. **Pantalla de celular**, 390×664.
 4. **El día de hoy**, que es el único que Carlos mira.
+5. **Snapshots congelados en profundidad**, como los entrega la `db` real.
 
 Un bug que apareció solo gracias a eso: al tocar `−15`, el panel se redibuja, el botón queda
 huérfano del DOM, `closest(".ed")` deja de encontrar el panel y el clic llega al bloque, que

@@ -39,10 +39,19 @@ export function estadoVacio(semana){
 }
 
 /* Migración explícita: cada versión sabe subir desde la anterior. */
+/* CLONAR ES OBLIGATORIO, no una cortesía. Los snapshots de la db vienen
+   congelados en profundidad —el contrato dice "clone a body before editing
+   it"— y Object.assign solo copia el primer nivel: `ajustes`, `hechos` y
+   `real` quedaban como referencias a objetos congelados. Escribir sobre
+   ellos fallaba EN SILENCIO, `rev` subía igual y se guardaba el mismo
+   valor. Esa fue la causa raíz de toda la saga de "los botones no hacen
+   nada", en las dos apps. */
+export function clonar(o){ return o == null ? o : JSON.parse(JSON.stringify(o)); }
+
 export function migrar(guardado, semana){
   const base = estadoVacio(semana);
   if(!guardado || typeof guardado !== "object") return base;
-  const e = Object.assign(base, guardado);
+  const e = Object.assign(base, clonar(guardado));
   e.esquema = ESQUEMA;
   e.semana = semana || e.semana;
   // Restos de la versión anterior que ya no significan nada.
@@ -124,6 +133,12 @@ export function crearAlmacen(opciones){
     /* Aplica un cambio y lo persiste. `fn` recibe el estado y lo muta;
        devolver algo no hace falta. */
     guardar(fn, campos){
+      // Cinturón y tirantes: si algo congelado se coló, se reemplaza por una
+      // copia ANTES de mutar. Con "use strict" además lanzaría, no callaría.
+      Object.keys(estado).forEach(k => {
+        const v = estado[k];
+        if(v && typeof v === "object" && Object.isFrozen(v)) estado[k] = clonar(v);
+      });
       fn(estado);
       estado.rev = (estado.rev || 0) + 1;
       local.guardar(estado);

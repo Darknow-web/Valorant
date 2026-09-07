@@ -4,7 +4,7 @@
 
 import { construirDia, construirSemana, contadores, aMin, aHora, hm,
          ventanaTienda, ordenarRuta } from "../fuente/motor.js";
-import { estadoVacio } from "../fuente/estado.js";
+import { estadoVacio, migrar } from "../fuente/estado.js";
 import { SEMANA } from "../fuente/semana.js";
 
 let ok = 0, mal = 0;
@@ -206,6 +206,19 @@ t("construir un día no muta el estado", () => {
   const antes = JSON.stringify(e);
   construirSemana(e);
   eq(JSON.stringify(e), antes, "el motor mutó el estado");
+});
+
+t("LA CAUSA RAÍZ · adoptar un snapshot congelado y luego ajustar un bloque funciona", () => {
+  const congela = o => { if(o && typeof o === "object"){
+    Object.values(o).forEach(congela); Object.freeze(o); } return o; };
+  const snap = congela(JSON.parse(JSON.stringify(semanaReal())));
+  const e = migrar(snap, "2026-W37");
+  yes(!Object.isFrozen(e.ajustes), "estado.ajustes sigue siendo el objeto congelado del servidor");
+  const r0 = construirDia(e, "lun");
+  const b = r0.bloques.find(x => x.habito === "takary");
+  e.ajustes[b.id] = {min: 45};                       // lo que hace el botón
+  eq(construirDia(e, "lun").bloques.find(x => x.id === b.id).dur, 45,
+     "el ajuste se perdió en silencio");
 });
 
 console.log("\nLA SEMANA REAL\n");

@@ -1,9 +1,10 @@
-/* Prueba de interfaz con las CUATRO condiciones que me faltaban y que
-   dejaron pasar cinco rondas de bugs:
+/* Prueba de interfaz con las CINCO condiciones que me faltaban y que
+   dejaron pasar siete rondas de bugs:
      1 · toques reales, no evaluate
      2 · db simulada, con eco del documento anterior
      3 · pantalla de celular
      4 · el día de HOY, que es el único que Carlos mira
+     5 · snapshots CONGELADOS en profundidad, como los entrega la db real
 */
 import { chromium } from "playwright";
 
@@ -26,8 +27,12 @@ p.on("console", m => { const x = m.text();
 await p.addInitScript(() => {
   const docs = {}, subs = {};
   const cl = o => JSON.parse(JSON.stringify(o));
+  // QUINTA CONDICIÓN. La db real entrega los datos congelados en
+  // profundidad. Sin esto, la causa raíz de toda la saga era invisible.
+  const congela = o => { if(o && typeof o === "object"){
+    Object.values(o).forEach(congela); Object.freeze(o); } return o; };
   const emit = (path, d) => (subs[path]||[]).forEach(f => f({exists:!!d,
-    data:()=>cl(d||{}), metadata:{fromCache:false, hasPendingWrites:false}}));
+    data:()=>congela(cl(d||{})), metadata:{fromCache:false, hasPendingWrites:false}}));
   const ref = path => ({
     update(c){ return new Promise((res,rej)=>setTimeout(()=>{
       if(!docs[path]) return rej({code:"invalid_argument",message:"no existe"});
