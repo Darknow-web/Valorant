@@ -1314,12 +1314,24 @@ function componerDia(d){
     bs.splice(at+1, 0, blk);
   });
 
-  // 4 · cada bloque recibe una clave estable. NO basta el nombre: dentro de un
+  // 4 · los hábitos: enganchados a su señal, flotantes como bloque agrupado
+  bloquesHabitos(bs, d.id);
+
+  // 5 · cada bloque recibe una clave estable. NO basta el nombre: dentro de un
   // mismo día se repiten "Traslado a casa", "Almuerzo" y "Llegada y saludo", y
   // un ajuste guardado solo por nombre se aplicaba a todos a la vez.
   ponerClaves(bs);
 
-  // 5 · los ajustes que Carlos hizo a mano: duración, orden y hora fija
+  // 6 · los ajustes manuales, AL FINAL y sobre el día ya completo.
+  //
+  //     Este orden es el arreglo, no un detalle. Antes los ajustes se
+  //     aplicaban aquí pero los bloques de hábito se creaban DESPUÉS, así que
+  //     "Takary · SP20", "Parada con libro" y "Tus hábitos de hoy" todavía no
+  //     existían y su ajuste se descartaba en silencio. Como el primer bloque
+  //     tocable del lunes es justamente el Takary, lo primero que Carlos
+  //     intentaba era un botón muerto. Y `mover` se calculaba contra este
+  //     array corto mientras el botón lo calculaba contra el array final:
+  //     un toque de "↑ antes" saltaba dos filas.
   const aj = (CFG.ajustes && CFG.ajustes[d.id]) || {};
   bs.forEach(function(b){
     const a = aj[b.clave]; if(!a) return;
@@ -1335,10 +1347,6 @@ function componerDia(d){
     const j = Math.max(1, Math.min(bs.length-2, i + mv));
     bs.splice(j, 0, bs.splice(i,1)[0]);
   });
-
-  // 6 · los hábitos: enganchados a su señal, flotantes como bloque agrupado
-  bloquesHabitos(bs, d.id);
-  ponerClaves(bs);
 
   // 7 · lo que Carlos soltó a propósito hoy
   const soltados = (CFG.soltados && CFG.soltados[d.id]) || [];
@@ -1356,7 +1364,11 @@ function componerDia(d){
   // hábitos baja a su piso — que es justo lo que el piso existe para hacer:
   // mantener viva la racha el día que no hay tiempo. Nunca al revés.
   const hb = bs.find(function(x){ return (x[6]||{}).habitos; });
-  if(hb && bs.horasSueno < 360){
+  // Si Carlos le puso la duración a mano, manda él: subirlo es decidir dormir
+  // menos, y el aviso de sueño corto ya se lo dice. La regla del piso está
+  // para cuando NO ha decidido nada, no para pelearle el botón.
+  const hbManual = hb && aj[hb.clave] && aj[hb.clave].dm;
+  if(hb && !hbManual && bs.horasSueno < 360){
     const piso = (hb[6].min != null) ? hb[6].min : 0;
     if(hb.dm > piso){
       hb.dm = piso;
@@ -1893,6 +1905,7 @@ function ajusta(diaId, nombre, cambio){
     if(cambio[k] == null) delete a[k]; else a[k] = cambio[k];
   });
   if(!Object.keys(a).length) delete CFG.ajustes[diaId][nombre];
+  if(!Object.keys(CFG.ajustes[diaId]).length) delete CFG.ajustes[diaId];
   pushCfg();
 }
 

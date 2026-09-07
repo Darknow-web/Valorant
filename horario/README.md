@@ -118,6 +118,23 @@ funcionaba. Las dos veces el error fue de método, no de código:
 
 Cualquier cambio a la edición manual se verifica con las tres condiciones a la vez.
 
+### El orden del pipeline ERA el bug
+
+`componerDia` aplicaba los ajustes manuales en el paso 5, pero los bloques de hábito se
+creaban en el paso 6. Cuando los ajustes se aplicaban, `Takary · SP20`, `Parada con libro` y
+`Tus hábitos de hoy` **todavía no existían** en el array, así que `aj[b.clave]` no encontraba
+nada y el ajuste se descartaba en silencio. Peor: el primer bloque tocable del lunes —la
+pantalla en la que Carlos aterriza— es justamente el Takary, así que lo primero que intentaba
+era un botón muerto. `Hoy no lo hago` sí funcionaba, porque el filtro de soltados corría en el
+paso 7, después de crear los hábitos; esa asimetría era la prueba.
+
+Los ajustes ahora se aplican **al final, sobre el día ya completo**. Eso arregla también
+`mover`: el botón calculaba el índice y el tope sobre el array final y el motor sobre el
+array corto, así que un toque de «↑ antes» saltaba dos filas.
+
+Y si Carlos le pone la duración a mano al bloque de hábitos, **manda él**: la regla del piso
+no se la pelea, porque subirlo es decidir dormir menos y el aviso ya se lo dice.
+
 ### El ancla visual
 
 `renderDay()` mide dónde estaba el bloque que se está editando, redibuja, y devuelve el
