@@ -26,7 +26,30 @@ y cae a `localStorage` cuando esa capacidad no está disponible.
 | Pareja | 8 h | 8 h 00 (sáb 5 h 50 · dom 2 h 10) |
 | Gym | 3 sesiones | 3 (vie tarde · sáb AM · dom AM) |
 
-Traslados: 17 h 25 por semana. Sueño promedio: 6 h 54 por noche.
+Traslados: 17 h 25 por semana. Sueño promedio: 6 h 53 por noche.
+
+## Semana del 7 al 12 de setiembre — cargada
+
+| Día | Programación | Sueño |
+|---|---|---|
+| Lun 7 | SP20 Dos de Mayo · turno completo (platino) | 5 h 13 (estructural) |
+| Mar 8 | U 07:30–12:40 · capacitación 14:05 · SP33 Plaza Norte | 7 h 05 |
+| Mié 9 | SP16 La Planicie · capacitación 14:00 · cine en Royal 20:20 | 6 h 50 |
+| Jue 10 | SP54 Mall Aventura SJL · capacitación 14:00 · fútbol | 6 h 50 |
+| Vie 11 | Tienda escuela todo el día · gym · **partido en Breña 22:00–00:00** | 7 h 00 |
+| Sáb 12 | SP69 Paracas · media jornada de 3 h | 8 h 15 |
+| Dom 13 | Correos, reportería, cocina, tesis | 7 h 00 |
+
+Tres hallazgos de esta carga, todos reales y ninguno maquillado:
+
+- **El martes no llega a las 14:00.** Clase hasta 12:40 en Los Olivos y capacitación al
+  otro lado de Lima: 14:05 es el mejor caso, y solo sacrificando la siesta. La visita a
+  SP33 va a 90 min, el mínimo, porque a 120 no cabe antes del partido.
+- **El partido de Breña se come el sábado por la mañana.** Con el partido de 22:00 a
+  00:00 se acuesta 01:00; el gym del sábado se cae y el día arranca 08:00. Las dos horas
+  de fútbol cuentan como la tercera sesión de la semana.
+- **El cine del miércoles no cuesta nada** porque Royal Plaza está en Independencia
+  (15 min) y la reunión de lanzamiento se toma desde ahí.
 
 ## Restricción estructural conocida
 
@@ -195,9 +218,24 @@ a ~25 min dentro del mismo grupo, así que la calculadora avisa cuando la ruta l
 La agrupación y los minutos de cada conglomerado están en la tabla **Traslados desde
 casa** de arriba: es la misma estructura `GRUPOS` que usa la página.
 
-Tipos de día detectados en el plan de banca: visita a tienda (90 min), capacitación
-(180 min, no se acorta), tienda escuela (turno mañana o tarde), MMEE / proyecto en
+Tipos de día detectados en el plan de banca: visita a tienda (**120 min**, el peor
+escenario de "1:30 a 2:00"), `turno-completo` para las platino (330 min), capacitación
+(150 min: el cuadro dice 14:00–16:30), tienda escuela (330 min), MMEE / proyecto en
 oficina, y los correos de visitas el domingo.
+
+**El orden de las filas es el orden real del día.** El generador ya no pone siempre las
+visitas primero: si el cuadro dice que la capacitación va antes que la tienda, va antes.
+Y **no hay hora de entrada fija**: la única hora inamovible es la que trae `horaFija`
+(hoy solo la capacitación). Carlos puede entrar a una tienda un poco más tarde; lo que
+importa es que la visita ocurra.
+
+## Seguimiento de disciplina
+
+Marcar un bloque ya no guarda un `true`: guarda `{t, plan}` — la hora **real** de cierre
+y la planificada. `desvio()` compara las dos y `disciplina()` resume el día: cuántos
+bloques se cerraron a tiempo y cuál fue el desvío medio. Si el desvío medio pasa de
+25 min, la página lo dice con todas sus letras: **el horario está mal calculado, no es
+falta de ganas**. Ese dato es el que permite corregir las duraciones con hechos.
 
 ## Pendiente de incorporar
 

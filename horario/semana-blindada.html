@@ -242,6 +242,10 @@ label.done input{accent-color:var(--accent); width:15px; height:15px; cursor:poi
 .etop .tras{color:var(--warn)}
 .chip.rec{color:var(--warn)}
 .chip.cai{color:var(--bad)}
+.dayhead h2 .fecha{font-size:12px;font-weight:500;color:var(--ink-3)}
+.chip.real{color:var(--good);font-variant-numeric:tabular-nums}
+.discip{margin:8px 0;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--line);font-size:12px;color:var(--ink-2)}
+.discip b{color:var(--ink)}
 .blk.est-caido{opacity:.5}
 .blk.est-caido .name{text-decoration:line-through}
 .blk.est-pasado{opacity:.42}
@@ -880,7 +884,7 @@ const DIAS = [
   },
   {
     id:"mar", nom:"Martes", corto:"Mar", res:"Clase de mañana + fútbol",
-    nota:{txt:"El día más pesado. La jornada laboral va corta a propósito y la siesta de la tarde no es opcional: dormiste 5 h 15.", alert:false},
+    nota:{txt:"El día imposible de la semana: clase hasta 12:40 y capacitación a las 14:00 al otro lado de Lima. Llegas cerca de 14:05 en el mejor caso — avisa que entras justo. La siesta se cayó: hoy no cabe.", alert:true},
     b: function(cfg){
       return [
         ["05:30","05:45","Areneros de los gatos","vinculo","","",{min:12}],
@@ -888,11 +892,10 @@ const DIAS = [
         ["06:05","06:15","Desayuno rápido","cuerpo","","",{min:10}],
         ["06:15","07:20","Traslado a la universidad","traslado","55 min reales + 10 de margen. Sales 6:15, no 6:30.","",{fijo:true}],
         ["07:30","12:40","Clase presencial","u","","",{fijo:true}],
-        ["12:40","13:15","Almuerzo cerca de la U","cuerpo","No vuelvas a casa: son 55 min que no tienes","",{min:25}],
-        ["13:15","13:40","Siesta de recuperación","cuerpo","25 minutos, no más. Es lo que sostiene el resto del día.","",{min:20}]
+        ["12:40","13:05","Almuerzo cerca de la U","cuerpo","25 min y sales. La capacitación es a las 14:00 y no la alcanzas de otra forma.","",{min:20}]
       ].concat(tardeFutbol(cfg,"mar",{
-        trasladoTrabajo:["13:40","14:45","Traslado a oficina o tienda"],
-        trabajoIni:"14:45", trabajoMax:"19:00",
+        trasladoTrabajo:["13:05","14:05","Traslado a oficina o tienda"],
+        trabajoIni:"14:05", trabajoMax:"19:00",
         trabajoNom:"Trabajo · jornada corta",
         trabajoNota:"Hoy no se recupera lo que falta: se reparte al resto de la semana.",
         vueltaCasa:45, cena:40, despiertaManana:"07:00"
@@ -901,7 +904,7 @@ const DIAS = [
   },
   {
     id:"mie", nom:"Miércoles", corto:"Mié", res:"Trabajo + reunión de grupo",
-    nota:{txt:"Arranque tardío a propósito: es tu primera noche completa de la semana. La reunión es desde casa, así que la tarde queda libre para tesis.", alert:false},
+    nota:{txt:"Cine a las 8:20 en Royal y la reunión de lanzamiento en paralelo desde ahí. La tarde en casa es corta: tesis antes de salir, no después.", alert:false},
     b:[
       ["07:00","07:15","Areneros de los gatos","vinculo","","",{min:12}],
       ["07:15","07:35","Aseo y vestirse","cuerpo","","",{min:14}],
@@ -914,13 +917,14 @@ const DIAS = [
       ["17:00","17:45","Traslado a casa","traslado","",""],
       ["17:45","18:05","Descompresión sin celular","mente","","",{min:10}],
       ["18:05","19:00","Tesis","u","","tesis"],
-      ["19:00","19:45","Cena","cuerpo","","",{min:28}],
-      ["19:45","20:00","Preparar la reunión","u","Llega con tu parte lista: acorta la reunión para todos","",{min:8}],
-      ["20:00","22:00","Reunión · Lanzamiento de producto y marca","u","","",{fijo:true}],
-      ["22:00","22:20","Areneros y captura de pendientes","vinculo","","",{min:10}],
-      ["22:20","22:55","Lectura","mente","","lectura",{min:20, prio:1}],
-      ["22:55","23:00","Dejar listo lo de mañana","cuerpo","","",{min:4, prio:3}],
-      ["23:00","06:00","Dormir","sueno","",""]
+      ["19:00","19:40","Cena","cuerpo","","",{min:28}],
+      ["19:40","19:50","Areneros y captura de pendientes","vinculo","","",{min:10}],
+      ["19:50","20:05","Traslado a Royal Plaza","traslado","Royal está en Independencia: 15 min de casa. Es lo que hace que este miércoles cierre.",""],
+      ["20:20","22:20","Cine con tus amigos","vinculo","La reunión de lanzamiento (21:00–22:00) la tomas desde aquí. No cuesta tiempo extra.","",{fijo:true}],
+      ["22:20","22:35","Salida del cine","traslado","",""],
+      ["22:35","22:50","Traslado a casa","traslado","",""],
+      ["22:50","23:10","Aseo y descompresión","cuerpo","","",{min:12}],
+      ["23:10","06:00","Dormir","sueno","",""]
     ]
   },
   {
@@ -949,7 +953,7 @@ const DIAS = [
   },
   {
     id:"vie", nom:"Viernes", corto:"Vie", res:"Gym + tu única noche libre",
-    nota:{txt:"La noche del viernes alterna entre salir con tu enamorada y un bloque profundo de tesis. Decide el lunes cuál toca, no el viernes a las 8.", alert:false},
+    nota:{txt:"Esta semana la noche libre no existe: partido en Breña de 10 a 12. Te acuestas 1:00 y el sábado arranca a las 8:00 — sin gym.", alert:true},
     b:[
       ["07:00","07:15","Areneros de los gatos","vinculo","","",{min:12}],
       ["07:15","07:35","Aseo y vestirse","cuerpo","","",{min:14}],
@@ -962,33 +966,34 @@ const DIAS = [
       ["17:00","17:40","Traslado al gym","traslado","Directo desde el trabajo, sin pasar por casa",""],
       ["17:40","19:10","Gym","cuerpo","","gym",{min:60, prio:4}],
       ["19:10","19:50","Traslado a casa","traslado","",""],
-      ["19:50","20:35","Ducha y cena","cuerpo","","",{min:30}],
-      ["20:35","22:45","Noche libre · pareja o tesis profunda","vinculo","Alterna semana a semana. Es el único bloque flexible grande que tienes.",""],
-      ["22:45","23:00","Areneros y captura","vinculo","","",{min:10}],
-      ["23:00","23:30","Lectura","mente","","lectura",{min:20, prio:1}],
-      ["23:30","06:30","Dormir","sueno","",""]
+      ["19:50","20:25","Lectura","mente","La espera antes del partido es tiempo de lectura, no de celular.","lectura",{min:20, prio:1}],
+      ["20:25","21:10","Ducha y cena","cuerpo","","",{min:30}],
+      ["21:10","21:55","Ordenar el cuarto","cuerpo","Esta semana la noche libre se la lleva el partido de Breña. Este es el hueco real que queda para el cuarto.","",{min:30, prio:3}],
+      ["21:20","22:00","Traslado a la cancha de Breña","traslado","",""],
+      ["22:00","00:00","Partido en Breña","cuerpo","2 horas. Esto reemplaza la sesión de gym del sábado: el sábado ya no da.","gym",{fijo:true}],
+      ["00:00","00:40","Traslado a casa","traslado","",""],
+      ["00:40","01:00","Ducha y areneros","cuerpo","","",{min:12}],
+      ["01:00","08:00","Dormir","sueno","",""]
     ]
   },
   {
     id:"sab", nom:"Sábado", corto:"Sáb", res:"Gym + media jornada + pareja",
-    nota:{txt:"El bloque grande con tu enamorada va aquí, protegido: casi 6 horas seguidas. No lo piques con pendientes de trabajo.", alert:false},
+    nota:{txt:"Sin gym: dormiste 7 h después del partido de Breña y eso vale más. El bloque con tu enamorada sigue protegido, casi 6 horas seguidas.", alert:false},
     b:[
-      ["06:30","06:45","Areneros de los gatos","vinculo","","",{min:12}],
-      ["06:45","07:05","Aseo y pre-entreno","cuerpo","","",{min:14}],
-      ["07:05","07:45","Traslado al gym","traslado","",""],
-      ["07:45","09:15","Gym","cuerpo","","gym",{min:60, prio:4}],
-      ["09:15","09:55","Traslado a casa","traslado","",""],
-      ["09:55","10:35","Ducha y desayuno","cuerpo","","",{min:25}],
-      ["10:35","11:20","Traslado al trabajo","traslado","",""],
-      ["11:20","15:00","Trabajo · media jornada","trabajo","","",{prio:2}],
-      ["15:00","15:35","Almuerzo","cuerpo","","",{min:25}],
-      ["15:35","16:20","Traslado a casa","traslado","",""],
-      ["16:20","16:40","Descompresión sin celular","mente","","",{min:10}],
+      ["08:00","08:15","Areneros de los gatos","vinculo","","",{min:12}],
+      ["08:15","08:35","Aseo y vestirse","cuerpo","","",{min:14}],
+      ["08:35","09:00","Desayuno","cuerpo","","",{min:18}],
+      ["09:00","09:45","Traslado al trabajo","traslado","",""],
+      ["09:45","12:45","Trabajo · media jornada","trabajo","","",{prio:2}],
+      ["12:45","13:20","Almuerzo","cuerpo","","",{min:25}],
+      ["13:20","14:05","Traslado a casa","traslado","",""],
+      ["14:05","14:40","Lectura","mente","","lectura",{min:20, prio:1}],
+      ["14:40","15:00","Descompresión sin celular","mente","","",{min:10}],
       ["16:40","17:10","Arreglarse","cuerpo","","",{min:18}],
       ["17:10","23:00","Salida con tu enamorada","vinculo","Sin revisar el correo del trabajo. Ese es el punto del bloque.","pareja",{fijo:true}],
       ["23:00","23:15","Areneros y captura","vinculo","","",{min:10}],
       ["23:15","23:45","Lectura","mente","","lectura",{min:20, prio:1}],
-      ["23:45","06:45","Dormir","sueno","",""]
+      ["23:45","08:00","Dormir","sueno","",""]
     ]
   },
   {
@@ -1102,7 +1107,50 @@ let pendientes = [];       // {id,txt,min,hecho}
 let CFG = {                // configuración de la semana en curso
   partidos: {},            // {mar:"21:30", jue:"20:40"} — Carlos avisa el día antes
   flex: {},                // {mar:"tesis", jue:"dormir"} — destino del bloque flexible
-  ajuste: null             // re-planificación activa: {dia, desde, escenario, caidos:[]}
+  ajuste: null,            // re-planificación activa: {dia, desde, escenario, caidos:[]}
+
+  /* Semilla de la semana del 7 al 12 de setiembre. Lo que esté guardado en
+     db o localStorage pisa esto, así que editar desde la página gana.
+     El ORDEN de las filas es el orden real del día. Solo la capacitación
+     lleva hora fija: la hora de entrada a tienda es flexible, lo que
+     importa es que la visita ocurra. */
+  programacion: [
+    {dia:"lun", tipo:"turno-completo", tiendas:["SP20"],
+     detalle:"Platino · bono 10 %, cayó 65 %. Turno completo."},
+
+    {dia:"mar", tipo:"capacitacion", horaFija:"14:00", lugar:"OFICINA",
+     detalle:"14:00–16:30"},
+    {dia:"mar", tipo:"visita", tiendas:["SP33"], min:90,
+     detalle:"Platino · bono 40 %, cayó 45 % en 7 días. Única visita de la semana a 1 h 30 y no a 2 h: es el mínimo que dijiste y el martes no da para más entre la capacitación y el partido."},
+
+    {dia:"mie", tipo:"visita", tiendas:["SP16"],
+     detalle:"Bono 0 %. La prioridad de la semana."},
+    {dia:"mie", tipo:"capacitacion", horaFija:"14:00", lugar:"OFICINA",
+     detalle:"14:00–16:30"},
+
+    {dia:"jue", tipo:"visita", tiendas:["SP54"],
+     detalle:"Bono 25 %, cayó 50 %."},
+    {dia:"jue", tipo:"capacitacion", horaFija:"14:00", lugar:"OFICINA",
+     detalle:"14:00–16:30"},
+
+    {dia:"vie", tipo:"tienda-escuela", lugar:"OFICINA",
+     detalle:"Todo el día."},
+
+    {dia:"sab", tipo:"visita", tiendas:["SP69"], min:180,
+     detalle:"Bono 35 %. Media jornada de sábado: 3 h en una sola tienda."}
+  ],
+
+  /* Lo que no es visita pero también ocupa la semana. */
+  tareas: [
+    {id:"tk-lun", txt:"Takary · SP20",          min:30, dia:"lun", tras:"Turno completo SP20 · Dos de Mayo"},
+    {id:"tk-mie", txt:"Takary · SP16",          min:30, dia:"mie", tras:"Visita SP16 · La Planicie"},
+    {id:"tk-mar", txt:"Takary · SP33",          min:30, dia:"mie", tras:"Traslado a casa"},
+    {id:"tk-jue", txt:"Takary · SP54",          min:30, dia:"jue", tras:"Visita SP54 · Mall Aventura SJL"},
+    // El jueves abre un margen de más de una hora esperando la capacitación
+    // de las 14:00: el seguimiento entra ahí y no cuesta nada.
+    {id:"seg-jue",txt:"Seguimiento de tiendas", min:40, dia:"jue", tras:"Takary · SP54"},
+    {id:"rep-dom",txt:"Reportería y correos",   min:60, dia:"dom", tras:"Correos de las visitas de la semana"}
+  ]
 };
 
 /* ============================================================
@@ -1131,48 +1179,94 @@ function segmentoTrabajo(bs){
   bs.forEach(function(b,i){ if(b[3]==="trabajo"){ if(pri<0) pri=i; ult=i; } });
   if(pri<0) return null;
   let ini=pri; while(ini>0 && bs[ini-1][3]==="traslado") ini--;
-  let fin=ult; while(fin<bs.length-1 && bs[fin+1][3]==="traslado") fin++;
+  let fin=ult, j=fin+1;
+  if(j<bs.length && /Almuerzo/.test(bs[j][2])) j++;      // el almuerzo se recalcula dentro
+  while(j<bs.length && bs[j][3]==="traslado"){ fin=j; j++; }
   return {ini:ini, fin:fin};
 }
 
-const DUR_ACT = {capacitacion:180, "tienda-escuela":240, oficina:180};
+/* Duraciones reales, no optimistas. La capacitación es 14:00–16:30 = 150 min
+   (dato del cuadro, ya no una estimación). La visita es 120: Carlos dijo
+   "1:30 a 2:00" y la regla de la casa es planificar el peor escenario. */
+const DUR_VISITA = 120;
+const DUR_ACT = {capacitacion:150, "tienda-escuela":330, oficina:180,
+                 "turno-completo":330, visita:DUR_VISITA};
+
+/* Lugares que no son tienda, con sus minutos desde casa. */
+const LUGARES = {OFICINA:{nom:"la oficina", min:60}, CASA:{nom:"casa", min:0}};
+
+function nombreLugar(loc){
+  if(LUGARES[loc]) return LUGARES[loc].nom;
+  const r = tiendaPorCodigo(loc);
+  return loc + (r ? " · " + r.t[1] : "");
+}
+function minsDesdeCasa(loc){
+  return LUGARES[loc] ? LUGARES[loc].min : minsCasa(loc);
+}
+/* Minutos entre dos puntos del día. Entre tiendas usa el par medido; con la
+   oficina de por medio no hay matriz, así que cae al salto entre
+   conglomerados (57 min), que es el lado pesimista. */
+function minsLugar(a, b){
+  if(a === b) return 0;
+  if(a === "CASA") return minsDesdeCasa(b);
+  if(b === "CASA") return minsDesdeCasa(a);
+  return minsEntre(a, b) || T_INTER;
+}
 
 /* Convierte la programación de un día en bloques reales con los minutos
-   medidos. Devuelve null si ese día no tiene programación cargada. */
+   medidos. Las filas se recorren EN EL ORDEN EN QUE ESTÁN: el martes la
+   tienda va después de la capacitación, y eso lo decide el cuadro, no el
+   generador. Devuelve null si ese día no tiene programación cargada. */
 function bloquesProgramacion(diaId, almuerzo){
   const prog = (CFG.programacion||[]).filter(function(r){ return r.dia===diaId; });
   if(!prog.length) return null;
+
+  // Una parada por tienda; dentro de una misma fila se ordenan de la más
+  // lejana a la más cercana a casa, para que el último tramo sea el corto.
+  const paradas = [];
+  prog.forEach(function(r){
+    const esTienda = r.tipo==="visita" || r.tipo==="turno-completo";
+    if(esTienda && (r.tiendas||[]).length){
+      ordenarRuta(r.tiendas).forEach(function(cod){
+        paradas.push({loc:cod, tipo:r.tipo, dm:r.min || DUR_ACT[r.tipo] || DUR_VISITA,
+                      hora:r.horaFija||null, detalle:r.detalle||""});
+      });
+    }else if(!esTienda){
+      paradas.push({loc:r.lugar || "OFICINA", tipo:r.tipo,
+                    dm:r.min || DUR_ACT[r.tipo] || 180,
+                    hora:r.horaFija||null, detalle:r.detalle||""});
+    }
+  });
+  if(!paradas.length) return null;
+
   const out=[];
   const push=function(m,n,c,nota,meta){ out.push(["","",n,c,nota||"","",meta||{}]); out[out.length-1].dm=m; };
 
-  const visitas = prog.filter(function(r){ return r.tipo==="visita"; });
-  const tiendas = ordenarRuta([].concat.apply([], visitas.map(function(r){ return r.tiendas||[]; })));
-  const otras = prog.filter(function(r){ return r.tipo!=="visita"; });
-
-  if(tiendas.length){
-    push(minsCasa(tiendas[0]), "Traslado a "+tiendas[0], "traslado", "", {});
-    tiendas.forEach(function(cod,i){
-      const r=tiendaPorCodigo(cod);
-      push(10, "Llegada y saludo", "traslado", "", {min:6});
-      push(90, "Visita "+cod+(r?" · "+r.t[1]:""), "trabajo",
-        r?r.t[2]:"", {prio:2});
-      if(i===0 && almuerzo) push(almuerzo, "Almuerzo", "cuerpo", "", {min:25});
-      if(i<tiendas.length-1){
-        const v=minsEntre(cod,tiendas[i+1]) || T_INTRA;
-        push(v, "Traslado a "+tiendas[i+1], "traslado", "", {});
-      }
-    });
-    push(minsCasa(tiendas[tiendas.length-1]), "Traslado a casa", "traslado", "", {});
-  }
-  otras.forEach(function(r,i){
-    const nom = r.tipo==="capacitacion" ? "Capacitación"+(r.tiendas&&r.tiendas.length?" · "+r.tiendas.join(", "):"")
-              : r.tipo==="tienda-escuela" ? "Tienda escuela" : "Proyecto en oficina";
-    if(!tiendas.length && i===0) push(45, "Traslado a la primera parada", "traslado", "", {});
-    push(DUR_ACT[r.tipo]||180, nom, "trabajo", r.detalle||"", {prio:2});
-    if(!tiendas.length && i===0 && almuerzo) push(almuerzo, "Almuerzo", "cuerpo", "", {min:25});
+  let aqui = "CASA", almPuesto = !almuerzo;
+  paradas.forEach(function(p, i){
+    const v = minsLugar(aqui, p.loc);
+    if(v){
+      push(v, "Traslado a "+nombreLugar(p.loc), "traslado", "", {});
+      if(!LUGARES[p.loc]) push(10, "Llegada y saludo", "traslado", "", {min:6});
+    }
+    const r = tiendaPorCodigo(p.loc);
+    const nom = p.tipo==="capacitacion"   ? "Capacitación"
+              : p.tipo==="tienda-escuela" ? "Tienda escuela"
+              : p.tipo==="oficina"        ? "Proyecto en oficina"
+              : (p.tipo==="turno-completo" ? "Turno completo " : "Visita ")+nombreLugar(p.loc);
+    const meta = {prio:2};
+    if(p.hora){ meta.fijo = true; meta.ancla = toMin(p.hora); }
+    push(p.dm, nom, "trabajo", p.detalle || (r ? r.t[2] : ""), meta);
+    aqui = p.loc;
+    // El almuerzo se reserva antes de repartir lo que queda, no después.
+    if(!almPuesto && i < paradas.length-1){
+      push(almuerzo, "Almuerzo", "cuerpo", "", {min:25}); almPuesto = true;
+    }
   });
-  if(!tiendas.length && otras.length) push(45, "Traslado a casa", "traslado", "", {});
-  return out.length ? out : null;
+  if(!almPuesto) push(almuerzo, "Almuerzo", "cuerpo", "", {min:25});
+  const vuelta = minsLugar(aqui, "CASA");
+  if(vuelta) push(vuelta, "Traslado a casa", "traslado", "", {});
+  return out;
 }
 
 function componerDia(d){
@@ -1233,6 +1327,11 @@ function reencadenar(bs, d, base){
         // sentado en la puerta del aula.
         let at = i;
         while(at > 0 && !/trabajo/.test(bs[at-1][3]) && !/a casa/i.test(bs[at-1][2])) at--;
+        // Si la caminata hacia atrás llega al arranque del día, no hay un
+        // "en casa después del trabajo" donde poner el hueco: se espera en
+        // el sitio, justo antes del ancla. (Ponerlo en 0 reiniciaba el reloj
+        // y corría el día entero.)
+        if(at === 0) at = i;
         const hueco = ["","","Margen libre","mente",
           "Se abrió al reacomodar el día. Úsalo, adelanta algo o descansa.","",{prio:3}];
         hueco.dm = ini - t;
@@ -1357,9 +1456,14 @@ function renderDay(){
     if(b[3]==="traslado") tras+=m;
   });
 
-  let html='<div class="dayhead"><h2>'+d.nom+'</h2>'+
+  let html='<div class="dayhead"><h2>'+d.nom+' <span class="fecha">'+fechaDia(d.id)+'</span></h2>'+
     '<div class="daystat">'+d.res+'</div>'+
     '<div class="daystat" style="margin-left:auto">Despierto <b>'+hm(despierto)+'</b> · Trabajo <b>'+hm(trab)+'</b> · Traslado <b>'+hm(tras)+'</b> · Sueño <b>'+hm(suenoMin)+'</b></div></div>';
+
+  const dis = disciplina(d);
+  if(dis) html += '<div class="discip">Disciplina · <b>'+dis.puntual+'</b> de <b>'+dis.n+
+    '</b> cerrados a tiempo · desvío medio <b>'+(dis.medio>0?"+":"")+dis.medio+' min</b>'+
+    (dis.medio>25?' — el horario te está quedando corto, no es falta de ganas: avísame y recalculo las duraciones.':'')+'</div>';
 
   if(d.nota) html+='<div class="daynote'+(d.nota.alert?" alert":"")+'">'+d.nota.txt+'</div>';
 
@@ -1424,6 +1528,11 @@ function renderDay(){
     if(b[3]==="sueno" && m<390) chip='<span class="chip corta">noche corta</span>';
     if(estado==="recortado") chip+='<span class="chip rec">recortado</span>';
     if(estado==="caido")     chip+='<span class="chip cai">se cae hoy</span>';
+    const reg = hechos[key];
+    if(done && reg && reg.t){
+      const dv = desvio(reg);
+      chip += '<span class="chip real">'+reg.t+(dv===null?"":(dv>0?" · +"+dv:(dv<0?" · "+dv:" · en punto")))+'</span>';
+    }
     html+='<li class="blk'+(done?" checked":"")+(estado?" est-"+estado:"")+'" data-c="'+b[3]+'">'+
       '<div class="time">'+b[0]+'<em>'+(b[3]==="sueno"?"→ "+b[1]:b[1])+'</em></div>'+
       '<div class="rail"></div>'+
@@ -1432,7 +1541,7 @@ function renderDay(){
         '<div class="dur">'+hm(m)+(b[4]?'<span class="pista">·  por qué</span>':'')+'</div>'+
         (b[4]?'<div class="why" hidden>'+b[4]+'</div>':'')+
       '</div>'+
-      (marcable?'<label class="done"><input type="checkbox" data-k="'+key+'"'+(done?" checked":"")+
+      (marcable?'<label class="done"><input type="checkbox" data-k="'+key+'" data-fin="'+b[1]+'"'+(done?" checked":"")+
         '><span aria-hidden="true"></span><em>hecho</em></label>':'<span></span>')+
       '</li>';
   });
@@ -1471,7 +1580,10 @@ function renderDay(){
 
   pane.querySelectorAll('input[type="checkbox"][data-k]').forEach(function(c){
     c.addEventListener("change", function(){
-      if(c.checked) hechos[c.dataset.k]=true; else delete hechos[c.dataset.k];
+      // Se guarda la hora REAL, no solo el hecho: es el dato que dice si el
+      // horario se cumple o si está mal calculado.
+      if(c.checked) hechos[c.dataset.k] = {t: fmt(minutosAhora()), plan: c.dataset.fin};
+      else delete hechos[c.dataset.k];
       pushHechos(); renderDay(); renderMeters(); renderAhora();
     });
   });
@@ -1485,6 +1597,29 @@ function renderDay(){
    ============================================================ */
 let verPasado = false;
 
+/* Desvío en minutos entre la hora real de cierre y la planificada.
+   Positivo = terminaste tarde. Null si el registro es de antes de que
+   la página empezara a guardar la hora. */
+function desvio(reg){
+  if(!reg || typeof reg !== "object" || !reg.t || !reg.plan) return null;
+  let d = toMin(reg.t) - toMin(reg.plan);
+  if(d >  720) d -= 1440;
+  if(d < -720) d += 1440;
+  return d;
+}
+/* Resumen de disciplina de un día: cuántos bloques se cerraron a tiempo y
+   cuál fue el desvío medio. Solo cuenta los que tienen hora registrada. */
+function disciplina(d){
+  const bs = bloquesDe(d), ds = [];
+  bs.forEach(function(b,i){
+    const v = desvio(hechos[d.id+"-"+i]);
+    if(v !== null) ds.push(v);
+  });
+  if(!ds.length) return null;
+  const puntual = ds.filter(function(v){ return v <= 10; }).length;
+  const medio = Math.round(ds.reduce(function(a,b){ return a+b; },0)/ds.length);
+  return {n:ds.length, puntual:puntual, medio:medio};
+}
 function minutosAhora(){ const d=new Date(); return d.getHours()*60+d.getMinutes(); }
 function indiceHoy(){ const j=new Date().getDay(); return j===0?6:j-1; }
 function esHoy(d){ return DIAS[indiceHoy()].id === d.id; }
@@ -2008,10 +2143,10 @@ async function leerFoto(){
       "Esta imagen es el plan de banca semanal de Carlos, Entrenador de Marca en SuperPet (Lima). "+
       "Es una grilla con los días de la semana en columnas y su fila de actividades.\n\n"+
       "Extrae SOLO la fila de Carlos Inga. Devuelve un array JSON, un objeto por actividad:\n"+
-      '[{"dia":"lun|mar|mie|jue|vie|sab","tipo":"visita|capacitacion|tienda-escuela|oficina",'+
+      '[{"dia":"lun|mar|mie|jue|vie|sab","tipo":"visita|turno-completo|capacitacion|tienda-escuela|oficina",'+
       '"tiendas":["SP41"],"horaFija":"09:00 o null","detalle":"texto corto",'+
       '"confianza":"alta|baja"}]\n\n'+
-      "Reglas: los códigos de tienda tienen forma SPnn. Si no distingues bien un código o un día, "+
+      "Reglas: los códigos de tienda tienen forma SPnn. El ORDEN del array es el orden real del día: si la capacitación va antes que la tienda, ponla antes. Una tienda platino a la que se le dedica el día entero es tipo turno-completo. Si no distingues bien un código o un día, "+
       "ponlo igual pero con confianza \"baja\". Si una celda dice TIENDA ESCUELA es tipo "+
       "tienda-escuela sin tiendas. MMEE o proyecto es tipo oficina. "+
       "Responde solo el array JSON, sin texto alrededor.",
@@ -2142,7 +2277,11 @@ async function reporte(){
   DIAS.forEach(function(d){
     bloquesDe(d).forEach(function(b,i){
       if(b[3]==="sueno"||b[3]==="traslado") return;
-      filas.push(d.nom+" · "+b[2]+": "+(hechos[d.id+"-"+i]?"cumplido":"no marcado"));
+      const reg = hechos[d.id+"-"+i], dv = desvio(reg);
+      filas.push(d.nom+" · "+b[2]+" (plan "+b[0]+"–"+b[1]+"): "+
+        (!reg ? "no marcado"
+              : dv===null ? "cumplido"
+              : "cerrado "+reg.t+" ("+(dv>0?"+"+dv:dv)+" min)"));
     });
   });
   const cumplidos=filas.filter(function(f){return /cumplido$/.test(f);}).length;
@@ -2187,6 +2326,14 @@ function etiquetaSemana(){
   const f=function(x){ return x.getDate()+"/"+(x.getMonth()+1); };
   return f(a)+" al "+f(b);
 }
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio",
+               "agosto","setiembre","octubre","noviembre","diciembre"];
+/* La fecha exacta del día, no solo su nombre: "Lunes 7 de setiembre". */
+function fechaDia(diaId){
+  const d = lunesObjetivo();
+  d.setDate(d.getDate() + (DIA_OFFSET[diaId]||0));
+  return d.getDate()+" de "+MESES[d.getMonth()];
+}
 function fechaISO(diaId, hhmm){
   const d=lunesObjetivo();
   d.setDate(d.getDate()+(DIA_OFFSET[diaId]||0));
@@ -2205,24 +2352,30 @@ async function sincronizarCalendario(){
   CFG.calIds = CFG.calIds || {};
   pensando(out, "Sincronizando la semana del "+etiquetaSemana()+"…");
   const hechas=[], fallos=[];
-  for(let i=0;i<prog.length;i++){
-    const r=prog[i];
-    const clave = r.dia+"|"+r.tipo+"|"+(Array.isArray(r.tiendas)?r.tiendas.join("-"):"");
-    const ini = r.horaFija || (r.dia==="mar" ? "14:45" : "09:00");
-    const mins = r.tipo==="capacitacion" ? 180
-               : r.tipo==="tienda-escuela" ? 240
-               : r.tipo==="oficina" ? 180
-               : 90*Math.max(1,(r.tiendas||[]).length);
-    const finM = toMin(ini)+mins;
-    const titulo = r.tipo==="visita" ? "Visita · "+(r.tiendas||[]).join(", ")
-                 : r.tipo==="capacitacion" ? "Capacitación"+(r.tiendas&&r.tiendas.length?" · "+r.tiendas.join(", "):"")
-                 : r.tipo==="tienda-escuela" ? "Tienda escuela" : "Proyecto en oficina";
+  // Las horas salen del día ya compuesto, no de un supuesto: son las mismas
+  // que ves en la pestaña Hoy, con traslados y anclas ya resueltos.
+  const dias = [];
+  prog.forEach(function(r){ if(dias.indexOf(r.dia)<0) dias.push(r.dia); });
+  const eventos = [];
+  dias.forEach(function(id){
+    const d = DIAS.find(function(x){ return x.id===id; });
+    if(!d) return;
+    bloquesDe(d).forEach(function(b){
+      if(b[3]!=="trabajo") return;
+      if(!/^(Visita|Turno completo|Capacitación|Tienda escuela|Proyecto en oficina)/.test(b[2])) return;
+      eventos.push({dia:id, ini:b[0], fin:b[1], titulo:b[2], detalle:b[4]||""});
+    });
+  });
+  for(let i=0;i<eventos.length;i++){
+    const e=eventos[i];
+    const clave = e.dia+"|"+e.titulo;
+    const titulo = e.titulo;
     const cuerpo = {
       calendarId: CAL_ID,
       summary: titulo,
-      description: (r.detalle||"")+"\n\nCreado desde Semana Blindada. Duración estimada en peor escenario.",
-      startTime: fechaISO(r.dia, ini),
-      endTime: fechaISO(r.dia, fmt(finM)),
+      description: (e.detalle||"")+"\n\nCreado desde Semana Blindada. Duración estimada en peor escenario.",
+      startTime: fechaISO(e.dia, e.ini),
+      endTime: fechaISO(e.dia, e.fin),
       timeZone: "America/Lima",
       colorId: "10"
     };
@@ -2230,14 +2383,14 @@ async function sincronizarCalendario(){
       if(CFG.calIds[clave]){
         await mcpNs.callTool(CAL, "update_event",
           Object.assign({eventId: CFG.calIds[clave]}, cuerpo));
-        hechas.push("Actualizado: "+titulo);
+        hechas.push("Actualizado: "+titulo+" "+e.ini+"–"+e.fin);
       } else {
         const res = await mcpNs.callTool(CAL, "create_event", cuerpo);
         const id = res && res.payload && res.payload.id;
         if(id) CFG.calIds[clave]=id;
-        hechas.push("Creado: "+titulo);
+        hechas.push("Creado: "+titulo+" "+e.ini+"–"+e.fin);
       }
-    }catch(e){ fallos.push(titulo+" — "+copyErr(e)); }
+    }catch(err){ fallos.push(titulo+" — "+copyErr(err)); }
   }
   pushCfg();
   out.innerHTML = (hechas.length?'<div class="respuesta"><b>Listo</b><p>'+hechas.join("<br>")+'</p></div>':'')+
