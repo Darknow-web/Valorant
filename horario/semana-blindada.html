@@ -72,6 +72,7 @@ header{position:sticky; top:0; z-index:40; background:var(--bg);
 .savestate{padding:2px 7px; border-radius:999px; background:var(--surface-2);
   border:1px solid var(--line); font-size:10px}
 .savestate.on{background:var(--accent-soft); border-color:transparent; color:var(--accent)}
+.savestate.mal{background:var(--bad-soft); border-color:transparent; color:var(--bad)}
 .nav{display:flex; gap:2px; position:relative}
 .nv{flex:1 1 0; min-width:0; appearance:none; border:0; background:none;
   padding:9px 2px 11px; font:inherit; font-size:12.5px; font-weight:500;
@@ -1547,20 +1548,63 @@ function saveLocal(){
   try{ localStorage.setItem(LS_P, JSON.stringify(pendientes)); }catch(e){}
   try{ localStorage.setItem(LS_C, JSON.stringify(CFG)); }catch(e){}
 }
+/* SINCRONIZACIÓN.
+
+   Dos reglas que salieron de un bug real: los ajustes manuales de Carlos se
+   deshacían solos en el celular y no en las pruebas locales, porque en local
+   no hay `db` y este código ni se ejecutaba.
+
+   1 · Nunca `set` sobre el documento de la semana. `set` REEMPLAZA el
+       documento entero: `pushHechos` con `set({hechos})` borraba el campo
+       `cfg` completo —ajustes, programación, horas reales— cada vez que
+       marcaba un bloque como hecho.
+
+   2 · Toda escritura lleva un `rev` que solo sube. Un snapshot con un `rev`
+       menor que el último que escribimos es un eco viejo y se ignora: sin
+       esto, la respuesta del servidor revertía el cambio recién hecho medio
+       segundo después de tocarlo. */
+let _rev = 0;
+const DOC = function(){ return "semanas/"+WEEK; };
+
+function marcarGuardado(estado, detalle){
+  const st = document.getElementById("saveState");
+  if(!st) return;
+  st.textContent = estado;
+  st.classList.toggle("on", estado === "guardado");
+  st.classList.toggle("mal", estado === "sin guardar");
+  if(detalle) st.title = detalle;
+}
+
+/* Escribe fusionando. Si el documento todavía no existe, `update` falla y
+   entonces —y solo entonces— se crea con TODO el estado, nunca con una parte. */
+function escribir(campos){
+  if(!db) return;
+  _rev++;
+  const cuerpo = Object.assign({}, campos, {rev:_rev, actualizado:new Date().toISOString()});
+  marcarGuardado("guardando…");
+  db.doc(DOC()).update(cuerpo).then(function(){ marcarGuardado("guardado"); })
+    .catch(function(){
+      return db.doc(DOC()).set({hechos:hechos, cfg:CFG, rev:_rev,
+                                actualizado:new Date().toISOString()})
+        .then(function(){ marcarGuardado("guardado"); });
+    })
+    .catch(function(e){
+      marcarGuardado("sin guardar", (e && e.message) || "no se pudo escribir");
+    });
+}
+
 function pushCfg(){
-  invalidar(); saveLocal();
-  if(db){ db.doc("semanas/"+WEEK).update({cfg:CFG, actualizado:new Date().toISOString()})
-    .catch(function(){ db.doc("semanas/"+WEEK).set({hechos:hechos, cfg:CFG}).catch(function(){}); }); }
+  invalidar(); saveLocal(); escribir({cfg:CFG});
   renderDay(); renderMeters(); renderFutbol(); renderAhora(); renderCheckin();
   renderTira(); renderAvance();
 }
 function pushHechos(){
-  saveLocal();
-  if(db){ db.doc("semanas/"+WEEK).set({hechos:hechos, actualizado:new Date().toISOString()}).catch(function(){}); }
+  saveLocal(); escribir({hechos:hechos});
 }
 function pushPend(){
   invalidar(); saveLocal();
-  if(db){ db.doc("listas/pendientes").set({items:pendientes, actualizado:new Date().toISOString()}).catch(function(){}); }
+  if(db){ db.doc("listas/pendientes").set({items:pendientes, actualizado:new Date().toISOString()})
+    .catch(function(){}); }
 }
 
 
@@ -1627,6 +1671,12 @@ function disciplina(d){
   return {n:ds.length, puntual:puntual, medio:medio};
 }
 
+/* Para meter una clave dentro de un selector CSS: los nombres de bloque traen
+   espacios, puntos y almohadillas. */
+function cssEsc(v){
+  return (window.CSS && CSS.escape) ? CSS.escape(v)
+       : String(v).replace(/["\\]/g, "\\$&");
+}
 function esc(s){ return String(s).replace(/[<>&"]/g,function(c){
   return {"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]; }); }
 
@@ -1743,7 +1793,8 @@ function renderDay(){
 
     if(b.pisa) chip += '<span class="chip corta">se corrió</span>';
     if(b.recortado) chip += '<span class="chip corta">−'+b.recortado+' min</span>';
-    html += '<li class="blk'+(done?" hecho":"")+(cambio?" entra":"")+(b.pisa?" corrido":"")+'" data-c="'+b[3]+
+    html += '<li class="blk'+(done?" hecho":"")+(cambio?" entra":"")+(b.pisa?" corrido":"")+
+      '" data-clave="'+esc(b.clave)+'" data-c="'+b[3]+
       '" data-fijo="'+fijo+'" data-i="'+i+'">'+
       '<div class="time">'+b[0]+'<em>'+(b[3]==="sueno"?"→ "+b[1]:b[1])+'</em></div>'+
       '<div class="rail"></div>'+
@@ -1763,7 +1814,27 @@ function renderDay(){
   html += '</ul>';
 
   const pane = document.getElementById("dayPane");
+
+  // ANCLA VISUAL. Redibujar el día entero cambia la altura de la lista: al
+  // tocar un botón, el bloque se movía 236 px y el botón quedaba fuera de la
+  // pantalla del celular. El número sí cambiaba — Carlos no podía verlo. Se
+  // mide dónde estaba el bloque de referencia y se devuelve el scroll para que
+  // quede exactamente bajo el dedo.
+  const refSel = _editorAbierto
+    ? '.blk[data-clave="'+cssEsc(_editorAbierto)+'"]'
+    : null;
+  const antes = refSel ? pane.querySelector(refSel) : null;
+  const yAntes = antes ? antes.getBoundingClientRect().top : null;
+
   pane.innerHTML = html;
+
+  if(yAntes !== null){
+    const luego = pane.querySelector(refSel);
+    if(luego){
+      const salto = luego.getBoundingClientRect().top - yAntes;
+      if(Math.abs(salto) > 1) window.scrollBy(0, salto);
+    }
+  }
 
   if(esHoy(d)){
     const cur = bloqueActual(bs);
@@ -1869,6 +1940,10 @@ function enlazarDia(pane, d, bs){
       _editorAbierto = ed.hidden ? null : clave;
       c.setAttribute("aria-expanded", String(!ed.hidden));
       c.classList.toggle("abierto", !ed.hidden);
+      // En un celular el panel se abre hacia abajo y puede quedar bajo el
+      // borde de la pantalla: si no cabe, se acerca.
+      if(!ed.hidden) setTimeout(function(){
+        ed.scrollIntoView({block:"nearest", behavior:"smooth"}); }, 30);
     };
     c.addEventListener("click", function(e){
       if(e.target.closest(".ed")) return;         // dentro del panel no se cierra
@@ -3526,17 +3601,26 @@ document.getElementById("pTxt").addEventListener("keydown", function(e){
     const cap = await window.claude.use("db");
     if(!cap) return;
     db = cap;
-    const st = document.getElementById("saveState");
-    st.textContent = "guardado"; st.classList.add("on");
+    marcarGuardado("conectando…");
 
-    db.doc("semanas/"+WEEK).onSnapshot(function(snap){
+    db.doc(DOC()).onSnapshot(function(snap){
       if(!snap.exists) return;
       const d = snap.data() || {};
+      // Un eco más viejo que lo último que escribimos no puede pisar lo que
+      // Carlos acaba de tocar. Este es el arreglo del bug de los ajustes.
+      const rev = typeof d.rev === "number" ? d.rev : 0;
+      if(rev < _rev) return;
+      _rev = rev;
       if(d.hechos && typeof d.hechos==="object") hechos = Object.assign({}, d.hechos);
       if(d.cfg && typeof d.cfg==="object") CFG = Object.assign(CFG, d.cfg);
       saveLocal(); invalidar();
-      renderDay(); renderMeters(); renderFutbol(); renderAhora(); renderCheckin();
-    }, function(){ st.textContent="local"; st.classList.remove("on"); });
+      // Si hay un panel de ajuste abierto no se redibuja: nada remoto tiene
+      // derecho a cerrarle el editor en la cara mientras lo está usando.
+      if(!_editorAbierto) renderDay();
+      renderMeters(); renderFutbol(); renderAhora(); renderCheckin();
+      renderTira(); renderAvance();
+      marcarGuardado("guardado");
+    }, function(e){ marcarGuardado("sin guardar", (e && e.message) || "sin conexión"); });
 
     db.doc("listas/pendientes").onSnapshot(function(snap){
       if(!snap.exists) return;

@@ -102,6 +102,40 @@ con las cinco entradas, los días de tesis y juego, y qué hábitos quedan encen
 de mañana y decide —o no— el comodín. Ver mañana antes de dormir es lo que evita repasarlo
 en la cama.
 
+## Cómo se prueba esto (y cómo NO)
+
+Dos veces di por bueno un arreglo de la edición manual que en el celular de Carlos no
+funcionaba. Las dos veces el error fue de método, no de código:
+
+1. **Probé el motor, no la interfaz.** Llamar `ajusta()` desde la consola pasa por encima de
+   todo el camino del botón. Hay que dar **clics reales**.
+2. **Probé sin `db`.** En un `file://` la capacidad no existe y ese código ni se ejecuta —
+   pero en la app de Claude sí. `horario/prueba-edicion.mjs` inyecta una `db` falsa con
+   latencia y con un **eco del documento anterior** después de cada escritura.
+3. **Probé en pantalla de escritorio.** El bug real solo aparecía a 390×664: al tocar `+15`
+   la lista **saltaba 236 px** y el botón quedaba fuera de la pantalla. El número cambiaba;
+   Carlos no podía verlo. En una pantalla grande cabe todo y el salto no se nota.
+
+Cualquier cambio a la edición manual se verifica con las tres condiciones a la vez.
+
+### El ancla visual
+
+`renderDay()` mide dónde estaba el bloque que se está editando, redibuja, y devuelve el
+scroll para que quede **exactamente bajo el dedo**. El salto pasó de 236 px a 0,5 px.
+
+## Contrato de sincronización
+
+- **Nunca `set` sobre el documento de la semana.** `set` reemplaza el documento entero:
+  `pushHechos` lo usaba y **borraba el campo `cfg` completo** —ajustes, programación, horas
+  reales— cada vez que Carlos marcaba un bloque como hecho. Ahora todo escribe con `update`,
+  y el `set` completo queda solo como respaldo para crear el documento la primera vez.
+- **`rev` monótona.** Cada escritura sube un contador que viaja en el documento; un snapshot
+  con un `rev` menor es un eco viejo y se descarta.
+- **El snapshot no redibuja con un panel abierto**, igual que el tic del reloj.
+- El sello de la cabecera dice la verdad: *conectando…* → *guardando…* → *guardado*, o
+  *sin guardar* con el error real. Antes decía "guardado" desde el arranque aunque no
+  hubiera escrito nunca nada, y eso fue lo que me impidió ver el problema.
+
 ## Editar a mano
 
 Toca cualquier bloque y se abre su panel. Cuatro cosas, y el resto del día se recompone
