@@ -202,6 +202,10 @@ header{position:sticky; top:0; z-index:40; background:var(--bg);
   color:var(--ink-3); flex:0 0 auto; margin-right:2px}
 .edv{font-size:13px; font-weight:600; font-variant-numeric:tabular-nums; min-width:52px;
   text-align:center}
+.edv.cambia{animation:destello .5s var(--t)}
+@keyframes destello{
+  0%{background:var(--accent); color:var(--accent-ink); border-radius:6px}
+  100%{background:transparent}}
 .edb{appearance:none; background:var(--surface); border:1px solid var(--line-2);
   border-radius:8px; padding:6px 11px; font:inherit; font-size:12.5px; color:var(--ink);
   cursor:pointer; transition:transform .12s var(--t), border-color .18s var(--t)}
@@ -1628,6 +1632,7 @@ function pushPend(){
    ============================================================ */
 let activo = 0, verPasado = false;
 let _editorAbierto = null;   // clave del bloque cuyo panel está desplegado
+let _ultimoAjuste  = null;   // el último bloque tocado, para confirmarlo en pantalla
 let _horasPrevias = {};        // para animar solo lo que cambió de hora
 
 /* Minuto absoluto de arranque de un bloque, contado desde el inicio del día.
@@ -1882,6 +1887,7 @@ function editorDe(d, b, i, m){
   // hayas clavado tú: mientras tenga hora, ↑/↓ no harían nada visible.
   const anclaFija = esAncla(b);
   const abierto = _editorAbierto === b.clave;
+  const parpadea = abierto && _ultimoAjuste === b.clave;
   return '<div class="ed"'+(abierto?"":" hidden")+'>'+
     (b[4] ? '<p class="why">'+esc(b[4])+'</p>' : '')+
     (anclaFija
@@ -1890,7 +1896,7 @@ function editorDe(d, b, i, m){
       : '')+
     '<div class="edrow"><span class="edl">Dura</span>'+
       '<button class="edb" data-dm="-15" data-b="'+esc(b.clave)+'">−15</button>'+
-      '<b class="edv">'+hm(b.dm||m)+'</b>'+
+      '<b class="edv'+(parpadea?" cambia":"")+'">'+hm(b.dm||m)+'</b>'+
       '<button class="edb" data-dm="15" data-b="'+esc(b.clave)+'">+15</button>'+
     '</div>'+
     (anclaFija ? '' :
@@ -1908,6 +1914,7 @@ function editorDe(d, b, i, m){
 }
 
 function ajusta(diaId, nombre, cambio){
+  _ultimoAjuste = nombre;
   CFG.ajustes = CFG.ajustes || {};
   CFG.ajustes[diaId] = CFG.ajustes[diaId] || {};
   const a = CFG.ajustes[diaId][nombre] = CFG.ajustes[diaId][nombre] || {};
@@ -1980,17 +1987,24 @@ function enlazarDia(pane, d, bs){
   const porClave = function(k){ return bs.find(function(x){ return x.clave===k; }); };
   pane.querySelectorAll("[data-dm]").forEach(function(btn){
     btn.addEventListener("click", function(){
-      const b = porClave(btn.dataset.b); if(!b) return;
-      // b.dm es la duración que el bloque QUIERE durar; b[1]-b[0] puede venir
-      // ya recortado contra un ancla, y sumarle 15 lo encogería.
-      const base = b.dm || dur(b[0], b[1]);
-      ajusta(d.id, b.clave, {dm: Math.max(5, base + (+btn.dataset.dm))});
+      const clave = btn.dataset.b;
+      const b = porClave(clave);
+      // La referencia es SIEMPRE tu último valor guardado. Leer la duración del
+      // bloque parecía más directo, pero si por lo que sea no refleja el ajuste,
+      // cada toque recalcula el mismo número: el primero funciona y del segundo
+      // en adelante escribe lo mismo. Eso es lo que Carlos veía como "no cambia
+      // nada" mientras el contador de escrituras subía de 86 a 126.
+      const guardado = ((CFG.ajustes||{})[d.id]||{})[clave] || {};
+      const base = guardado.dm || (b && b.dm) || (b && dur(b[0], b[1])) || 30;
+      ajusta(d.id, clave, {dm: Math.max(5, base + (+btn.dataset.dm))});
     });
   });
   pane.querySelectorAll("[data-mv]").forEach(function(btn){
     btn.addEventListener("click", function(){
       const b = porClave(btn.dataset.b); if(!b) return;
-      const i = bs.indexOf(b), mv = +btn.dataset.mv;
+      const i = ordenCronologico(bs).indexOf(bs.indexOf(b)) >= 0 ? bs.indexOf(b) : -1;
+      const mv = +btn.dataset.mv;
+      if(i < 0) return;
       // El tope se calcula ANTES de guardar: si no, cada toque contra el borde
       // seguía sumando y había que dar cinco toques de vuelta para ver algo.
       const destino = Math.max(1, Math.min(bs.length-2, i + mv));

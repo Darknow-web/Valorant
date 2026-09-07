@@ -118,6 +118,25 @@ funcionaba. Las dos veces el error fue de método, no de código:
 
 Cualquier cambio a la edición manual se verifica con las tres condiciones a la vez.
 
+### El botón recalculaba siempre el mismo número
+
+Lo decisivo fue **leer la base de datos real dos veces, con seis minutos de diferencia**:
+`rev` había subido de 86 a 126 —cuarenta escrituras— y `ajustes.lun` seguía clavado en
+`dm:315`. Los toques llegaban; el valor no se movía.
+
+La causa: el botón calculaba `base = b.dm` (la duración del bloque) en vez de leer **el último
+valor guardado**. Si por lo que sea `b.dm` no reflejaba el ajuste, cada toque recalculaba
+`330 − 15 = 315`: el primero funcionaba y del segundo en adelante escribía lo mismo. El
+contador de escrituras subía y la pantalla no cambiaba nunca.
+
+Ahora la referencia es siempre `CFG.ajustes[dia][clave].dm`, con la duración del bloque solo
+como valor inicial. El resultado es monótono: 330 → 315 → 300 → 285. Y el número parpadea al
+cambiar, para que se vea que el toque registró.
+
+**La lección de método:** cuando el usuario dice que no pasa nada y las pruebas pasan, hay
+que mirar los datos que su app escribió de verdad — `read_db` sobre el artifact publicado —
+antes de formular una sola hipótesis más.
+
 ### El plegado se tragaba el bloque que estabas editando
 
 La causa que de verdad veía Carlos, encontrada leyendo **su base de datos real** en vez de
