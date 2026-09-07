@@ -178,6 +178,24 @@ header{position:sticky; top:0; z-index:40; background:var(--bg);
 .blk .name{font-size:14px; font-weight:500; line-height:1.3; color:var(--ink)}
 .blk .dur{font-size:11.5px; color:var(--ink-3); margin-top:1px}
 .blk .pista{color:var(--accent); margin-left:6px; font-weight:500}
+.ed[hidden]{display:none}
+.ed{margin-top:8px; display:flex; flex-direction:column; gap:7px;
+  background:var(--surface-2); border-radius:10px; padding:10px 11px;
+  animation:pop .22s var(--t) both}
+.ed .why{margin:0; background:none; padding:0}
+.edrow{display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.edl{font-size:10.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--ink-3); flex:0 0 auto; margin-right:2px}
+.edv{font-size:13px; font-weight:600; font-variant-numeric:tabular-nums; min-width:52px;
+  text-align:center}
+.edb{appearance:none; background:var(--surface); border:1px solid var(--line-2);
+  border-radius:8px; padding:6px 11px; font:inherit; font-size:12.5px; color:var(--ink);
+  cursor:pointer; transition:transform .12s var(--t), border-color .18s var(--t)}
+.edb:hover,.edb:focus-visible{border-color:var(--accent); outline:none}
+.edb:active{transform:scale(.96)}
+.edb.x{color:var(--bad); border-color:var(--bad)}
+.edt{flex:0 0 118px; padding:6px 9px; font-size:13px}
+.blk .cuerpo.abierto .pista{color:var(--ink-3)}
 .blk .why{margin-top:6px; font-size:12px; color:var(--ink-2); line-height:1.5;
   background:var(--surface-2); border-radius:8px; padding:8px 10px}
 .blk[data-c="trabajo"]{--c:var(--c-trabajo)} .blk[data-c="u"]{--c:var(--c-u)}
@@ -957,6 +975,7 @@ let CFG = {                // configuración de la semana en curso
   flex: {},                // {mar:"tesis", jue:"dormir"} — destino del bloque flexible
   real: {},                // {lun:{idx,hora,nombre}} lo que de verdad pasó hoy
   soltados: {},            // {lun:["Lectura"]} lo que soltaste a propósito
+  ajustes: {},             // {lun:{"Tesis":{dm,mover,fijar}}} ediciones a mano
   checkin: {},             // respuestas de las cinco entradas de la semana
 
   /* Semilla de la semana del 7 al 12 de setiembre. Lo que esté guardado en
@@ -1247,7 +1266,24 @@ function componerDia(d){
     bs.splice(at+1, 0, blk);
   });
 
-  // 4 · lo que Carlos soltó a propósito hoy
+  // 4 · los ajustes que Carlos hizo a mano: duración, orden y hora fija.
+  // Se guardan por NOMBRE de bloque, no por índice: el índice cambia cada vez
+  // que se recompone el día y dejaría los ajustes pegados al bloque de al lado.
+  const aj = (CFG.ajustes && CFG.ajustes[d.id]) || {};
+  bs.forEach(function(b){
+    const a = aj[b[2]]; if(!a) return;
+    if(a.dm)    b.dm = Math.max(5, a.dm);
+    if(a.fijar) b[6] = Object.assign({}, b[6]||{}, {fijo:true, ancla:toMin(a.fijar), manual:true});
+  });
+  Object.keys(aj).forEach(function(n){
+    const mv = aj[n].mover; if(!mv) return;
+    const i = bs.findIndex(function(b){ return b[2]===n; });
+    if(i < 0) return;
+    const j = Math.max(0, Math.min(bs.length-2, i + mv));
+    bs.splice(j, 0, bs.splice(i,1)[0]);
+  });
+
+  // 5 · lo que Carlos soltó a propósito hoy
   const soltados = (CFG.soltados && CFG.soltados[d.id]) || [];
   if(soltados.length) bs = bs.filter(function(b){ return soltados.indexOf(b[2]) < 0; });
 
@@ -1562,6 +1598,15 @@ function renderDay(){
   if(bs.desborde) html += '<div class="aviso mal">Con lo programado, este día te deja <b>'+
     hm(bs.horasSueno)+'</b> de sueño: <b>'+hm(bs.desborde)+'</b> menos de lo normal.</div>';
 
+  const sol = (CFG.soltados && CFG.soltados[d.id]) || [];
+  if(sol.length) html += '<div class="aviso">Hoy soltaste <b>'+sol.map(esc).join("</b>, <b>")+
+    '</b>. <button class="lnk" id="volverSol">Devolverlos al día</button></div>';
+
+  const ajs = Object.keys((CFG.ajustes && CFG.ajustes[d.id]) || {});
+  if(ajs.length) html += '<div class="aviso">Ajustaste a mano <b>'+ajs.length+
+    '</b> bloque'+(ajs.length>1?"s":"")+': '+ajs.map(esc).join(", ")+
+    '. <button class="lnk" id="volverAj">Volver al plan original</button></div>';
+
   const real = CFG.real && CFG.real[d.id];
   if(real) html += '<div class="aviso">Reprogramado desde las <b>'+real.hora+
     '</b>, cuando cerraste <b>'+esc(real.nombre||"un bloque")+'</b>. '+
@@ -1620,10 +1665,11 @@ function renderDay(){
       '" data-fijo="'+fijo+'" data-i="'+i+'">'+
       '<div class="time">'+b[0]+'<em>'+(b[3]==="sueno"?"→ "+b[1]:b[1])+'</em></div>'+
       '<div class="rail"></div>'+
-      '<div class="cuerpo"'+(b[4]?' data-nota="'+i+'" tabindex="0" role="button"':'')+'>'+
+      '<div class="cuerpo" data-abre="'+i+'" tabindex="0" role="button" '+
+        'aria-expanded="false" aria-label="Ajustar '+esc(b[2])+'">'+
         '<div class="name">'+esc(b[2])+chip+'</div>'+
-        '<div class="dur">'+hm(m)+(b[4]?'<span class="pista">por qué</span>':'')+'</div>'+
-        (b[4]?'<div class="why" hidden>'+esc(b[4])+'</div>':'')+
+        '<div class="dur">'+hm(m)+'<span class="pista">ajustar</span></div>'+
+        editorDe(d, b, i, m)+
       '</div>'+
       (marcable
         ? '<label class="done"><input type="checkbox" data-k="'+key+'" data-fin="'+b[1]+
@@ -1645,6 +1691,48 @@ function renderDay(){
     }
   }
   enlazarDia(pane, d, bs);
+}
+
+/* Panel de ajuste manual de un bloque. Carlos preguntó cómo mover algo o
+   recortarlo para que cuadre el resto: aquí está, sin salir del día. */
+function editorDe(d, b, i, m){
+  const aj = ((CFG.ajustes||{})[d.id]||{})[b[2]] || {};
+  const tocado = !!(aj.dm || aj.fijar || aj.mover);
+  const anclaFija = esAncla(b) && !aj.fijar;
+  return '<div class="ed" hidden>'+
+    (b[4] ? '<p class="why">'+esc(b[4])+'</p>' : '')+
+    (anclaFija
+      ? '<p class="why">Tiene hora impuesta por alguien más, así que no se mueve. '+
+        'Puedes cambiar cuánto dura o soltarlo hoy.</p>'
+      : '')+
+    '<div class="edrow"><span class="edl">Dura</span>'+
+      '<button class="edb" data-dm="-15" data-b="'+esc(b[2])+'">−15</button>'+
+      '<b class="edv">'+hm(m)+'</b>'+
+      '<button class="edb" data-dm="15" data-b="'+esc(b[2])+'">+15</button>'+
+    '</div>'+
+    (anclaFija ? '' :
+      '<div class="edrow"><span class="edl">Mover</span>'+
+        '<button class="edb" data-mv="-1" data-b="'+esc(b[2])+'">↑ antes</button>'+
+        '<button class="edb" data-mv="1" data-b="'+esc(b[2])+'">↓ después</button>'+
+      '</div>'+
+      '<div class="edrow"><span class="edl">Clavar a las</span>'+
+        '<input type="time" class="edt" data-fijar="'+esc(b[2])+'" value="'+b[0]+'">'+
+      '</div>')+
+    '<div class="edrow">'+
+      '<button class="edb x" data-soltar="'+esc(b[2])+'">Hoy no lo hago</button>'+
+      (tocado ? '<button class="edb" data-reset="'+esc(b[2])+'">Deshacer ajustes</button>' : '')+
+    '</div></div>';
+}
+
+function ajusta(diaId, nombre, cambio){
+  CFG.ajustes = CFG.ajustes || {};
+  CFG.ajustes[diaId] = CFG.ajustes[diaId] || {};
+  const a = CFG.ajustes[diaId][nombre] = CFG.ajustes[diaId][nombre] || {};
+  Object.keys(cambio).forEach(function(k){
+    if(cambio[k] == null) delete a[k]; else a[k] = cambio[k];
+  });
+  if(!Object.keys(a).length) delete CFG.ajustes[diaId][nombre];
+  pushCfg();
 }
 
 function pintarHueco(h, d){
@@ -1682,16 +1770,65 @@ function pintarConflicto(c, d){
 }
 
 function enlazarDia(pane, d, bs){
-  pane.querySelectorAll("[data-nota]").forEach(function(c){
-    const abrir=function(){ const w=c.querySelector(".why"); if(w) w.hidden=!w.hidden; };
-    c.addEventListener("click", function(e){ if(e.target.tagName!=="INPUT") abrir(); });
+  pane.querySelectorAll("[data-abre]").forEach(function(c){
+    const ed = c.querySelector(".ed");
+    const abrir = function(){
+      if(!ed) return;
+      ed.hidden = !ed.hidden;
+      c.setAttribute("aria-expanded", String(!ed.hidden));
+      c.classList.toggle("abierto", !ed.hidden);
+    };
+    c.addEventListener("click", function(e){
+      if(e.target.closest(".ed")) return;         // dentro del panel no se cierra
+      abrir();
+    });
     c.addEventListener("keydown", function(e){
+      if(e.target !== c) return;
       if(e.key==="Enter"||e.key===" "){ e.preventDefault(); abrir(); } });
+  });
+
+  const bloquePorNombre = function(n){ return bs.find(function(x){ return x[2]===n; }); };
+  pane.querySelectorAll("[data-dm]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      const b = bloquePorNombre(btn.dataset.b); if(!b) return;
+      const actual = ((CFG.ajustes||{})[d.id]||{})[b[2]] || {};
+      const base = actual.dm || dur(b[0], b[1]);
+      ajusta(d.id, b[2], {dm: Math.max(5, base + (+btn.dataset.dm))});
+    });
+  });
+  pane.querySelectorAll("[data-mv]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      const actual = ((CFG.ajustes||{})[d.id]||{})[btn.dataset.b] || {};
+      ajusta(d.id, btn.dataset.b, {mover: (actual.mover||0) + (+btn.dataset.mv)});
+    });
+  });
+  pane.querySelectorAll("[data-fijar]").forEach(function(inp){
+    inp.addEventListener("change", function(){
+      ajusta(d.id, inp.dataset.fijar, {fijar: inp.value || null});
+    });
+  });
+  pane.querySelectorAll("[data-reset]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      ajusta(d.id, btn.dataset.reset, {dm:null, mover:null, fijar:null});
+    });
+  });
+  pane.querySelectorAll("[data-soltar]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      CFG.soltados = CFG.soltados || {};
+      CFG.soltados[d.id] = (CFG.soltados[d.id]||[]).concat([btn.dataset.soltar]);
+      pushCfg();
+    });
   });
   const vp=pane.querySelector("#verPasado");
   if(vp) vp.addEventListener("click", function(){ verPasado=true; renderDay(); });
   const op=pane.querySelector("#ocultarPasado");
   if(op) op.addEventListener("click", function(){ verPasado=false; renderDay(); });
+  const vs=pane.querySelector("#volverSol");
+  if(vs) vs.addEventListener("click", function(){
+    if(CFG.soltados) delete CFG.soltados[d.id]; pushCfg(); });
+  const va=pane.querySelector("#volverAj");
+  if(va) va.addEventListener("click", function(){
+    if(CFG.ajustes) delete CFG.ajustes[d.id]; pushCfg(); });
   const ur=pane.querySelector("#undoReal");
   if(ur) ur.addEventListener("click", function(){
     if(CFG.real) delete CFG.real[d.id]; pushCfg(); });

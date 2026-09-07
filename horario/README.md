@@ -58,6 +58,25 @@ su hora, lo posterior se recalcula, las anclas siguen donde estaban.
 Verificado con un retraso de 5 h 30 un lunes: la clase sigue dibujada **19:30–22:40** y sale
 un conflicto de 60 min. Antes, la clase se habría dibujado a la 1 de la mañana.
 
+## Editar a mano
+
+Toca cualquier bloque y se abre su panel. Cuatro cosas, y el resto del día se recompone
+al instante alrededor de las anclas:
+
+- **Dura** −15 / +15 min. Recortar la tesis para que quepa la cena es el caso de uso.
+- **Mover** ↑ antes / ↓ después, una posición por toque.
+- **Clavar a las** — convierte un bloque movible en ancla propia. Útil cuando *tú* decides
+  que algo pasa a una hora, no solo cuando lo impone otro.
+- **Hoy no lo hago** — lo saca del día.
+
+Un bloque con hora impuesta por otro solo deja cambiar la duración o soltarlo; mover y
+clavar no aparecen, porque moverlo sería mentira.
+
+Los ajustes se guardan en `CFG.ajustes[dia][nombreDelBloque]`, **por nombre y no por
+índice**: el índice cambia cada vez que el día se recompone y dejaría el ajuste pegado al
+bloque de al lado. La cabecera del día lista lo ajustado y lo soltado, cada uno con su
+deshacer.
+
 ## Horarios de tienda — leídos, no supuestos
 
 Las 20 fichas de `superpet.pe/store_ml_sp_SPnn.html` publican el horario por día. Se
