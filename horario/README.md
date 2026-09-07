@@ -17,6 +17,64 @@ Publicado como Artifact: https://claude.ai/code/artifact/0ca773dd-81ed-43e8-b0cd
 El estado (bloques marcados y pendientes) se guarda con la capacidad `db` del Artifact
 y cae a `localStorage` cuando esa capacidad no está disponible.
 
+## El motor: tres clases de bloque
+
+Hasta la v7 el día era una cadena: `bloque[i].inicio = bloque[i-1].fin`. Si algo se
+corría, se corría **todo** — incluida la clase de la universidad, que pasa a su hora esté
+Carlos o no. Él lo detectó usándola:
+
+> *"todos los pendientes se corren incluyendo los que no se pueden mover como por ejemplo
+> las clases de la universidad que sí o sí se va a dar esté o no esté a la hora de esa
+> clase, no lo puedo ni adelantar ni retroceder."*
+
+Ahora cada bloque declara qué tan movible es, y `resolverDia()` los trata distinto:
+
+| Clase | Qué es | Cómo se dibuja |
+|---|---|---|
+| **ANCLA** (`meta.fijo`) | Hora impuesta por otro: clase, partido, capacitación, cine | Barra sólida, etiqueta «fija» |
+| **VENTANA** (`meta.ventana`) | Visita a tienda: la hora la elige el motor dentro del horario real de esa tienda | Punteada, con su rango al lado |
+| **FLEXIBLE** | Todo lo demás | Punteada |
+
+Un ancla nunca cede. Cuando la cadena llega tarde a una, el motor **no la mueve**: registra
+un conflicto. Cuando llega temprano, registra un hueco. Ninguno de los dos se resuelve solo
+—Carlos decidió que la app le muestre las opciones y él elija.
+
+Contra un ancla, un bloque flexible **se recorta hasta donde haya sitio** antes de
+diferirse. Diferir algo que sí cabía apretado lo mandaba detrás del ancla y producía
+disparates: viajar a la oficina *después* de la capacitación. Solo se difiere cuando no
+queda nada de sitio, y un traslado nunca se recorta ni se difiere: si no cabe, llegas
+tarde, y el ancla siguiente es la que lo dice.
+
+Como un bloque diferido ocurre después aunque en el array venga antes, la vista recorre
+`ordenCronologico()` y no el orden del array. Las claves de `hechos` siguen atadas al
+índice original.
+
+### Reportar la hora real
+
+El único botón grande de la tarjeta **Ahora** es «terminé esto». Guarda la hora real en
+`CFG.real[dia] = {idx, hora}` y `componerDia()` reanuda la cadena ahí: lo anterior conserva
+su hora, lo posterior se recalcula, las anclas siguen donde estaban.
+
+Verificado con un retraso de 5 h 30 un lunes: la clase sigue dibujada **19:30–22:40** y sale
+un conflicto de 60 min. Antes, la clase se habría dibujado a la 1 de la mañana.
+
+## Horarios de tienda — leídos, no supuestos
+
+Las 20 fichas de `superpet.pe/store_ml_sp_SPnn.html` publican el horario por día. Se
+scrapearon las 20 con confianza alta y quedan en `tiendas-horarios.json`. El motor no
+programa una visita antes de que la tienda abra ni de modo que termine después de
+`cierra − 15`.
+
+Reserva algo de sorpresa: **SP20 Dos de Mayo abre 08:00**, pero **SP56 Mega Plaza y SP66
+Santa Anita recién a las 10:00**, y **SP16 La Planicie cierra 21:00** (19:00 los domingos).
+
+## Las cinco entradas de la semana
+
+Carlos nombró él mismo lo que determina su semana, y el check-in pregunta por eso y por
+nada más: programación de tiendas · capacitaciones · horarios de fútbol · compromisos
+sociales · tareas de la universidad. El indicador de arriba dice cuántas de las cinco
+faltan. Un compromiso social entra como **ancla**, no como sugerencia.
+
 ## Cuadre de la semana
 
 | Innegociable | Objetivo | Asignado |
@@ -26,7 +84,7 @@ y cae a `localStorage` cuando esa capacidad no está disponible.
 | Pareja | 8 h | 8 h 00 (sáb 5 h 50 · dom 2 h 10) |
 | Gym | 3 sesiones | 3 (vie tarde · sáb AM · dom AM) |
 
-Traslados: 17 h 25 por semana. Sueño promedio: 6 h 53 por noche.
+Traslados: 17 h 25 por semana. Sueño promedio: 6 h 56 por noche.
 
 ## Semana del 7 al 12 de setiembre — cargada
 

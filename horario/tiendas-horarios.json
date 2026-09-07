@@ -1,0 +1,343 @@
+{
+  "SP33": {
+    "nombre": "Plaza Norte",
+    "lv": [
+      "09:00",
+      "22:00"
+    ],
+    "sab": [
+      "09:00",
+      "22:00"
+    ],
+    "dom": [
+      "09:00",
+      "22:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP33.html",
+    "confianza": "alta"
+  },
+  "SP56": {
+    "nombre": "Mega Plaza",
+    "lv": [
+      "10:00",
+      "22:00"
+    ],
+    "sab": [
+      "10:00",
+      "22:00"
+    ],
+    "dom": [
+      "10:00",
+      "22:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP56.html",
+    "confianza": "alta"
+  },
+  "SP44": {
+    "nombre": "Izaguirre",
+    "lv": [
+      "10:00",
+      "21:00"
+    ],
+    "sab": [
+      "10:00",
+      "21:00"
+    ],
+    "dom": [
+      "09:00",
+      "19:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP44.html",
+    "confianza": "alta"
+  },
+  "SP15": {
+    "nombre": "Antúnez de Mayolo",
+    "lv": [
+      "10:00",
+      "21:00"
+    ],
+    "sab": [
+      "10:00",
+      "21:00"
+    ],
+    "dom": [
+      "10:00",
+      "20:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP15.html",
+    "confianza": "alta"
+  },
+  "SP61": {
+    "nombre": "Minka",
+    "lv": [
+      "09:00",
+      "22:00"
+    ],
+    "sab": [
+      "09:00",
+      "22:00"
+    ],
+    "dom": [
+      "09:00",
+      "22:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP61.html",
+    "confianza": "alta"
+  },
+  "SP52": {
+    "nombre": "Real Plaza Salaverry",
+    "lv": [
+      "09:00",
+      "22:00"
+    ],
+    "sab": [
+      "09:00",
+      "22:00"
+    ],
+    "dom": [
+      "09:00",
+      "22:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP52.html",
+    "confianza": "alta"
+  },
+  "SP20": {
+    "nombre": "Dos de Mayo",
+    "lv": [
+      "08:00",
+      "22:00"
+    ],
+    "sab": [
+      "08:00",
+      "22:00"
+    ],
+    "dom": [
+      "08:00",
+      "21:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP20.html",
+    "confianza": "alta"
+  },
+  "SP54": {
+    "nombre": "Mall Aventura SJL",
+    "lv": [
+      "09:00",
+      "22:00"
+    ],
+    "sab": [
+      "09:00",
+      "22:00"
+    ],
+    "dom": [
+      "09:00",
+      "22:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP54.html",
+    "confianza": "alta"
+  },
+  "SP25": {
+    "nombre": "SJL",
+    "lv": [
+      "09:00",
+      "22:00"
+    ],
+    "sab": [
+      "09:00",
+      "22:00"
+    ],
+    "dom": [
+      "09:00",
+      "22:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP25.html",
+    "confianza": "alta"
+  },
+  "SP47": {
+    "nombre": "28 de Julio",
+    "lv": [
+      "09:00",
+      "22:00"
+    ],
+    "sab": [
+      "09:00",
+      "22:00"
+    ],
+    "dom": [
+      "09:00",
+      "21:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP47.html",
+    "confianza": "alta"
+  },
+  "SP41": {
+    "nombre": "Aurora",
+    "lv": [
+      "08:00",
+      "22:00"
+    ],
+    "sab": [
+      "08:00",
+      "22:00"
+    ],
+    "dom": [
+      "09:00",
+      "21:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP41.html",
+    "confianza": "alta"
+  },
+  "SP12": {
+    "nombre": "Bajada Balta",
+    "lv": [
+      "10:00",
+      "22:00"
+    ],
+    "sab": [
+      "10:00",
+      "22:00"
+    ],
+    "dom": [
+      "10:00",
+      "22:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP12.html",
+    "confianza": "alta"
+  },
+  "SP55": {
+    "nombre": "Ejército 2",
+    "lv": [
+      "09:00",
+      "21:00"
+    ],
+    "sab": [
+      "09:00",
+      "21:00"
+    ],
+    "dom": [
+      "09:00",
+      "20:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP55.html",
+    "confianza": "alta"
+  },
+  "SP66": {
+    "nombre": "Mall Aventura Santa Anita",
+    "lv": [
+      "10:00",
+      "22:00"
+    ],
+    "sab": [
+      "10:00",
+      "22:00"
+    ],
+    "dom": [
+      "10:00",
+      "22:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP66.html",
+    "confianza": "alta"
+  },
+  "SP69": {
+    "nombre": "Paracas",
+    "lv": [
+      "09:00",
+      "22:00"
+    ],
+    "sab": [
+      "09:00",
+      "22:00"
+    ],
+    "dom": [
+      "09:00",
+      "22:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP69.html",
+    "confianza": "alta",
+    "nota": "La ficha lleva el título 'SuperPet Santa Catalina' pero la dirección (Av. Paracas N° 236, Ate) y el correo paracas@superpet.pe corresponden a la tienda Paracas; el horario es el publicado en esa ficha."
+  },
+  "SP36": {
+    "nombre": "Real Plaza Puruchuco",
+    "lv": [
+      "09:00",
+      "22:00"
+    ],
+    "sab": [
+      "09:00",
+      "22:00"
+    ],
+    "dom": [
+      "09:00",
+      "22:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP36.html",
+    "confianza": "alta"
+  },
+  "SP42": {
+    "nombre": "Cenco La Molina",
+    "lv": [
+      "09:00",
+      "22:00"
+    ],
+    "sab": [
+      "09:00",
+      "22:00"
+    ],
+    "dom": [
+      "09:00",
+      "22:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP42.html",
+    "confianza": "alta"
+  },
+  "SP03": {
+    "nombre": "La Molina",
+    "lv": [
+      "08:00",
+      "21:00"
+    ],
+    "sab": [
+      "08:00",
+      "21:00"
+    ],
+    "dom": [
+      "08:00",
+      "21:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP03.html",
+    "confianza": "alta"
+  },
+  "SP16": {
+    "nombre": "La Planicie",
+    "lv": [
+      "08:00",
+      "21:00"
+    ],
+    "sab": [
+      "08:00",
+      "21:00"
+    ],
+    "dom": [
+      "09:00",
+      "19:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP16.html",
+    "confianza": "alta"
+  },
+  "SP48": {
+    "nombre": "Molicentro",
+    "lv": [
+      "09:00",
+      "21:00"
+    ],
+    "sab": [
+      "09:00",
+      "21:00"
+    ],
+    "dom": [
+      "09:00",
+      "21:00"
+    ],
+    "fuente": "https://www.superpet.pe/store_ml_sp_SP48.html",
+    "confianza": "alta"
+  }
+}

@@ -1,552 +1,406 @@
 <title>Semana Blindada</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap">
-
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter+Tight:wght@400;500;600&display=swap">
 <style>
 :root{
-  --bg:#F1F3F0; --surface:#FFFFFF; --surface-2:#E7EBE6; --surface-3:#DDE3DE;
-  --ink:#16211D; --ink-2:#4A5A54; --ink-3:#7B8A84;
-  --line:#D3DAD5; --line-2:#C0C9C3;
-  --accent:#0F6B5C;
-  --c-trabajo:#0F6B5C; --c-u:#3F4FA0; --c-cuerpo:#B4651B;
-  --c-vinculo:#A33A5F; --c-mente:#6A4B9C; --c-traslado:#8A9891; --c-sueno:#33424C;
-  --warn:#B4651B; --bad:#A8332F; --good:#0F6B5C;
-  --shadow:0 1px 2px rgba(22,33,29,.06), 0 6px 18px -8px rgba(22,33,29,.16);
+  /* Neutros con sesgo verde frío: es la pantalla que Carlos mira al sol,
+     en la calle, entre tienda y tienda. Contraste antes que suavidad. */
+  --bg:#F1F3F1; --surface:#FFFFFF; --surface-2:#E9EDEA; --surface-3:#DEE4DF;
+  --ink:#141C19; --ink-2:#4C5C56; --ink-3:#7E8D87;
+  --line:#D6DCD7; --line-2:#C2CAC4;
+  --accent:#0B6B57; --accent-ink:#FFFFFF; --accent-soft:#DFEEE8;
+  --warn:#A8571A; --warn-soft:#F7E9DA; --bad:#9E2F2B; --bad-soft:#F7E1E0;
+  --good:#0B6B57;
+  /* Rieles por categoría. Cada uno nombra un tipo de vida, no un color. */
+  --c-trabajo:#0B6B57; --c-u:#4F4AB8; --c-cuerpo:#A8571A; --c-vinculo:#A6376A;
+  --c-mente:#2F7392;   --c-traslado:#7E8D87; --c-sueno:#4E5A70;
+  --r:14px; --r-s:9px;
+  --sh:0 1px 2px rgba(20,28,25,.05), 0 6px 18px -10px rgba(20,28,25,.18);
+  --sh-up:0 2px 6px rgba(20,28,25,.08), 0 18px 36px -18px rgba(20,28,25,.32);
+  --t:cubic-bezier(.22,.8,.28,1);
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#101614; --surface:#18201D; --surface-2:#212B27; --surface-3:#2A3531;
-    --ink:#E8EFEB; --ink-2:#A3B2AC; --ink-3:#74847E;
-    --line:#2C3833; --line-2:#3A4842;
-    --accent:#3FB09A;
-    --c-trabajo:#3FB09A; --c-u:#8494E8; --c-cuerpo:#E09A4E;
-    --c-vinculo:#E0708F; --c-mente:#A98EE2; --c-traslado:#74847E; --c-sueno:#93A7B1;
-    --warn:#E09A4E; --bad:#E8756F; --good:#3FB09A;
-    --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px -8px rgba(0,0,0,.6);
-  }
-}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0E1412; --surface:#161E1B; --surface-2:#1E2926; --surface-3:#273330;
+  --ink:#E9EFEC; --ink-2:#A5B3AD; --ink-3:#75847E;
+  --line:#2A3733; --line-2:#374541;
+  --accent:#3FB394; --accent-ink:#08201A; --accent-soft:#16302A;
+  --warn:#DE9450; --warn-soft:#2E2318; --bad:#E5736D; --bad-soft:#2F1A19;
+  --good:#3FB394;
+  --c-trabajo:#3FB394; --c-u:#8F8BEA; --c-cuerpo:#DE9450; --c-vinculo:#E0779F;
+  --c-mente:#6FB2D2;   --c-traslado:#8E9C96; --c-sueno:#8290AA;
+  --sh:0 1px 2px rgba(0,0,0,.4), 0 6px 18px -10px rgba(0,0,0,.6);
+  --sh-up:0 2px 6px rgba(0,0,0,.5), 0 18px 36px -18px rgba(0,0,0,.75);
+}}
 :root[data-theme="dark"]{
-  --bg:#101614; --surface:#18201D; --surface-2:#212B27; --surface-3:#2A3531;
-  --ink:#E8EFEB; --ink-2:#A3B2AC; --ink-3:#74847E;
-  --line:#2C3833; --line-2:#3A4842;
-  --accent:#3FB09A;
-  --c-trabajo:#3FB09A; --c-u:#8494E8; --c-cuerpo:#E09A4E;
-  --c-vinculo:#E0708F; --c-mente:#A98EE2; --c-traslado:#74847E; --c-sueno:#93A7B1;
-  --warn:#E09A4E; --bad:#E8756F; --good:#3FB09A;
-  --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px -8px rgba(0,0,0,.6);
+  --bg:#0E1412; --surface:#161E1B; --surface-2:#1E2926; --surface-3:#273330;
+  --ink:#E9EFEC; --ink-2:#A5B3AD; --ink-3:#75847E;
+  --line:#2A3733; --line-2:#374541;
+  --accent:#3FB394; --accent-ink:#08201A; --accent-soft:#16302A;
+  --warn:#DE9450; --warn-soft:#2E2318; --bad:#E5736D; --bad-soft:#2F1A19;
+  --good:#3FB394;
+  --c-trabajo:#3FB394; --c-u:#8F8BEA; --c-cuerpo:#DE9450; --c-vinculo:#E0779F;
+  --c-mente:#6FB2D2;   --c-traslado:#8E9C96; --c-sueno:#8290AA;
+  --sh:0 1px 2px rgba(0,0,0,.4), 0 6px 18px -10px rgba(0,0,0,.6);
+  --sh-up:0 2px 6px rgba(0,0,0,.5), 0 18px 36px -18px rgba(0,0,0,.75);
 }
 
 *{box-sizing:border-box}
 body{
   margin:0; background:var(--bg); color:var(--ink);
-  font-family:"Public Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  font-size:15px; line-height:1.55; -webkit-text-size-adjust:100%;
+  font-family:"Inter Tight","Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
 }
-.wrap{max-width:820px; margin:0 auto; padding:20px 16px 72px}
+.wrap{max-width:560px; margin:0 auto; padding:0 14px 96px}
+h1,h2,h3{font-family:Fraunces,Georgia,"Times New Roman",serif; font-weight:600;
+  letter-spacing:-.014em; text-wrap:balance; margin:0}
+.mono,.time,.big{font-variant-numeric:tabular-nums}
+.eyebrow{font-size:10.5px; font-weight:600; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--ink-3)}
+.sub{color:var(--ink-2); font-size:13.5px; margin:0}
+.why{color:var(--ink-2); font-size:12.5px; line-height:1.5; margin:0}
 
-/* ---------- typography ---------- */
-h1,h2,h3{font-family:"Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif; text-wrap:balance; margin:0}
-h1{font-size:clamp(30px,7vw,42px); font-weight:800; letter-spacing:-.025em; line-height:1.02}
-h2{font-size:19px; font-weight:700; letter-spacing:-.012em}
-h3{font-size:15px; font-weight:700; letter-spacing:-.008em}
-.eyebrow{
-  font-family:"JetBrains Mono", ui-monospace, monospace;
-  font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
-  color:var(--ink-3); font-weight:500;
-}
-.mono{font-family:"JetBrains Mono", ui-monospace, monospace; font-variant-numeric:tabular-nums}
-p{margin:0}
+/* ---------- cabecera ---------- */
+header{position:sticky; top:0; z-index:40; background:var(--bg);
+  padding:12px 0 0; margin:0 -14px; padding-left:14px; padding-right:14px;
+  border-bottom:1px solid var(--line)}
+.hbar{display:flex; align-items:baseline; gap:10px; margin-bottom:10px}
+.hbar h1{font-size:19px}
+.stamp{margin-left:auto; display:flex; align-items:center; gap:7px;
+  font-size:11px; color:var(--ink-3)}
+.stamp b{font-weight:600; color:var(--ink-2)}
+.savestate{padding:2px 7px; border-radius:999px; background:var(--surface-2);
+  border:1px solid var(--line); font-size:10px}
+.savestate.on{background:var(--accent-soft); border-color:transparent; color:var(--accent)}
+.nav{display:flex; gap:2px; position:relative}
+.nv{flex:1 1 0; min-width:0; appearance:none; border:0; background:none;
+  padding:9px 2px 11px; font:inherit; font-size:12.5px; font-weight:500;
+  color:var(--ink-3); cursor:pointer; position:relative;
+  transition:color .2s var(--t)}
+.nv.mas{flex:0 0 38px}
+.nv[aria-selected="true"]{color:var(--ink); font-weight:600}
+.nv::after{content:""; position:absolute; left:12%; right:12%; bottom:-1px; height:2px;
+  border-radius:2px; background:var(--accent); transform:scaleX(0);
+  transition:transform .26s var(--t)}
+.nv[aria-selected="true"]::after{transform:scaleX(1)}
+.nv:focus-visible{outline:2px solid var(--accent); outline-offset:-2px; border-radius:6px}
 
-/* ---------- header ---------- */
-header{padding-bottom:18px; border-bottom:2px solid var(--ink); margin-bottom:20px}
-.hgrid{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px 20px}
-.sub{color:var(--ink-2); font-size:14.5px; max-width:56ch; margin-top:8px}
-.stamp{
-  font-family:"JetBrains Mono", ui-monospace, monospace; font-size:11px;
-  color:var(--ink-3); text-align:right; line-height:1.7; font-variant-numeric:tabular-nums;
-}
-.stamp b{color:var(--ink); font-weight:700; display:block; font-size:12.5px}
-
-/* ---------- meters ---------- */
-.meters{
-  display:grid; grid-template-columns:repeat(auto-fit,minmax(138px,1fr));
-  gap:1px; background:var(--line); border:1px solid var(--line);
-  border-radius:3px; overflow:hidden; margin-bottom:8px;
-}
-.meter{background:var(--surface); padding:11px 13px 12px}
-.meter .lab{
-  font-family:"JetBrains Mono", ui-monospace, monospace; font-size:10px;
-  letter-spacing:.13em; text-transform:uppercase; color:var(--ink-3); font-weight:500;
-}
-.meter .val{
-  font-family:"Bricolage Grotesque", sans-serif; font-weight:700;
-  font-size:21px; letter-spacing:-.02em; margin-top:3px; font-variant-numeric:tabular-nums;
-}
-.meter .val small{font-size:12px; font-weight:500; color:var(--ink-3); letter-spacing:0}
-.bar{height:4px; background:var(--surface-3); border-radius:99px; margin-top:8px; overflow:hidden}
-.bar i{display:block; height:100%; border-radius:99px; background:var(--accent); transition:width .35s ease}
-.meter.tesis .bar i{background:var(--c-u)}
-.meter.lectura .bar i{background:var(--c-mente)}
-.meter.pareja .bar i{background:var(--c-vinculo)}
-.meter.gym .bar i{background:var(--c-cuerpo)}
-.metersNote{font-size:12.5px; color:var(--ink-3); margin-bottom:26px}
-
-/* ---------- section ---------- */
-section{margin-top:30px}
-.shead{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:12px}
-.shead .eyebrow{white-space:nowrap}
-
-/* ---------- day tabs ---------- */
-.tabs{
-  display:flex; gap:0; overflow-x:auto; border:1px solid var(--line);
-  border-radius:3px; background:var(--surface); margin-bottom:4px; scrollbar-width:thin;
-}
-.tab{
-  flex:1 1 0; min-width:0; padding:9px 4px 10px; background:none; border:0;
-  border-right:1px solid var(--line); cursor:pointer; color:var(--ink-2);
-  font-family:"JetBrains Mono", monospace; font-size:11px; letter-spacing:.09em;
-  text-transform:uppercase; font-weight:500; text-align:center; line-height:1.4;
-}
-.tab:last-child{border-right:0}
-.tab span{display:block; font-size:9.5px; color:var(--ink-3); letter-spacing:.05em; margin-top:2px}
-.tab[aria-selected="true"]{background:var(--ink); color:var(--bg)}
-.tab[aria-selected="true"] span{color:var(--bg); opacity:.62}
-.tab:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
-
-/* ---------- day head ---------- */
-.dayhead{
-  display:flex; flex-wrap:wrap; gap:8px 16px; align-items:baseline;
-  padding:14px 0 12px; border-bottom:1px solid var(--line);
-}
-.dayhead h2{font-size:22px}
-.daystat{font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--ink-3); font-variant-numeric:tabular-nums}
-.daystat b{color:var(--ink-2); font-weight:700}
-.daynote{
-  font-size:13.5px; color:var(--ink-2); background:var(--surface-2);
-  border-left:3px solid var(--c-cuerpo); padding:9px 12px; margin:12px 0 4px; border-radius:0 3px 3px 0;
-}
-.daynote.alert{border-left-color:var(--bad); color:var(--ink)}
-
-/* ---------- timeline ---------- */
-.tl{list-style:none; margin:0; padding:0}
-.blk{
-  display:grid; grid-template-columns:52px 12px 1fr auto; gap:0 10px;
-  align-items:start; padding:9px 0; border-bottom:1px solid var(--line);
-}
-.blk:last-child{border-bottom:0}
-.blk .time{
-  font-family:"JetBrains Mono",monospace; font-size:12.5px; font-weight:500;
-  color:var(--ink-2); font-variant-numeric:tabular-nums; padding-top:1px; letter-spacing:-.02em;
-}
-.blk .time em{display:block; font-style:normal; font-size:10.5px; color:var(--ink-3)}
-.rail{width:4px; margin-left:4px; border-radius:99px; align-self:stretch; min-height:20px; background:var(--c-traslado)}
-.blk[data-c="trabajo"] .rail{background:var(--c-trabajo)}
-.blk[data-c="u"] .rail{background:var(--c-u)}
-.blk[data-c="cuerpo"] .rail{background:var(--c-cuerpo)}
-.blk[data-c="vinculo"] .rail{background:var(--c-vinculo)}
-.blk[data-c="mente"] .rail{background:var(--c-mente)}
-.blk[data-c="sueno"] .rail{background:var(--c-sueno)}
-.blk[data-c="traslado"] .rail{
-  background:repeating-linear-gradient(180deg,var(--c-traslado) 0 4px,transparent 4px 8px);
-}
-.blk[data-c="traslado"] .name{color:var(--ink-3); font-weight:400}
-.name{font-size:14.5px; font-weight:600; letter-spacing:-.005em; line-height:1.35}
-.why{font-size:12.5px; color:var(--ink-3); margin-top:2px; line-height:1.45; max-width:52ch}
-.dur{
-  font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--ink-3);
-  font-variant-numeric:tabular-nums; padding-top:3px; white-space:nowrap;
-}
-.chip{
-  display:inline-block; font-family:"JetBrains Mono",monospace; font-size:9.5px;
-  letter-spacing:.1em; text-transform:uppercase; font-weight:700;
-  padding:1px 5px; border-radius:2px; margin-left:7px; vertical-align:1.5px;
-  border:1px solid currentColor;
-}
-.chip.blindado{color:var(--c-vinculo)}
-.chip.corta{color:var(--bad)}
-.blk .tick{grid-column:1 / -1; margin-top:6px}
-label.done{
-  display:inline-flex; align-items:center; gap:7px; cursor:pointer;
-  font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.1em;
-  text-transform:uppercase; color:var(--ink-3); user-select:none;
-}
-label.done input{accent-color:var(--accent); width:15px; height:15px; cursor:pointer; margin:0}
-.blk.checked .name{text-decoration:line-through; text-decoration-thickness:1px; color:var(--ink-3)}
-
-/* ---------- legend ---------- */
-.legend{display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line)}
-.lg{display:flex; align-items:center; gap:6px; font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3)}
-.lg i{width:11px; height:4px; border-radius:99px; display:block}
-
-/* ---------- calculator ---------- */
-.calc{background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:16px; box-shadow:var(--shadow)}
-.frow{display:grid; grid-template-columns:repeat(auto-fit,minmax(126px,1fr)); gap:12px}
-.field{display:flex; flex-direction:column; gap:5px}
-.field label{font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-3); font-weight:500}
-.field input, .field select{
-  font-family:"JetBrains Mono",monospace; font-size:14px; padding:8px 9px;
-  border:1px solid var(--line-2); border-radius:2px; background:var(--bg); color:var(--ink);
-  font-variant-numeric:tabular-nums; width:100%;
-}
-.field input:focus-visible, .field select:focus-visible{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent)}
-.calcOut{margin-top:16px; border-top:1px solid var(--line); padding-top:14px}
-.verdict{
-  font-family:"Bricolage Grotesque",sans-serif; font-weight:700; font-size:17px;
-  letter-spacing:-.015em; display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;
-}
-.verdict.ok{color:var(--good)} .verdict.tight{color:var(--warn)} .verdict.no{color:var(--bad)}
-.verdict small{font-family:"JetBrains Mono",monospace; font-size:11.5px; font-weight:500; color:var(--ink-3); letter-spacing:0}
-.plan{list-style:none; margin:13px 0 0; padding:0; display:flex; flex-direction:column; gap:0}
-.plan li{
-  display:grid; grid-template-columns:104px 1fr; gap:10px; padding:6px 0;
-  border-bottom:1px dotted var(--line-2); font-size:14px;
-}
-.plan li:last-child{border-bottom:0}
-.plan .t{font-family:"JetBrains Mono",monospace; font-size:12.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; font-weight:500}
-.plan li.tr{color:var(--ink-3)}
-.plan li.tr .t{color:var(--ink-3)}
-.plan .pm{font-style:normal; font-size:11px; color:var(--ink-3); white-space:nowrap}
-
-/* ---------- re-planificador ---------- */
-.retraso{margin-top:18px; border:1px solid var(--line); border-radius:3px; background:var(--surface); padding:14px 15px}
-.rhead{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
-.rhead h3{font-size:15px}
-.rmodes{display:flex; gap:0; border:1px solid var(--line); border-radius:3px; overflow:hidden}
-.rm{
-  flex:1 1 0; padding:8px 6px; background:none; border:0; border-right:1px solid var(--line);
-  font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.08em;
-  text-transform:uppercase; color:var(--ink-2); cursor:pointer; line-height:1.3;
-}
-.rm:last-child{border-right:0}
-.rm[aria-selected="true"]{background:var(--ink); color:var(--bg)}
-.rm:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
-.escen{
-  display:block; width:100%; text-align:left; margin-bottom:9px; cursor:pointer;
-  border:1px solid var(--line-2); border-left:4px solid var(--c-traslado);
-  border-radius:3px; background:var(--bg); padding:11px 13px; font-family:inherit; color:var(--ink);
-}
-.escen:hover{border-color:var(--accent)}
-.escen.sel{border-left-color:var(--accent); background:var(--surface-2)}
-.escen:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-.etop{display:flex; align-items:baseline; gap:9px; flex-wrap:wrap}
-.etop b{font-family:"Bricolage Grotesque",sans-serif; font-size:15px; letter-spacing:-.01em}
-.etop span{font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3)}
-.edorm{font-family:"JetBrains Mono",monospace; font-size:12px; margin-top:4px; color:var(--ink-2); font-variant-numeric:tabular-nums}
-.edorm.corto{color:var(--bad)}
-.edorm em{font-style:normal; font-size:10px; letter-spacing:.08em; text-transform:uppercase}
-.edet{list-style:none; margin:7px 0 0; padding:0; display:flex; flex-direction:column; gap:3px}
-.edet li{font-size:12.5px; color:var(--ink-3); padding-left:13px; position:relative; line-height:1.4}
-.edet li::before{content:"·"; position:absolute; left:3px}
-.eaviso{margin-top:7px; font-size:12.5px; color:var(--bad); line-height:1.45}
-.etop .tras{color:var(--warn)}
-.chip.rec{color:var(--warn)}
-.chip.cai{color:var(--bad)}
-.dayhead h2 .fecha{font-size:12px;font-weight:500;color:var(--ink-3)}
-.chip.real{color:var(--good);font-variant-numeric:tabular-nums}
-.discip{margin:8px 0;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--line);font-size:12px;color:var(--ink-2)}
-.discip b{color:var(--ink)}
-.blk.est-caido{opacity:.5}
-.blk.est-caido .name{text-decoration:line-through}
-.blk.est-pasado{opacity:.42}
-
-/* ---------- panel de fútbol ---------- */
-.fcard{border:1px solid var(--line); border-radius:3px; background:var(--surface); padding:14px 15px; margin-bottom:12px}
-.fhead{
-  display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:11px;
-  font-family:"Bricolage Grotesque",sans-serif; font-weight:700; font-size:15px; letter-spacing:-.01em;
-}
-.fhead span{
-  font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.1em;
-  text-transform:uppercase; font-weight:700; padding:2px 6px; border-radius:2px; border:1px solid currentColor;
-}
-.fhead .ok{color:var(--good)}
-.fhead .warn{color:var(--warn)}
-
-/* ---------- asistente ---------- */
-.acard{border:1px solid var(--line); border-radius:3px; background:var(--surface); padding:15px 16px; margin-bottom:12px}
-.acard h3{margin-bottom:5px}
-.acard .why{max-width:58ch}
-.acard input[type="file"]{
-  flex:1 1 180px; font-family:"JetBrains Mono",monospace; font-size:11.5px; padding:8px;
-  border:1px dashed var(--line-2); border-radius:2px; background:var(--bg); color:var(--ink-2);
-}
-.pensando{
-  font-family:"JetBrains Mono",monospace; font-size:11.5px; letter-spacing:.06em;
-  color:var(--ink-3); margin-top:11px;
-}
-.pensando::after{content:""; animation:dots 1.4s steps(4,end) infinite}
-@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
-.respuesta{
-  margin-top:11px; border-left:3px solid var(--accent); background:var(--surface-2);
-  padding:11px 13px; border-radius:0 3px 3px 0;
-}
-.respuesta.no{border-left-color:var(--bad)}
-.respuesta b{font-family:"Bricolage Grotesque",sans-serif; font-size:14.5px; letter-spacing:-.01em}
-.respuesta p{font-size:14px; color:var(--ink-2); margin-top:4px; line-height:1.5}
-.ok{margin-top:11px; font-size:13.5px; color:var(--good)}
-.conf{list-style:none; margin:0; padding:0; border:1px solid var(--line); border-radius:3px; overflow:hidden}
-.conf li{
-  display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:9px 11px;
-  background:var(--surface); border-bottom:1px solid var(--line);
-}
-.conf li:last-child{border-bottom:0}
-.conf li.dudoso{background:var(--surface-2); box-shadow:inset 3px 0 0 var(--warn)}
-.conf select, .conf input{
-  font-family:"JetBrains Mono",monospace; font-size:12px; padding:5px 6px;
-  border:1px solid var(--line-2); border-radius:2px; background:var(--bg); color:var(--ink);
-}
-.conf input{flex:1 1 110px; min-width:100px}
-.conf .dudo{
-  font-family:"JetBrains Mono",monospace; font-size:9px; letter-spacing:.1em;
-  text-transform:uppercase; color:var(--warn); font-weight:700;
-}
-
-/* ---------- cabecera y navegación ---------- */
-header{padding-bottom:0; border-bottom:0; margin-bottom:16px}
-.hbar{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:12px}
-.hbar h1{font-size:clamp(22px,5.5vw,28px)}
-.stamp{display:flex; flex-direction:column; align-items:flex-end; gap:1px; line-height:1.4}
-.stamp b{font-size:11px}
-.nav{
-  display:flex; gap:0; border:1px solid var(--line); border-radius:3px;
-  background:var(--surface); overflow:hidden; position:sticky; top:0; z-index:20;
-}
-.nv{
-  flex:1 1 0; min-width:0; padding:10px 4px; background:none; border:0;
-  border-right:1px solid var(--line); cursor:pointer; color:var(--ink-2);
-  font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.08em;
-  text-transform:uppercase; font-weight:500;
-}
-.nv:last-child{border-right:0}
-.nv.mas{flex:0 0 46px; letter-spacing:.15em}
-.nv[aria-selected="true"]{background:var(--ink); color:var(--bg)}
-.nv:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
-.vista{animation:aparece .18s ease}
-@keyframes aparece{from{opacity:.4}to{opacity:1}}
+.vista{padding-top:16px; animation:sube .3s var(--t) both}
+@keyframes sube{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
 
 /* ---------- tarjeta AHORA ---------- */
-.ahora{
-  display:flex; gap:14px; align-items:center; margin:16px 0 14px;
-  border:1px solid var(--line); border-left:4px solid var(--c-mente);
-  border-radius:3px; background:var(--surface); padding:14px 15px; box-shadow:var(--shadow);
-}
-.ahora[data-c="trabajo"]{border-left-color:var(--c-trabajo)}
-.ahora[data-c="u"]{border-left-color:var(--c-u)}
-.ahora[data-c="cuerpo"]{border-left-color:var(--c-cuerpo)}
-.ahora[data-c="vinculo"]{border-left-color:var(--c-vinculo)}
-.ahora[data-c="traslado"]{border-left-color:var(--c-traslado)}
-.ahora[data-c="sueno"]{border-left-color:var(--c-sueno)}
-.ahora.otro{
-  display:block; border-left-color:var(--line-2); font-size:13.5px; color:var(--ink-2);
-  box-shadow:none; padding:11px 14px;
-}
-.acuerpo{flex:1; min-width:0}
-.aeti{
-  font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.13em;
-  text-transform:uppercase; color:var(--ink-3);
-}
-.anom{
-  font-family:"Bricolage Grotesque",sans-serif; font-weight:700; font-size:19px;
-  letter-spacing:-.02em; line-height:1.15; margin-top:2px;
-}
-.asub{font-size:13px; color:var(--ink-2); margin-top:5px}
-.abar{height:3px; background:var(--surface-3); border-radius:99px; margin-top:8px; overflow:hidden}
-.abar i{display:block; height:100%; background:var(--accent); border-radius:99px}
-.aring{
-  flex:none; width:52px; height:52px; border-radius:50%;
-  background:conic-gradient(var(--accent) calc(var(--p)*1%), var(--surface-3) 0);
-  display:grid; place-items:center; position:relative;
-}
-.aring::after{content:""; position:absolute; inset:5px; border-radius:50%; background:var(--surface)}
-.aring span{
-  position:relative; z-index:1; font-family:"JetBrains Mono",monospace;
-  font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.04em;
-}
-.aring em{font-style:normal; font-size:8px; color:var(--ink-3)}
-.lnk{
-  background:none; border:0; padding:0; cursor:pointer; color:var(--accent);
-  font-family:inherit; font-size:inherit; text-decoration:underline; text-underline-offset:2px;
-}
+.ahora{background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--sh); padding:14px 15px 13px; margin-bottom:14px;
+  position:relative; overflow:hidden}
+.ahora::before{content:""; position:absolute; inset:0 auto 0 0; width:3px;
+  background:var(--accent)}
+.ahora .top{display:flex; align-items:baseline; gap:8px; margin-bottom:2px}
+.ahora .lbl{font-size:10.5px; font-weight:600; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--accent)}
+.ahora .reloj{margin-left:auto; font-size:12px; color:var(--ink-3);
+  font-variant-numeric:tabular-nums}
+.ahora .nom{font-family:Fraunces,Georgia,serif; font-size:21px; font-weight:600;
+  letter-spacing:-.02em; line-height:1.2; margin:1px 0 3px}
+.ahora .meta{font-size:12.5px; color:var(--ink-2)}
+.ahora .meta b{color:var(--ink); font-variant-numeric:tabular-nums}
+.barra{height:3px; border-radius:2px; background:var(--surface-3); margin:11px 0 0;
+  overflow:hidden}
+.barra i{display:block; height:100%; background:var(--accent); border-radius:2px;
+  transition:width .5s var(--t)}
+.ahora .luego{margin-top:9px; padding-top:9px; border-top:1px solid var(--line);
+  font-size:12.5px; color:var(--ink-2); display:flex; gap:7px; align-items:baseline}
+.ahora .luego b{color:var(--ink); font-weight:600}
+.ahora .luego .h{margin-left:auto; font-variant-numeric:tabular-nums; color:var(--ink-3)}
+.cerrar{margin-top:11px; width:100%; appearance:none; border:0; border-radius:10px;
+  background:var(--accent); color:var(--accent-ink); font:inherit; font-size:14px;
+  font-weight:600; padding:11px; cursor:pointer;
+  transition:transform .14s var(--t), filter .2s var(--t)}
+.cerrar:active{transform:scale(.985); filter:brightness(1.08)}
+.cerrar:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+
+/* ---------- pestañas de día ---------- */
+.tabs{display:flex; gap:3px; margin-bottom:12px}
+.tb{flex:1 1 0; min-width:0; appearance:none; background:var(--surface);
+  border:1px solid var(--line); border-radius:9px; padding:7px 2px 6px;
+  font:inherit; font-size:11.5px; color:var(--ink-3); cursor:pointer; text-align:center;
+  transition:background .2s var(--t), color .2s var(--t), border-color .2s var(--t)}
+.tb b{display:block; font-size:14px; font-weight:600; color:var(--ink-2);
+  font-variant-numeric:tabular-nums; line-height:1.25}
+.tb.hoy{border-color:var(--accent)}
+.tb[aria-selected="true"]{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.tb[aria-selected="true"] b{color:var(--accent-ink)}
+.tb:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+/* ---------- cabecera del día ---------- */
+.dayhead{margin-bottom:10px}
+.dayhead .l1{display:flex; align-items:baseline; gap:9px}
+.dayhead h2{font-size:20px}
+.dayhead .fecha{font-size:12px; color:var(--ink-3); font-weight:500}
+.dayhead .res{margin-left:auto; font-size:11.5px; color:var(--ink-3); text-align:right}
+.pills{display:flex; flex-wrap:wrap; gap:5px; margin-top:8px}
+.pill{font-size:11px; padding:3px 8px; border-radius:999px; background:var(--surface-2);
+  color:var(--ink-2); border:1px solid var(--line); font-variant-numeric:tabular-nums}
+.pill b{color:var(--ink); font-weight:600}
+.pill.corta{background:var(--bad-soft); border-color:transparent; color:var(--bad)}
+
+.aviso{border-radius:var(--r-s); padding:10px 12px; font-size:12.5px; line-height:1.5;
+  margin:10px 0; border:1px solid var(--line); background:var(--surface)}
+.aviso.alerta{background:var(--warn-soft); border-color:transparent; color:var(--warn)}
+.aviso.mal{background:var(--bad-soft); border-color:transparent; color:var(--bad)}
+.aviso b{font-weight:600}
 
 /* ---------- plegado del pasado ---------- */
-.plegado{
-  display:flex; width:100%; align-items:center; gap:10px; cursor:pointer;
-  border:1px dashed var(--line-2); border-radius:3px; background:var(--surface-2);
-  padding:10px 13px; margin-bottom:10px; color:var(--ink-2);
-  font-family:"Public Sans",sans-serif; font-size:13.5px; text-align:left;
-}
-.plegado b{font-weight:700; color:var(--ink)}
-.plegado span{
-  margin-left:auto; font-family:"JetBrains Mono",monospace; font-size:10px;
-  letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); white-space:nowrap;
-}
-.plegado:hover{border-color:var(--accent)}
+.plegado{width:100%; appearance:none; background:var(--surface-2); border:1px dashed var(--line-2);
+  border-radius:var(--r-s); padding:9px 12px; font:inherit; font-size:12px;
+  color:var(--ink-2); cursor:pointer; display:flex; align-items:center; gap:7px;
+  margin-bottom:9px; transition:background .2s var(--t)}
+.plegado b{color:var(--ink); font-weight:600}
+.plegado span{margin-left:auto; color:var(--accent); font-weight:600}
 .plegado:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-.plegado.abierto{justify-content:center; font-size:11px; font-family:"JetBrains Mono",monospace;
-  letter-spacing:.1em; text-transform:uppercase}
-.blk.encurso{
-  background:var(--surface-2); box-shadow:inset 3px 0 0 var(--accent);
-  margin-left:-9px; padding-left:9px; border-radius:0 3px 3px 0;
-}
 
-/* ---------- medidores compactos ---------- */
-.meters{grid-template-columns:repeat(auto-fit,minmax(112px,1fr))}
-.meter{padding:9px 11px 10px}
-.meter .val{font-size:17px}
-.meter .val small{font-size:11px}
+/* ---------- timeline ---------- */
+.tl{list-style:none; margin:0; padding:0; position:relative}
+.blk{display:grid; grid-template-columns:46px 14px 1fr auto; gap:0 9px;
+  align-items:start; padding:7px 0; position:relative;
+  transition:opacity .3s var(--t)}
+.blk .time{font-size:11.5px; color:var(--ink-2); font-variant-numeric:tabular-nums;
+  line-height:1.35; padding-top:1px}
+.blk .time em{display:block; font-style:normal; color:var(--ink-3); font-size:10.5px}
+.blk .rail{position:relative; height:100%; min-height:26px}
+.blk .rail::before{content:""; position:absolute; left:50%; top:0; bottom:-14px;
+  width:2px; margin-left:-1px; background:var(--linea, var(--line))}
+.blk:last-child .rail::before{bottom:50%}
+.blk .rail::after{content:""; position:absolute; left:50%; top:6px; width:9px; height:9px;
+  margin-left:-4.5px; border-radius:50%; background:var(--bg);
+  border:2px solid var(--c, var(--c-traslado))}
+.blk[data-fijo="1"] .rail::after{background:var(--c, var(--c-traslado))}
+.blk .cuerpo{min-width:0; padding-bottom:2px}
+.blk .name{font-size:14px; font-weight:500; line-height:1.3; color:var(--ink)}
+.blk .dur{font-size:11.5px; color:var(--ink-3); margin-top:1px}
+.blk .pista{color:var(--accent); margin-left:6px; font-weight:500}
+.blk .why{margin-top:6px; font-size:12px; color:var(--ink-2); line-height:1.5;
+  background:var(--surface-2); border-radius:8px; padding:8px 10px}
+.blk[data-c="trabajo"]{--c:var(--c-trabajo)} .blk[data-c="u"]{--c:var(--c-u)}
+.blk[data-c="cuerpo"]{--c:var(--c-cuerpo)}  .blk[data-c="vinculo"]{--c:var(--c-vinculo)}
+.blk[data-c="mente"]{--c:var(--c-mente)}    .blk[data-c="traslado"]{--c:var(--c-traslado)}
+.blk[data-c="sueno"]{--c:var(--c-sueno)}
+/* Un ancla se dibuja sólida; lo movible, punteado. De un vistazo se ve qué
+   se puede correr y qué no. Es la información más importante de la pantalla. */
+.blk[data-fijo="1"] .name{font-weight:600}
+.blk[data-fijo="1"] .cuerpo{border-left:2px solid var(--c); padding-left:9px; margin-left:-2px}
+.blk[data-fijo="0"] .cuerpo{border-left:2px dotted var(--line-2); padding-left:9px; margin-left:-2px}
+.blk[data-c="traslado"] .name{color:var(--ink-2); font-weight:400; font-size:13px}
+.blk.hecho .name{color:var(--ink-3); text-decoration:line-through;
+  text-decoration-thickness:1px; text-decoration-color:var(--line-2)}
+.blk.encurso{background:var(--accent-soft); border-radius:var(--r-s);
+  margin-left:-8px; margin-right:-8px; padding-left:8px; padding-right:8px;
+  animation:late 2.6s ease-in-out infinite}
+@keyframes late{0%,100%{box-shadow:0 0 0 0 rgba(11,107,87,0)}
+                50%{box-shadow:0 0 0 3px rgba(11,107,87,.09)}}
+.blk.corrido .cuerpo{border-left-color:var(--warn)}
+.blk.corrido .time{color:var(--warn)}
+.blk.entra{animation:pop .34s var(--t) both}
+@keyframes pop{from{opacity:0; transform:translateY(-6px) scale(.99)} to{opacity:1; transform:none}}
+.done{display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer;
+  padding-top:2px; user-select:none}
+.done input{position:absolute; opacity:0; width:0; height:0}
+.done span{width:21px; height:21px; border-radius:7px; border:1.5px solid var(--line-2);
+  background:var(--surface); display:block; position:relative;
+  transition:background .18s var(--t), border-color .18s var(--t), transform .18s var(--t)}
+.done span::after{content:""; position:absolute; left:6.5px; top:3px; width:5px; height:10px;
+  border:solid var(--accent-ink); border-width:0 2px 2px 0; transform:rotate(45deg) scale(.4);
+  opacity:0; transition:opacity .16s var(--t), transform .16s var(--t)}
+.done input:checked + span{background:var(--accent); border-color:var(--accent)}
+.done input:checked + span::after{opacity:1; transform:rotate(45deg) scale(1)}
+.done input:focus-visible + span{outline:2px solid var(--accent); outline-offset:2px}
+.done em{font-style:normal; font-size:9px; color:var(--ink-3); letter-spacing:.04em}
 
-/* ---------- bloque compacto ---------- */
-.blk{grid-template-columns:50px 12px 1fr auto; align-items:start; padding:8px 0}
-.cuerpo{min-width:0}
-.cuerpo.conNota{cursor:pointer}
-.cuerpo.conNota:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:2px}
-.blk .dur{padding-top:1px; display:flex; gap:8px; align-items:baseline}
-.pista{
-  font-family:"JetBrains Mono",monospace; font-size:9.5px; letter-spacing:.09em;
-  text-transform:uppercase; color:var(--accent);
-}
-.cuerpo.abierto .pista{opacity:.45}
-.blk .why{margin-top:5px}
-label.done{
-  display:grid; place-items:center; gap:0; width:30px; padding-top:1px;
-  position:relative;
-}
-label.done em{
-  font-style:normal; font-family:"JetBrains Mono",monospace; font-size:8px;
-  letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); margin-top:2px;
-}
-label.done input{width:18px; height:18px}
-.plegado{font-size:13px}
-.plegado span{
-  padding:2px 7px; border:1px solid var(--line-2); border-radius:2px; color:var(--ink-2);
-}
+.chip{display:inline-block; margin-left:6px; font-size:10px; font-weight:600;
+  letter-spacing:.05em; text-transform:uppercase; vertical-align:1px}
+.chip.blindado{color:var(--accent)}
+.chip.corta{color:var(--bad)}
+.chip.real{color:var(--good); font-variant-numeric:tabular-nums; text-transform:none;
+  letter-spacing:0; font-size:11px}
+.chip.fija{color:var(--ink-3)}
 
-/* ---------- cartera ---------- */
-.grupo{border:1px solid var(--line); border-radius:3px; background:var(--surface); margin-bottom:10px; overflow:hidden}
-.ghead{
-  display:flex; align-items:center; gap:8px; padding:9px 13px; background:var(--surface-2);
-  border-bottom:1px solid var(--line); font-family:"Bricolage Grotesque",sans-serif;
-  font-weight:700; font-size:14px; letter-spacing:-.01em;
-}
-.ghead i{width:9px; height:9px; border-radius:99px; flex:none}
-.ghead span{
-  margin-left:auto; font-family:"JetBrains Mono",monospace; font-size:11px;
-  color:var(--ink-3); font-weight:500; font-variant-numeric:tabular-nums;
-}
-.glist{list-style:none; margin:0; padding:0}
-.glist li{
-  display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 9px;
-  padding:7px 13px; border-bottom:1px solid var(--line); font-size:14px;
-}
-.glist li:last-child{border-bottom:0}
-.glist b{font-size:12px; font-weight:700; color:var(--ink-2); letter-spacing:-.02em}
-.glist .tn{font-weight:600}
-.glist .tz{font-size:12px; color:var(--ink-3)}
-.glist .mins{
-  font-family:"JetBrains Mono",monospace; font-size:10.5px; font-weight:700;
-  color:var(--ink-2); font-variant-numeric:tabular-nums; white-space:nowrap;
-}
-.cat{
-  margin-left:auto; font-family:"JetBrains Mono",monospace; font-size:9px;
-  letter-spacing:.1em; padding:1px 5px; border-radius:2px; font-weight:700;
-  border:1px solid var(--line-2); color:var(--ink-3);
-}
-.cat-platino{border-color:var(--c-u); color:var(--c-u)}
-.cat-oro{border-color:var(--c-cuerpo); color:var(--c-cuerpo)}
+/* ---------- hueco abierto ---------- */
+.hueco{border:1.5px dashed var(--accent); border-radius:var(--r);
+  background:var(--accent-soft); padding:12px 13px; margin:9px 0 11px;
+  animation:pop .36s var(--t) both}
+.hueco h4{margin:0 0 3px; font-family:Fraunces,Georgia,serif; font-size:15px;
+  font-weight:600; color:var(--ink)}
+.hueco .why{color:var(--ink-2)}
+.cands{display:flex; flex-direction:column; gap:6px; margin-top:10px}
+.cand{width:100%; text-align:left; appearance:none; background:var(--surface);
+  border:1px solid var(--line); border-radius:10px; padding:9px 11px; font:inherit;
+  cursor:pointer; display:flex; align-items:baseline; gap:8px;
+  transition:transform .14s var(--t), border-color .18s var(--t), box-shadow .18s var(--t)}
+.cand:hover,.cand:focus-visible{border-color:var(--accent); box-shadow:var(--sh); outline:none}
+.cand:active{transform:scale(.99)}
+.cand b{font-weight:600; font-size:13.5px}
+.cand .m{margin-left:auto; font-size:11.5px; color:var(--ink-3);
+  font-variant-numeric:tabular-nums; white-space:nowrap}
+.cand .p{display:block; font-size:11.5px; color:var(--ink-2); margin-top:1px}
 
-/* ---------- picker ---------- */
-.picker{display:flex; flex-wrap:wrap; gap:6px}
-.pk{
-  font-family:"JetBrains Mono",monospace; font-size:11px; font-weight:700;
-  padding:6px 9px; border-radius:2px; cursor:pointer; letter-spacing:.02em;
-  border:1px solid var(--line-2); background:var(--bg); color:var(--ink-2);
-  display:inline-flex; align-items:baseline; gap:5px; line-height:1.3;
-}
-.pk span{font-family:"Public Sans",sans-serif; font-size:11.5px; font-weight:400; color:var(--ink-3)}
-.pk:hover{border-color:var(--pkc)}
-.pk.on{background:var(--pkc); border-color:var(--pkc); color:#fff}
-.pk.on span{color:#fff; opacity:.82}
-.pk:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+/* ---------- conflicto: las dos versiones ---------- */
+.conf{border:1px solid var(--warn); border-radius:var(--r); background:var(--warn-soft);
+  padding:12px 13px; margin:9px 0 11px}
+.conf h4{margin:0 0 4px; font-family:Fraunces,Georgia,serif; font-size:15px;
+  font-weight:600; color:var(--warn)}
+.dos{display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:10px}
+.ver{appearance:none; text-align:left; background:var(--surface); border:1px solid var(--line);
+  border-radius:10px; padding:10px 11px; font:inherit; cursor:pointer;
+  transition:transform .14s var(--t), border-color .18s var(--t), box-shadow .18s var(--t)}
+.ver:hover,.ver:focus-visible{border-color:var(--warn); box-shadow:var(--sh); outline:none}
+.ver:active{transform:scale(.99)}
+.ver b{display:block; font-size:13px; font-weight:600; margin-bottom:3px}
+.ver span{font-size:11.5px; color:var(--ink-2); line-height:1.45}
 
-/* ---------- pendientes ---------- */
-.addrow{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap}
-.addrow input[type="text"]{
-  flex:1 1 180px; font-family:inherit; font-size:14.5px; padding:9px 11px;
-  border:1px solid var(--line-2); border-radius:2px; background:var(--surface); color:var(--ink);
-}
-.addrow input[type="number"]{
-  width:82px; font-family:"JetBrains Mono",monospace; font-size:14px; padding:9px;
-  border:1px solid var(--line-2); border-radius:2px; background:var(--surface); color:var(--ink);
-  font-variant-numeric:tabular-nums;
-}
-.addrow input:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
-button.btn{
-  font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.11em;
-  text-transform:uppercase; font-weight:700; padding:9px 15px; border-radius:2px;
-  border:1px solid var(--ink); background:var(--ink); color:var(--bg); cursor:pointer;
-}
-button.btn:hover{opacity:.86}
-button.btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-button.btn.ghost{background:none; color:var(--ink-2); border-color:var(--line-2)}
-.pend{list-style:none; margin:0; padding:0; border:1px solid var(--line); border-radius:3px; overflow:hidden}
-.pend li{
-  display:flex; align-items:flex-start; gap:10px; padding:10px 12px;
-  background:var(--surface); border-bottom:1px solid var(--line); font-size:14.5px;
-}
-.pend li:last-child{border-bottom:0}
-.pend li.hecho .txt{text-decoration:line-through; color:var(--ink-3)}
-.pend .txt{flex:1; line-height:1.4}
-.pend .min{font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--ink-3); font-variant-numeric:tabular-nums; white-space:nowrap; padding-top:2px}
-.pend input[type="checkbox"]{accent-color:var(--accent); width:16px; height:16px; margin:3px 0 0; cursor:pointer; flex:none}
-.pend .del{background:none; border:0; color:var(--ink-3); cursor:pointer; font-size:16px; line-height:1; padding:2px 4px}
-.pend .del:hover{color:var(--bad)}
-.empty{padding:16px 12px; background:var(--surface); color:var(--ink-3); font-size:13.5px; text-align:center}
+/* ---------- medidores ---------- */
+.meters{display:grid; grid-template-columns:repeat(2,1fr); gap:8px}
+.meter{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-s);
+  padding:10px 11px}
+.meter .mt{display:flex; align-items:baseline; gap:6px; font-size:12px; color:var(--ink-2)}
+.meter .mt b{margin-left:auto; font-size:13px; color:var(--ink); font-weight:600;
+  font-variant-numeric:tabular-nums}
+.meter .bar{height:4px; border-radius:2px; background:var(--surface-3); margin-top:8px;
+  overflow:hidden}
+.meter .bar i{display:block; height:100%; border-radius:2px; background:var(--accent);
+  transition:width .6s var(--t)}
+.meter.corto .bar i{background:var(--warn)}
+.metersNote{font-size:12px; color:var(--ink-2); margin:10px 0 0}
 
-/* ---------- protocol ---------- */
-.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px}
-.card{background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:15px 16px}
-.card h3{margin-bottom:8px; display:flex; align-items:center; gap:8px}
-.card h3::before{content:""; width:8px; height:8px; border-radius:99px; background:var(--accent); flex:none}
-.card.rule h3::before{background:var(--c-mente)}
-.card.alert h3::before{background:var(--bad)}
-.card.land h3::before{background:var(--c-vinculo)}
-.card p, .card li{font-size:13.5px; color:var(--ink-2); line-height:1.55}
-.card ul{margin:0; padding-left:17px; display:flex; flex-direction:column; gap:5px}
-.card ul.plain{list-style:none; padding-left:0}
-.card ul.plain li{padding-left:15px; position:relative}
-.card ul.plain li::before{content:"—"; position:absolute; left:0; color:var(--ink-3)}
+/* ---------- disciplina ---------- */
+.discip{margin:9px 0; padding:9px 11px; border-radius:var(--r-s); background:var(--surface);
+  border:1px solid var(--line); font-size:12px; color:var(--ink-2)}
+.discip b{color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
 
-/* ---------- contingency ---------- */
-.order{list-style:none; margin:0; padding:0; counter-reset:o}
-.order li{
-  counter-increment:o; display:grid; grid-template-columns:30px 1fr; gap:12px;
-  padding:11px 0; border-bottom:1px solid var(--line); font-size:14.5px; align-items:baseline;
-}
-.order li:last-child{border-bottom:0}
-.order li::before{
-  content:counter(o); font-family:"JetBrains Mono",monospace; font-size:11px; font-weight:700;
-  color:var(--bg); background:var(--ink); width:20px; height:20px; border-radius:2px;
-  display:grid; place-items:center; align-self:start; margin-top:2px;
-}
-.order b{font-weight:600}
+/* ---------- check-in ---------- */
+.checkin{background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--sh); padding:14px 15px; margin-bottom:14px}
+.checkin h3{font-size:16px; margin-bottom:3px}
+.paso{margin-top:12px}
+.paso .q{font-size:13.5px; font-weight:600; margin-bottom:7px}
+.progreso{display:flex; gap:4px; margin-top:12px}
+.progreso i{flex:1; height:3px; border-radius:2px; background:var(--surface-3);
+  transition:background .3s var(--t)}
+.progreso i.on{background:var(--accent)}
+
+/* ---------- formularios y botones ---------- */
+.field{display:flex; flex-direction:column; gap:4px; min-width:0}
+.field label{font-size:10.5px; font-weight:600; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--ink-3)}
+input[type=text],input[type=time],input[type=number],select,textarea{
+  appearance:none; background:var(--surface); border:1px solid var(--line-2);
+  border-radius:9px; padding:9px 10px; font:inherit; font-size:14px; color:var(--ink);
+  min-width:0; width:100%; transition:border-color .18s var(--t), box-shadow .18s var(--t)}
+input:focus,select:focus,textarea:focus{outline:none; border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft)}
+.frow{display:grid; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); gap:9px}
+.addrow{display:flex; gap:7px; flex-wrap:wrap}
+.addrow input[type=text]{flex:1 1 140px}
+.addrow input[type=number]{flex:0 0 76px}
+.btn{appearance:none; border:0; border-radius:9px; background:var(--accent);
+  color:var(--accent-ink); font:inherit; font-size:13.5px; font-weight:600;
+  padding:9px 15px; cursor:pointer; white-space:nowrap;
+  transition:transform .14s var(--t), filter .2s var(--t)}
+.btn:active{transform:scale(.98); filter:brightness(1.08)}
+.btn:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+.btn.ghost{background:var(--surface); color:var(--ink-2); border:1px solid var(--line-2)}
+.btn.chico{padding:6px 11px; font-size:12.5px}
+.lnk{appearance:none; background:none; border:0; padding:0; font:inherit; font-size:inherit;
+  color:var(--accent); font-weight:600; cursor:pointer; text-decoration:underline;
+  text-underline-offset:2px}
+
+/* ---------- secciones y tarjetas ---------- */
+section{margin-bottom:26px}
+.shead{display:flex; align-items:baseline; gap:9px; margin-bottom:8px}
+.shead h2{font-size:18px}
+.shead .eyebrow{margin-left:auto}
+.cards{display:flex; flex-direction:column; gap:9px}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+  padding:12px 13px}
+.card h3{font-size:14.5px; margin-bottom:5px}
+.card p{margin:0; font-size:13px; color:var(--ink-2); line-height:1.55}
+.card.alert{background:var(--warn-soft); border-color:transparent}
+.card.alert h3{color:var(--warn)}
+.plain{margin:6px 0 0; padding-left:17px; font-size:12.5px; color:var(--ink-2); line-height:1.6}
+.plain li{margin-bottom:4px}
+.plain b{color:var(--ink)}
+.order{counter-reset:o; list-style:none; margin:0; padding:0}
+.order li{counter-increment:o; display:flex; gap:11px; padding:10px 0;
+  border-top:1px solid var(--line)}
+.order li::before{content:counter(o); flex:0 0 22px; height:22px; border-radius:50%;
+  background:var(--surface-3); color:var(--ink-2); font-size:11px; font-weight:600;
+  display:grid; place-items:center}
+.order b{font-size:13.5px}
 .order .why{margin-top:2px}
 
-/* ---------- footer ---------- */
-footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-3)}
-footer b{color:var(--ink-2)}
-footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column; gap:4px}
-.savestate{
-  font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.1em;
-  text-transform:uppercase; color:var(--ink-3);
-}
-.savestate.on{color:var(--good)}
+/* ---------- cartera ---------- */
+.grupo{margin-bottom:11px}
+.ghead{display:flex; align-items:center; gap:7px; font-size:12px; font-weight:600;
+  color:var(--ink-2); margin-bottom:5px}
+.ghead i{width:9px; height:9px; border-radius:3px; display:block}
+.ghead span{margin-left:auto; color:var(--ink-3); font-weight:500}
+.glist{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:3px}
+.glist li{display:flex; align-items:baseline; gap:7px; background:var(--surface);
+  border:1px solid var(--line); border-radius:8px; padding:7px 9px; font-size:12.5px}
+.glist .tn{font-weight:500}
+.glist .tz{color:var(--ink-3); font-size:11px; flex:1 1 0; min-width:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.glist .mins{color:var(--ink-2); font-size:11.5px; white-space:nowrap}
+.glist .cat{font-size:9.5px; font-weight:700; letter-spacing:.05em; color:var(--ink-3)}
+.picker{display:flex; flex-wrap:wrap; gap:5px}
+.pk{appearance:none; background:var(--surface); border:1px solid var(--line);
+  border-radius:999px; padding:6px 11px; font:inherit; font-size:12px; cursor:pointer;
+  color:var(--ink-2); transition:all .16s var(--t)}
+.pk span{color:var(--ink-3); font-size:11px; margin-left:3px}
+.pk.on{background:var(--pkc); border-color:transparent; color:#fff}
+.pk.on span{color:rgba(255,255,255,.8)}
+.pk:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
 
-@media (max-width:560px){
-  .blk{grid-template-columns:46px 10px 1fr auto; gap:0 8px}
-  .plan li{grid-template-columns:96px 1fr}
+.calc{background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+  padding:13px}
+.calcOut{margin-top:13px; padding-top:13px; border-top:1px solid var(--line)}
+.verdict{font-size:14px; font-weight:600; margin-bottom:7px}
+.verdict.ok{color:var(--good)} .verdict.tight{color:var(--warn)} .verdict.no{color:var(--bad)}
+.plan{list-style:none; margin:8px 0 0; padding:0; font-size:12.5px}
+.plan li{display:flex; gap:9px; padding:4px 0; border-top:1px solid var(--line)}
+.plan .h{font-variant-numeric:tabular-nums; color:var(--ink-2); flex:0 0 88px}
+
+.pend{list-style:none; margin:11px 0 0; padding:0; display:flex; flex-direction:column; gap:5px}
+.pend li{display:flex; align-items:center; gap:9px; background:var(--surface);
+  border:1px solid var(--line); border-radius:9px; padding:8px 10px; font-size:13px}
+.pend li.ok .t{color:var(--ink-3); text-decoration:line-through}
+.pend .t{flex:1 1 0; min-width:0}
+.pend .m{color:var(--ink-3); font-size:11.5px; font-variant-numeric:tabular-nums}
+.pend .x{appearance:none; background:none; border:0; color:var(--ink-3); cursor:pointer;
+  font-size:16px; line-height:1; padding:0 2px}
+
+.acard{background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+  padding:13px; margin-bottom:11px}
+.acard h3{font-size:14.5px; margin-bottom:4px}
+.respuesta{background:var(--surface-2); border-radius:var(--r-s); padding:11px 12px;
+  margin-top:11px; font-size:13px; line-height:1.55}
+.pensando{color:var(--ink-3); font-size:12.5px; margin:11px 0 0}
+.pensando::after{content:""; display:inline-block; width:3px; height:3px; margin-left:5px;
+  border-radius:50%; background:currentColor; animation:late 1.1s ease-in-out infinite}
+.ok{color:var(--good); font-size:12.5px; margin:10px 0 0}
+.eaviso{color:var(--bad); font-size:12.5px; margin:10px 0 0}
+
+footer{border-top:1px solid var(--line); margin-top:26px; padding-top:14px;
+  font-size:11.5px; color:var(--ink-3); line-height:1.6}
+footer b{color:var(--ink-2)}
+footer ul{margin:8px 0 0; padding-left:16px}
+
+@media (max-width:400px){
+  .blk{grid-template-columns:42px 12px 1fr auto; gap:0 7px}
+  .dos{grid-template-columns:1fr}
 }
-@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important; animation-iteration-count:1 !important;
+    transition-duration:.001ms !important}
+}
 </style>
 
 <div class="wrap">
@@ -560,7 +414,7 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
     <button class="nv" data-v="hoy" aria-selected="true">Hoy</button>
     <button class="nv" data-v="semana" aria-selected="false">Semana</button>
     <button class="nv" data-v="ruta" aria-selected="false">Ruta</button>
-    <button class="nv" data-v="asis" aria-selected="false" id="nvAsis" hidden>Asistente</button>
+    <button class="nv" data-v="asis" aria-selected="false">Asistente</button>
     <button class="nv mas" data-v="mas" aria-selected="false" aria-label="Más">···</button>
   </nav>
 </header>
@@ -569,23 +423,6 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
   <div id="ahora"></div>
   <div class="tabs" id="tabs" role="tablist"></div>
   <div id="dayPane"></div>
-
-  <div class="retraso">
-    <div class="rhead">
-      <h3>Voy retrasado</h3>
-      <button class="btn ghost" id="rToggle" aria-expanded="false">Recalcular el día</button>
-    </div>
-    <div id="rBody" hidden>
-      <p class="sub" style="margin:0 0 12px">Dime cómo vas y te propongo tres formas de cerrar el día. Ninguna se aplica sola — tú eliges.</p>
-      <div class="rmodes" id="rModes" role="tablist">
-        <button class="rm" data-m="donde" aria-selected="true">Dónde estoy</button>
-        <button class="rm" data-m="tarde" aria-selected="false">Cuánto tarde voy</button>
-        <button class="rm" data-m="termino" aria-selected="false">Cuándo termino</button>
-      </div>
-      <div class="frow" id="rInputs" style="margin-top:12px"></div>
-      <div id="rOut" style="margin-top:14px"></div>
-    </div>
-  </div>
 </div>
 
 <div class="vista" id="v-semana" hidden>
@@ -593,67 +430,69 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
   <div class="meters" id="meters"></div>
   <p class="metersNote" id="metersNote"></p>
 
-  <section style="margin-top:22px">
-  <div class="shead"><h2>Noches de fútbol</h2><span class="eyebrow">Hora variable</span></div>
-  <p class="sub" style="margin:0 0 12px">Juegas <b>un partido de 40 minutos</b>: llegas 20 antes y te vas 15 después. Con traslados son 2 h 35 fuera de casa, no la ventana completa. Pon la hora del partido el día anterior y el día se rearma solo.</p>
-  <div id="futbolPanel"></div>
+  <section style="margin-top:24px">
+    <div class="shead"><h2>Noches de fútbol</h2><span class="eyebrow">Hora variable</span></div>
+    <p class="sub" style="margin:0 0 11px">Juegas <b>un partido de 40 minutos</b>: llegas 20 antes y te vas 15 después. Con traslados son 2 h 35 fuera de casa, no la ventana completa. Pon la hora el día anterior y la tarde se rearma sola.</p>
+    <div id="futbolPanel"></div>
   </section>
 </div>
 
 <div class="vista" id="v-asis" hidden>
+  <div class="checkin" id="checkin"></div>
+
   <div id="asistente" hidden>
-  <div class="shead"><h2>Asistente</h2><span class="eyebrow">Sin pasar por el chat</span></div>
-  <p class="sub" style="margin:0 0 14px">Todo esto le pregunta a Claude desde aquí, mandando solo tu horario y no una conversación entera. Gasta tu uso de Claude, pero una fracción de lo que cuesta un chat largo.</p>
+    <div class="shead" style="margin-top:22px"><h2>Preguntarle a Claude</h2><span class="eyebrow">Sin pasar por el chat</span></div>
+    <p class="sub" style="margin:0 0 13px">Estas cuatro cosas le preguntan a Claude desde aquí, mandando solo tu horario y no una conversación entera. Gasta tu uso de Claude, pero una fracción de lo que cuesta un chat largo.</p>
 
-  <div class="acard" id="acFoto" hidden>
-    <h3>Domingo · tu programación de trabajo</h3>
-    <p class="why">Sube la captura de tu plan de banca. Te muestro lo que entendí antes de tocar nada.</p>
-    <div class="addrow" style="margin-top:10px">
-      <input type="file" id="fotoIn" accept="image/*">
-      <button class="btn" id="fotoGo">Leer la foto</button>
+    <div class="acard" id="acFoto" hidden>
+      <h3>La foto de tu plan de banca</h3>
+      <p class="why">Sube la captura. Te muestro lo que entendí antes de tocar nada.</p>
+      <div class="addrow" style="margin-top:10px">
+        <input type="file" id="fotoIn" accept="image/*">
+        <button class="btn" id="fotoGo">Leer la foto</button>
+      </div>
+      <div id="fotoOut"></div>
     </div>
-    <div id="fotoOut"></div>
-  </div>
 
-  <div class="acard">
-    <h3>Agregar una tarea</h3>
-    <p class="why">Escríbela como te salga: «trabajo de marketing, 3 horas, para el viernes». Te digo en qué bloque cae y por qué.</p>
-    <div class="addrow" style="margin-top:10px">
-      <input id="tareaIn" type="text" placeholder="Qué te dejaron, cuánto dura y para cuándo" maxlength="240">
-      <button class="btn" id="tareaGo">Ubicar</button>
+    <div class="acard">
+      <h3>Agregar una tarea</h3>
+      <p class="why">Escríbela como te salga: «trabajo de marketing, 3 horas, para el viernes». Te digo en qué bloque cae y por qué.</p>
+      <div class="addrow" style="margin-top:10px">
+        <input id="tareaIn" type="text" placeholder="Qué te dejaron, cuánto dura y para cuándo" maxlength="240">
+        <button class="btn" id="tareaGo">Ubicar</button>
+      </div>
+      <div id="tareaOut"></div>
     </div>
-    <div id="tareaOut"></div>
-  </div>
 
-  <div class="acard">
-    <h3>Pregunta lo que sea de tu semana</h3>
-    <p class="why">«¿Me da tiempo de ir al gym hoy?» · «¿Cuándo meto SP33?» · «¿Qué dejo de hacer esta semana?»</p>
-    <div class="addrow" style="margin-top:10px">
-      <input id="preIn" type="text" placeholder="Tu pregunta" maxlength="300">
-      <button class="btn" id="preGo">Preguntar</button>
-      <button class="btn ghost" id="preStop" hidden>Parar</button>
+    <div class="acard">
+      <h3>Pregunta lo que sea de tu semana</h3>
+      <p class="why">«¿Me da tiempo de ir al gym hoy?» · «¿Cuándo meto SP33?» · «¿Qué dejo de hacer esta semana?»</p>
+      <div class="addrow" style="margin-top:10px">
+        <input id="preIn" type="text" placeholder="Tu pregunta" maxlength="300">
+        <button class="btn" id="preGo">Preguntar</button>
+        <button class="btn ghost" id="preStop" hidden>Parar</button>
+      </div>
+      <div id="preOut"></div>
     </div>
-    <div id="preOut"></div>
-  </div>
 
-  <div class="acard">
-    <h3>Reporte del domingo</h3>
-    <p class="why">Lee lo que cumpliste de verdad y te dice qué bloques se caen siempre. Eso corrige el horario, no tu voluntad.</p>
-    <div class="addrow" style="margin-top:10px">
-      <button class="btn" id="repGo">Ver el reporte</button>
+    <div class="acard">
+      <h3>Reporte del domingo</h3>
+      <p class="why">Lee lo que cumpliste de verdad, con las horas reales de cierre, y te dice qué bloques se caen siempre. Eso corrige el horario, no tu voluntad.</p>
+      <div class="addrow" style="margin-top:10px">
+        <button class="btn" id="repGo">Ver el reporte</button>
+      </div>
+      <div id="repOut"></div>
     </div>
-    <div id="repOut"></div>
-  </div>
 
-  <div class="acard" id="acCal" hidden>
-    <h3>Sincronizar tu Google Calendar</h3>
-    <p class="why">Crea y mueve los eventos de la semana variable: visitas, capacitaciones y el partido. Los bloques fijos que ya tienes no se tocan.</p>
-    <p class="why" id="calSemana"></p>
-    <div class="addrow" style="margin-top:10px">
-      <button class="btn" id="calGo">Sincronizar</button>
+    <div class="acard" id="acCal" hidden>
+      <h3>Sincronizar tu Google Calendar</h3>
+      <p class="why">Crea y mueve los eventos de la semana variable con las horas que ves aquí. Los bloques fijos que ya tienes no se tocan.</p>
+      <p class="why" id="calSemana"></p>
+      <div class="addrow" style="margin-top:10px">
+        <button class="btn" id="calGo">Sincronizar</button>
+      </div>
+      <div id="calOut"></div>
     </div>
-    <div id="calOut"></div>
-  </div>
   </div>
 </div>
 
@@ -664,10 +503,10 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
   <div class="calc">
     <div class="eyebrow" style="margin-bottom:7px">Tiendas de hoy</div>
     <div class="picker" id="picker"></div>
-    <div class="frow" style="margin-top:14px">
+    <div class="frow" style="margin-top:13px">
       <div class="field"><label for="cTope">En casa a las</label><input id="cTope" type="time" value="18:30"></div>
       <div class="field"><label for="cAhora">Sales a las</label><input id="cAhora" type="time" value="11:35"></div>
-      <div class="field"><label for="cVisita">Min / visita</label><input id="cVisita" type="number" min="30" max="240" step="5" value="90"></div>
+      <div class="field"><label for="cVisita">Min / visita</label><input id="cVisita" type="number" min="30" max="240" step="5" value="120"></div>
       <div class="field"><label for="cIda">Casa → 1ª (min)</label><input id="cIda" type="number" min="5" max="180" step="5" value="45"></div>
       <div class="field"><label for="cEntre">Entre tiendas (min)</label><input id="cEntre" type="number" min="5" max="180" step="5" value="70"></div>
       <div class="field"><label for="cVuelta">Última → casa (min)</label><input id="cVuelta" type="number" min="5" max="180" step="5" value="45"></div>
@@ -679,7 +518,7 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
 
 <section>
   <div class="shead"><h2>Pendientes sueltos</h2><span class="eyebrow">Sácalos de tu cabeza</span></div>
-  <p class="sub" style="margin:0 0 12px">Todo lo que aparece durante el día entra aquí con su estimación en minutos. Lo que no tiene minutos asignados no es una tarea, es una preocupación.</p>
+  <p class="sub" style="margin:0 0 11px">Todo lo que aparece durante el día entra aquí con su estimación en minutos. Cuando se te abra un hueco, la app te los ofrece para meterlos ahí.</p>
   <div class="addrow">
     <input id="pTxt" type="text" placeholder="Qué hay que hacer" maxlength="140">
     <input id="pMin" type="number" placeholder="min" min="5" max="480" step="5" value="30" aria-label="Minutos estimados">
@@ -691,95 +530,102 @@ footer ul{margin:8px 0 0; padding-left:17px; display:flex; flex-direction:column
 
 <div class="vista" id="v-mas" hidden>
   <section>
-  <div class="shead"><h2>Tu cartera</h2><span class="eyebrow">20 tiendas · todas en Lima</span></div>
-  <p class="sub" style="margin:0 0 12px">Minutos <b>medidos</b> desde tu casa en Independencia: cada dirección real ruteada y ajustada a hora punta de Lima. Un día dentro de un mismo grupo cuesta ~23 min por salto; cruzar grupos cuesta ~57. Ahí está la decisión que más tiempo te ahorra en la semana.</p>
-  <div id="cartera"></div>
-  <div class="card" style="margin-top:14px">
-    <h3>Cuánto dura cada tipo de día</h3>
-    <ul class="plain">
-      <li><b>Visita a tienda</b> · 90 min por tienda. Tú la resuelves más rápido, pero el horario se planifica con 90: el día que se complica, es lo que evita que todo se corra.</li>
-      <li><b>Capacitación</b> · 180 min. Es el único bloque que no se puede acortar.</li>
-      <li><b>Tienda escuela</b> · turno mañana o turno tarde completo.</li>
-      <li><b>MMEE / proyecto en oficina</b> · bloque de oficina, sin traslados entre paradas.</li>
-      <li><b>Correos de visitas</b> · domingo, todos de una vez.</li>
-    </ul>
-  </div>
-</section>
-
-
-
-
-
-<section>
-  <div class="shead"><h2>Protocolo de cabeza</h2><span class="eyebrow">Antes de que se rompa</span></div>
-  <div class="cards">
-    <div class="card rule">
-      <h3>Regla del 80 %</h3>
-      <p>Si el miércoles vas por debajo del 80 % de los bloques marcados, <b>recortas alcance, nunca sueño</b>. Sacrificas tareas, no horas de dormir. El sueño es lo que hace que la semana siguiente exista.</p>
-    </div>
-    <div class="card">
-      <h3>Descompresión diaria</h3>
-      <p>Los 20 minutos al llegar a casa, sin celular, no son tiempo muerto: son lo que impide que el día laboral se filtre a la noche. Es el bloque que más rápido querrás saltarte y el que menos deberías.</p>
-    </div>
-    <div class="card alert">
-      <h3>Señales de alerta</h3>
+    <div class="shead"><h2>Tu cartera</h2><span class="eyebrow">20 tiendas · todas en Lima</span></div>
+    <p class="sub" style="margin:0 0 11px">Minutos <b>medidos</b> desde tu casa en Independencia: cada dirección real ruteada y ajustada a hora punta de Lima. Un día dentro de un mismo grupo cuesta ~23 min por salto; cruzar grupos cuesta ~57. Ahí está la decisión que más tiempo te ahorra en la semana.</p>
+    <div id="cartera"></div>
+    <div class="card" style="margin-top:13px">
+      <h3>Cuánto dura cada cosa</h3>
       <ul class="plain">
-        <li>Dos noches seguidas bajo 6 h → cancela el fútbol de esa semana.</li>
-        <li>Te saltas la descompresión 3 días → recorta un bloque de trabajo, no la lectura.</li>
-        <li>Irritabilidad con tu enamorada o con los gatos → es fatiga, no es la relación.</li>
-        <li>La tesis lleva 2 semanas sin avanzar → el problema es el horario, no tu voluntad. Reescríbelo.</li>
+        <li><b>Visita a tienda</b> · 120 min. Dijiste «1 h 30 a 2 h»; el horario usa el peor escenario, que es lo que evita que el día se corra.</li>
+        <li><b>Turno completo</b> · 330 min, para una platino a la que le dedicas el día.</li>
+        <li><b>Capacitación</b> · 150 min, con hora fija. Es la que menos se puede mover.</li>
+        <li><b>Tienda escuela</b> · 330 min, día completo en oficina.</li>
+        <li><b>Takary</b> · 30 min por visita · <b>Reportería</b> 60 · <b>Seguimiento</b> 40.</li>
       </ul>
     </div>
-    <div class="card land">
-      <h3>Día de aterrizaje</h3>
-      <p>Un domingo al mes: sin correos, sin tesis, sin planificación. Solo gym, comida y tu gente. No es premio por rendimiento — va en el calendario aunque la semana haya salido mal. Sobre todo si salió mal.</p>
+    <div class="card" style="margin-top:9px">
+      <h3>Horario de cada tienda</h3>
+      <p>Las 20 fichas de <b>superpet.pe</b> publican su horario y la app los usa: nunca programa una visita antes de que la tienda abra ni de modo que termine después de que cierre. SP20 Dos de Mayo abre 08:00; SP56 Mega Plaza y SP66 recién a las 10:00.</p>
     </div>
-  </div>
-</section>
+  </section>
 
-<section>
-  <div class="shead"><h2>Cuando la semana se rompe</h2><span class="eyebrow">Orden de sacrificio</span></div>
-  <p class="sub" style="margin:0 0 12px">Escrito ahora, con la cabeza descansada, para no decidirlo a las 11 de la noche. Se sacrifica de arriba hacia abajo, nunca salteado.</p>
-  <div class="card" style="margin-bottom:14px">
-    <h3>Qué resuelve el botón y qué me escribes a mí</h3>
-    <p>El botón <b>Voy retrasado</b> arregla minutos dentro del día, sin chat y sin internet. Los cambios de forma los reacomodo yo en la semana completa. Frases que ya entiendo:</p>
-    <ul class="plain" style="margin-top:8px">
-      <li><b>«El partido de mañana es a las 21:30»</b> — ajusto el día y el evento del calendario.</li>
-      <li><b>«Se cayó la visita del jueves»</b> — reacomodo la semana y republico esta página.</li>
-      <li><b>«Esta semana el bloque flexible va a tesis»</b> — reasigno martes y jueves.</li>
-      <li><b>«Adelantaron la entrega de tesis al viernes»</b> — recompongo los cuatro bloques de tesis.</li>
-      <li><b>«Esta semana trabajo sábado completo»</b> — muevo el bloque de pareja y reviso los contadores.</li>
+  <section>
+    <div class="shead"><h2>Cómo decide la app</h2><span class="eyebrow">Tres clases de bloque</span></div>
+    <div class="cards">
+      <div class="card">
+        <h3>Anclado</h3>
+        <p>Clase, partido, capacitación, cine, reunión. <b>Hora impuesta por otra gente: la app nunca la mueve.</b> Se dibuja con la barra sólida a la izquierda. Si llegas tarde, te lo dice — no corre la clase.</p>
+      </div>
+      <div class="card">
+        <h3>Con ventana</h3>
+        <p>Las visitas a tienda. La hora la elige la app, pero dentro del horario real de esa tienda. Se dibuja punteado y con su rango al lado.</p>
+      </div>
+      <div class="card">
+        <h3>Movible</h3>
+        <p>Todo lo demás: tesis, lectura, comida, traslados, gym. Se acomoda donde quepa. Punteado, sin rango.</p>
+      </div>
+      <div class="card alert">
+        <h3>Cuando sobra o falta tiempo</h3>
+        <p>Si se abre un hueco, la app te lo muestra con candidatos concretos y tú eliges. Si algo pisaría un ancla, te muestra las dos versiones —llegar tarde o soltar lo de antes— con la consecuencia de cada una. <b>Nunca decide por ti.</b></p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><h2>Protocolo de cabeza</h2><span class="eyebrow">Antes de que se rompa</span></div>
+    <div class="cards">
+      <div class="card">
+        <h3>Regla del 80 %</h3>
+        <p>Si el miércoles vas por debajo del 80 % de los bloques marcados, <b>recortas alcance, nunca sueño</b>. Sacrificas tareas, no horas de dormir. El sueño es lo que hace que la semana siguiente exista.</p>
+      </div>
+      <div class="card">
+        <h3>Descompresión diaria</h3>
+        <p>Los 20 minutos al llegar a casa, sin celular, no son tiempo muerto: son lo que impide que el día laboral se filtre a la noche. Es el bloque que más rápido querrás saltarte y el que menos deberías.</p>
+      </div>
+      <div class="card alert">
+        <h3>Señales de alerta</h3>
+        <ul class="plain">
+          <li>Dos noches seguidas bajo 6 h → cancela el fútbol de esa semana.</li>
+          <li>Te saltas la descompresión 3 días → recorta un bloque de trabajo, no la lectura.</li>
+          <li>Irritabilidad con tu enamorada o con los gatos → es fatiga, no es la relación.</li>
+          <li>La tesis lleva 2 semanas sin avanzar → el problema es el horario, no tu voluntad.</li>
+          <li>El desvío medio del día pasa de 25 min varios días → las duraciones están mal calculadas. Dímelo y las corrijo.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Día de aterrizaje</h3>
+        <p>Un domingo al mes: sin correos, sin tesis, sin planificación. Solo gym, comida y tu gente. No es premio por rendimiento — va en el calendario aunque la semana haya salido mal. Sobre todo si salió mal.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><h2>Cuando la semana se rompe</h2><span class="eyebrow">Orden de sacrificio</span></div>
+    <p class="sub" style="margin:0 0 11px">Escrito ahora, con la cabeza descansada, para no decidirlo a las 11 de la noche. Se sacrifica de arriba hacia abajo, nunca salteado. Es el mismo orden que usa la app cuando te ofrece «soltar y llegar».</p>
+    <ol class="order">
+      <li><div><b>Lectura del día</b><div class="why">Se recupera el fin de semana sin costo. Es el amortiguador barato.</div></div></li>
+      <li><div><b>Un bloque de trabajo adelantado</b><div class="why">Lo que ibas a adelantar, no lo que vence. Se corre al día siguiente.</div></div></li>
+      <li><div><b>El fútbol de esa noche</b><div class="why">Duele, pero recuperas 2 h 35 completas incluyendo traslados.</div></div></li>
+      <li><div><b>Una sesión de gym</b><div class="why">Solo si ya sacrificaste el fútbol y sigue sin alcanzar. Nunca las tres.</div></div></li>
+      <li><div><b>Nada más</b><div class="why">Tesis, pareja, sueño y descompresión no entran en esta lista. Si llegaste hasta aquí, el problema es la carga, no el horario: hay que sacar algo de la semana, no comprimirlo.</div></div></li>
+    </ol>
+  </section>
+
+  <footer>
+    <b>De dónde salen los números.</b> La cartera sale de tu Matriz de Indicadores 2026, hoja de setiembre: 20 tiendas, todas en Lima. Los minutos de traslado se calcularon ruteando cada dirección real con OSRM desde Las Gladiolas 125, Independencia, con un factor de hora punta de Lima (×2.2) más 10 min de margen. Los horarios de tienda se leyeron de las 20 fichas de superpet.pe.
+    <ul>
+      <li>El punto de casa es el centroide de Independencia: la calle exacta no está indexada en OpenStreetMap, así que añade unos minutos de incertidumbre propia.</li>
+      <li>El ×2.2 es un factor de tráfico, no una medición. Se recalibra con los tiempos reales que vayas midiendo: casa→sede dio 60 real contra 58 del modelo.</li>
+      <li>De la oficina a una tienda no hay matriz medida, así que se usa el salto entre conglomerados (57 min), que es el lado pesimista.</li>
+      <li>La noche del lunes al martes son 5 h 15 y no se arregla moviendo bloques: sales de clase 22:40 y entras a las 7:30.</li>
     </ul>
-  </div>
-  <ol class="order">
-    <li><div><b>Lectura del día</b><div class="why">Se recupera el fin de semana sin costo. Es el amortiguador barato.</div></div></li>
-    <li><div><b>Un bloque de trabajo adelantado</b><div class="why">Lo que ibas a adelantar, no lo que vence. Se corre al día siguiente.</div></div></li>
-    <li><div><b>El fútbol de esa noche</b><div class="why">Duele, pero recuperas 2 h 20 completas incluyendo traslados. Es la palanca más grande de la semana.</div></div></li>
-    <li><div><b>Una sesión de gym</b><div class="why">Solo si ya sacrificaste el fútbol y sigue sin alcanzar. Nunca las tres.</div></div></li>
-    <li><div><b>Nada más</b><div class="why">Tesis, pareja, sueño y descompresión no entran en esta lista. Si llegaste hasta aquí, el problema es la carga, no el horario: hay que sacar algo de la semana, no comprimirlo.</div></div></li>
-  </ol>
-</section>
-
-<footer>
-  <b>Supuestos de esta versión.</b> La cartera sale de tu Matriz de Indicadores 2026, hoja de setiembre: 20 tiendas, todas en Lima. La jornada laboral sigue como bloque parametrizable de ~7 h 25 más almuerzo, porque tu carga varía cada semana entre visitas, capacitaciones, tienda escuela y oficina. Los traslados usan 45 min casa→trabajo, 55+10 casa→U y 30+10 casa→gym, siempre en peor escenario.
-  <ul>
-    <li>Falta: <b>tu distrito</b> — sin él no se puede calcular ningún tramo de vuelta a casa — y la zona de <b>SP69 Paracas</b>, más la confirmación de SP15 Mayolo, SP55 El Ejército y SP20 Dos de Mayo.</li>
-    <li>Los tiempos entre conglomerados (25 min dentro, 55 min cruzando) son provisionales: se corrigen con los tiempos reales que vayas midiendo.</li>
-    <li>El gym quedó viernes tarde, sábado y domingo por la mañana: son las únicas franjas que no le quitan horas a tu sueño.</li>
-    <li>La noche del lunes al martes son 5 h 15 y no se puede arreglar moviendo bloques — sales de clase 22:40 y entras a las 7:30. Se compensa con la siesta del martes y el arranque tardío del miércoles.</li>
-  </ul>
-</footer>
+  </footer>
 </div>
 
 </div>
 
 <script>
-"use strict";
-
-/* ============================================================
-   DATOS — la semana base. Minutos verificados, peor escenario.
-   tag: cuenta para los innegociables.
-   ============================================================ */
+/* datos: fútbol de hora variable y los siete días base */
 /* ============================================================
    FÚTBOL CON HORA VARIABLE
    Carlos juega UN partido de 40 min. Llega 20 min antes y se va
@@ -837,13 +683,13 @@ function tardeFutbol(cfg, diaId, o){
       esDormir
         ? "El fútbol te devolvió este rato. Elige arriba en qué invertirlo esta semana."
         : dest.nota,
-      esDormir ? "" : dest.tag, {prio:3});
+      esDormir ? "" : dest.tag, {min:0, prio:3});
   } else if(flexPre > 0){
     push(flexPre, "Margen antes de salir", "cuerpo", "", "", {min:0, prio:3});
   }
 
   push(F_TRASLADO, "Traslado a la cancha", "traslado", "", "", {fijo:true});
-  push(F_ANTES, "Llegada y calentamiento", "cuerpo", "", "", {fijo:true, min:12});
+  push(F_ANTES, "Llegada y calentamiento", "cuerpo", "", "", {min:12});
   push(F_PARTIDO, "Partido",  "cuerpo",
     sinHora ? "Hora sin confirmar: el día está armado con el escenario tardío. Dime a qué hora juegas y se recalcula."
             : "Tu único partido de la semana en este día.", "", {fijo:true});
@@ -1022,6 +868,7 @@ const DIAS = [
   }
 ];
 
+
 const METAS = [
   {tag:"tesis",   nom:"Tesis",   meta:300, cls:"tesis"},
   {tag:"lectura", nom:"Lectura", meta:210, cls:"lectura"},
@@ -1100,14 +947,17 @@ function weekId(d){
   return t.getUTCFullYear()+"-W"+String(wk).padStart(2,"0");
 }
 
+
 /* ---------------- estado ---------------- */
 const WEEK = weekId(new Date());
-let hechos = {};           // blockKey -> true
+let hechos = {};           // blockKey -> {t: hora real de cierre, plan: hora prevista}
 let pendientes = [];       // {id,txt,min,hecho}
 let CFG = {                // configuración de la semana en curso
   partidos: {},            // {mar:"21:30", jue:"20:40"} — Carlos avisa el día antes
   flex: {},                // {mar:"tesis", jue:"dormir"} — destino del bloque flexible
-  ajuste: null,            // re-planificación activa: {dia, desde, escenario, caidos:[]}
+  real: {},                // {lun:{idx,hora,nombre}} lo que de verdad pasó hoy
+  soltados: {},            // {lun:["Lectura"]} lo que soltaste a propósito
+  checkin: {},             // respuestas de las cinco entradas de la semana
 
   /* Semilla de la semana del 7 al 12 de setiembre. Lo que esté guardado en
      db o localStorage pisa esto, así que editar desde la página gana.
@@ -1163,6 +1013,66 @@ let CFG = {                // configuración de la semana en curso
      4 · reencadenado  todo se recalcula en cadena, sin huecos ni solapes
    Si el día resultante no cabe, se marca y se ofrecen escenarios.
    ============================================================ */
+
+
+/* Horarios reales de cada tienda, leídos de su ficha en superpet.pe.
+   [lunes-viernes, sábado, domingo], cada uno [abre, cierra] en minutos.
+   Una visita no se programa antes de que la tienda abra ni de modo que
+   termine después de que cierre. */
+const HORARIOS = {
+  SP33:[[540,1320],[540,1320],[540,1320]],
+  SP56:[[600,1320],[600,1320],[600,1320]],
+  SP44:[[600,1260],[600,1260],[540,1140]],
+  SP15:[[600,1260],[600,1260],[600,1200]],
+  SP61:[[540,1320],[540,1320],[540,1320]],
+  SP52:[[540,1320],[540,1320],[540,1320]],
+  SP20:[[480,1320],[480,1320],[480,1260]],
+  SP54:[[540,1320],[540,1320],[540,1320]],
+  SP25:[[540,1320],[540,1320],[540,1320]],
+  SP47:[[540,1320],[540,1320],[540,1260]],
+  SP41:[[480,1320],[480,1320],[540,1260]],
+  SP12:[[600,1320],[600,1320],[600,1320]],
+  SP55:[[540,1260],[540,1260],[540,1200]],
+  SP66:[[600,1320],[600,1320],[600,1320]],
+  SP69:[[540,1320],[540,1320],[540,1320]],
+  SP36:[[540,1320],[540,1320],[540,1320]],
+  SP42:[[540,1320],[540,1320],[540,1320]],
+  SP03:[[480,1260],[480,1260],[480,1260]],
+  SP16:[[480,1260],[480,1260],[540,1140]],
+  SP48:[[540,1260],[540,1260],[540,1260]]
+};
+function ventanaTienda(cod, diaId){
+  const h = HORARIOS[cod]; if(!h) return null;
+  const idx = diaId==="dom" ? 2 : (diaId==="sab" ? 1 : 0);
+  return h[idx].slice();
+}
+
+
+/* ============================================================
+   MOTOR — TRES CLASES DE BLOQUE
+
+   El error del motor anterior era tratar el día como una cadena:
+   cada bloque empezaba donde terminó el anterior, así que si algo
+   se corría, se corría TODO — incluida la clase de la universidad,
+   que pasa a su hora esté Carlos o no.
+
+   Ahora cada bloque declara qué tan movible es:
+
+     ANCLA     hora impuesta por otro. NUNCA se mueve.
+               (clase, partido, capacitación, cine, reunión)
+               meta.fijo + meta.ancla = minuto del día
+
+     VENTANA   la hora la elige el motor, pero dentro de un rango.
+               (visita a tienda: no antes de que abra, no después
+                de que cierre)  meta.ventana = [abreMin, cierraMin]
+
+     FLEXIBLE  se acomoda donde caiga. Todo lo demás.
+
+   El motor NO decide por Carlos: cuando sobra tiempo emite un hueco
+   y cuando falta emite un conflicto. La interfaz le muestra las
+   opciones y él elige. Eso fue lo que pidió explícitamente.
+   ============================================================ */
+
 let _cache = {}, _sello = 0;
 function invalidar(){ _cache = {}; _sello++; }
 
@@ -1171,6 +1081,10 @@ function bloquesDe(d){
   if(!_cache[k]) _cache[k] = componerDia(d);
   return _cache[k];
 }
+
+function metaDe(b){ return b[6] || {}; }
+function esAncla(b){ const m=metaDe(b); return !!(m.fijo && m.ancla != null); }
+function esVentana(b){ const m=metaDe(b); return !!(m.ventana); }
 
 /* Tramo del día ocupado por el trabajo: desde el traslado que lleva a la
    primera parada hasta el traslado de vuelta a casa, ambos incluidos. */
@@ -1185,9 +1099,235 @@ function segmentoTrabajo(bs){
   return {ini:ini, fin:fin};
 }
 
+/* Resuelve el día completo.
+
+   `desde` (opcional) es lo que Carlos reportó: {idx, t} = "el bloque idx
+   terminó de verdad a las t". Los bloques anteriores conservan su hora,
+   la cadena se reanuda en t, y las anclas siguen sin moverse.
+
+   Devuelve el array con tres propiedades colgadas:
+     bs.huecos      [{desde, hasta, min, antes}]   tiempo que se abrió
+     bs.conflictos  [{idx, tarde, contra}]         algo pisa un ancla
+     bs.horasSueno / bs.desborde                   como antes
+*/
+function resolverDia(bs, d, base, desde){
+  bs.forEach(function(b){
+    if(typeof b.dm !== "number") b.dm = (b[0] && b[1]) ? dur(b[0],b[1]) : 0;
+    b.pisa = false; b.recortado = 0;
+  });
+  const arranque = toMin(bs[0][0]);
+  const anclaDe = function(i){
+    let ini = bs[i][6].ancla; if(ini < arranque) ini += 1440; return ini;
+  };
+  // Hora de la próxima ancla a partir de i; Infinity si ya no hay ninguna.
+  const proxima = new Array(bs.length).fill(Infinity);
+  for(let i = bs.length-1, sig = Infinity; i >= 0; i--){
+    proxima[i] = sig;
+    if(esAncla(bs[i])) sig = anclaDe(i);
+  }
+
+  const huecos = [], conflictos = [];
+  let t = arranque, i = 0;
+
+  // Lo que ya pasó de verdad no se recalcula: conserva su hora y la cadena
+  // se reanuda donde Carlos dijo que terminó.
+  if(desde && desde.idx >= 0){
+    i = Math.min(desde.idx + 1, bs.length - 1);
+    t = desde.t;
+    if(t < arranque) t += 1440;
+  }
+
+  const coloca = function(b, ini){ b[0] = fmt(ini); b[1] = fmt(ini + b.dm); return ini + b.dm; };
+
+  // Lo que ya no cabe antes de un ancla no se comprime ni se borra: se
+  // difiere a después del ancla, que es lo que pasa en la vida real.
+  let diferidos = [];
+  const vaciar = function(){
+    diferidos.forEach(function(x){ x.pisa = true; t = coloca(x, t); });
+    diferidos = [];
+  };
+
+  for(; i < bs.length; i++){
+    const b = bs[i], m = b[6] || {};
+    if(b[3] === "sueno") break;
+
+    if(esAncla(b)){
+      const ini = anclaDe(i);
+      if(t > ini + 1) conflictos.push({idx:i, tarde:t - ini, nombre:b[2], hora:fmt(ini)});
+      else if(ini - t >= 10) huecos.push({desde:t, hasta:ini, min:ini - t, antes:i, nombre:b[2]});
+      t = coloca(b, ini);
+      vaciar();                       // lo diferido se hace después del ancla
+      continue;
+    }
+
+    if(esVentana(b)){
+      const v = m.ventana;                      // [abre, cierra] en minutos
+      const ini = Math.max(t, v[0]);
+      if(ini - t >= 10) huecos.push({desde:t, hasta:ini, min:ini - t, antes:i,
+                                     nombre:"que abra "+b[2]});
+      if(ini + b.dm > v[1]) conflictos.push({idx:i, cierra:v[1], nombre:b[2],
+                                             excede:(ini + b.dm) - v[1], tipo:"cierre"});
+      t = coloca(b, ini);
+      continue;
+    }
+
+    // Contra un ancla el bloque se recorta —cenas más rápido para llegar a
+    // clase— y solo se difiere cuando ya no queda NADA de sitio. Diferir un
+    // bloque que sí cabe apretado lo mandaba detrás del ancla, y eso produce
+    // disparates: viajar a la oficina después de la capacitación.
+    const sitio = proxima[i] - t;
+    if(b.dm > sitio + 1){
+      // Un traslado no se comprime ni se salta: si no cabe, llegas tarde, y
+      // el ancla de más adelante es la que lo dice.
+      if(b[3] !== "traslado"){
+        if(sitio <= 0){ diferidos.push(b); continue; }
+        b.recortado = b.dm - sitio;
+        b[0] = fmt(t); b[1] = fmt(t + sitio); t += sitio;
+        continue;
+      }
+    }
+    t = coloca(b, t);
+  }
+  vaciar();
+
+  const dm = bs[bs.length-1];
+  if(dm && dm[3] === "sueno"){
+    let h = toMin(dm[1]) - t; if(h <= 0) h += 1440;
+    dm[0] = fmt(t);
+    bs.horasSueno = h;
+    // Solo cuenta como desborde lo que la carga de ESTA semana quita frente
+    // al plan base: las 5 h 15 del lunes son estructurales, no una alarma.
+    const ref = (typeof base === "number") ? base : h;
+    bs.desborde = h < ref ? ref - h : 0;
+  }
+  bs.huecos = huecos;
+  bs.conflictos = conflictos;
+  return bs;
+}
+
+/* Compone el día en capas: base → programación real → tareas → resolución. */
+function componerDia(d){
+  const crudo = (typeof d.b === "function" ? d.b(CFG) : d.b).map(function(b){
+    const c = b.slice();
+    if(c[6] && c[6].fijo) c[6] = Object.assign({}, c[6], {ancla: toMin(c[0])});
+    return c;
+  });
+  const base = resolverDia(crudo.map(function(b){ return b.slice(); }), d).horasSueno;
+  let bs = crudo.map(function(b){ return b.slice(); });
+
+  // 2 · la programación real reemplaza el tramo de trabajo genérico
+  const seg = segmentoTrabajo(bs);
+  if(seg){
+    const alm = bs.slice(seg.ini,seg.fin+1).find(function(b){ return /Almuerzo/.test(b[2]); });
+    const nuevos = bloquesProgramacion(d.id, alm?dur(alm[0],alm[1]):0);
+    if(nuevos){
+      const dm = nuevos.map(function(b){ return b.dm; });
+      bs = bs.slice(0,seg.ini).concat(nuevos).concat(bs.slice(seg.fin+1));
+      nuevos.forEach(function(b,i){ b.dm = dm[i]; });
+    }
+  }
+
+  // 3 · las tareas colocadas entran donde corresponde
+  (CFG.tareas||[]).filter(function(t){ return t.dia===d.id && !t.quitada; }).forEach(function(t){
+    const mt = {prio:2, tarea:t.id};
+    if(t.horaFija){ mt.fijo = true; mt.ancla = toMin(t.horaFija); delete mt.prio; }
+    if(t.tag) mt.tag = t.tag;
+    const blk = ["","",t.txt,t.cat||"trabajo",
+                 t.horaFija ? "Compromiso con hora fija. La app no lo mueve."
+                            : "Tarea que agregaste", t.tag||"", mt];
+    blk.dm = Math.max(5, t.min||30);
+    let at = -1;
+    if(t.tras) at = bs.findIndex(function(b){ return b[2]===t.tras; });
+    if(at<0 && t.antesDe != null) at = t.antesDe - 1;
+    if(at<0){
+      at = bs.findIndex(function(b){ return /flexible|Pendientes|Margen/.test(b[2]); });
+      if(at<0) at = bs.findIndex(function(b){ return b[3]==="mente" && /Descompresión/.test(b[2]); }) - 1;
+    }
+    if(at<0) at = bs.length-2;
+    bs.splice(at+1, 0, blk);
+  });
+
+  // 4 · lo que Carlos soltó a propósito hoy
+  const soltados = (CFG.soltados && CFG.soltados[d.id]) || [];
+  if(soltados.length) bs = bs.filter(function(b){ return soltados.indexOf(b[2]) < 0; });
+
+  const real = CFG.real && CFG.real[d.id];
+  resolverDia(bs, d, base);                 // pasada limpia: todo tiene hora
+  if(!real) return bs;
+  return resolverDia(bs, d, base, {idx:real.idx, t:toMin(real.hora)});
+}
+
+/* ---------------- huecos: qué se puede meter ahí ----------------
+   Carlos pidió que la app le muestre el hueco y le ofrezca candidatos
+   concretos, no que lo rellene sola. Esto arma esa lista, ordenada por
+   lo que más falta esta semana. */
+function candidatosParaHueco(min, diaId){
+  const out = [];
+  const puestos = {};
+  DIAS.forEach(function(d){ bloquesDe(d).forEach(function(b){
+    if(b[5]) puestos[b[5]] = (puestos[b[5]]||0) + dur(b[0],b[1]);
+  }); });
+
+  // 1 · tareas de la semana que todavía no tienen día
+  (CFG.tareas||[]).filter(function(t){ return !t.dia && !t.quitada; }).forEach(function(t){
+    if((t.min||30) <= min) out.push({id:"t-"+t.id, txt:t.txt, min:t.min||30,
+      cat:"trabajo", por:"Está pendiente y no tiene día", tarea:t.id});
+  });
+
+  // 2 · pendientes sueltos que quepan
+  pendientes.filter(function(p){ return !p.hecho; }).forEach(function(p){
+    if((p.min||30) <= min) out.push({id:"p-"+p.id, txt:p.txt, min:p.min||30,
+      cat:"trabajo", por:"Lo tienes en la bandeja"});
+  });
+
+  // 3 · los innegociables que van atrasados
+  METAS.forEach(function(mt){
+    if(mt.sesiones) return;
+    const falta = mt.meta - (puestos[mt.tag]||0);
+    if(falta > 20 && Math.min(falta, min) >= 25){
+      out.push({id:"m-"+mt.tag, txt:mt.nom, min:Math.min(falta, min, 120),
+        cat:mt.cat||"u", tag:mt.tag,
+        por:"Te faltan "+hm(falta)+" esta semana"});
+    }
+  });
+
+  // 4 · siempre disponible: no meter nada. Adelantar el día no es opción
+  // aquí — el hueco existe justamente porque lo que sigue no se mueve.
+  out.push({id:"libre", txt:"Dejarlo libre", min:min, cat:"mente",
+    por:"Café, lectura o simplemente respirar"});
+  return out.slice(0, 6);
+}
+
+/* ---------------- conflictos: las dos versiones ----------------
+   Cuando lo flexible pisaría un ancla, Carlos pidió ver las dos y elegir. */
+function versionesDeConflicto(d, c){
+  const bs = bloquesDe(d);
+  // Versión B: soltar bloques anteriores al ancla, por orden de sacrificio
+  const antes = [];
+  for(let i = 0; i < c.idx; i++){
+    const m = metaDe(bs[i]);
+    if(m.prio && !esAncla(bs[i]) && bs[i][3] !== "traslado") antes.push({i:i, prio:m.prio, b:bs[i]});
+  }
+  antes.sort(function(a,b){ return a.prio - b.prio; });
+  const soltar = []; let ganado = 0;
+  for(const x of antes){
+    if(ganado >= c.tarde) break;
+    soltar.push(x.b[2]); ganado += dur(x.b[0], x.b[1]);
+  }
+  return {
+    tarde:  {nom:"Llegas tarde", detalle:"Entras "+c.tarde+" min tarde a "+c.nombre+
+                   " ("+c.hora+"). Todo lo de antes se hace completo."},
+    soltar: ganado >= c.tarde
+      ? {nom:"Sueltas y llegas", detalle:"Dejas "+soltar.join(" y ")+". Llegas a "+
+                 c.nombre+" a su hora.", bloques:soltar}
+      : null
+  };
+}
+
+
 /* Duraciones reales, no optimistas. La capacitación es 14:00–16:30 = 150 min
-   (dato del cuadro, ya no una estimación). La visita es 120: Carlos dijo
-   "1:30 a 2:00" y la regla de la casa es planificar el peor escenario. */
+   (dato del cuadro). La visita es 120: Carlos dijo "1:30 a 2:00" y la regla
+   de la casa es planificar el peor escenario. */
 const DUR_VISITA = 120;
 const DUR_ACT = {capacitacion:150, "tienda-escuela":330, oficina:180,
                  "turno-completo":330, visita:DUR_VISITA};
@@ -1216,7 +1356,8 @@ function minsLugar(a, b){
 /* Convierte la programación de un día en bloques reales con los minutos
    medidos. Las filas se recorren EN EL ORDEN EN QUE ESTÁN: el martes la
    tienda va después de la capacitación, y eso lo decide el cuadro, no el
-   generador. Devuelve null si ese día no tiene programación cargada. */
+   generador. Cada visita lleva la ventana horaria real de su tienda.
+   Devuelve null si ese día no tiene programación cargada. */
 function bloquesProgramacion(diaId, almuerzo){
   const prog = (CFG.programacion||[]).filter(function(r){ return r.dia===diaId; });
   if(!prog.length) return null;
@@ -1256,7 +1397,16 @@ function bloquesProgramacion(diaId, almuerzo){
               : (p.tipo==="turno-completo" ? "Turno completo " : "Visita ")+nombreLugar(p.loc);
     const meta = {prio:2};
     if(p.hora){ meta.fijo = true; meta.ancla = toMin(p.hora); }
-    push(p.dm, nom, "trabajo", p.detalle || (r ? r.t[2] : ""), meta);
+    else {
+      // Sin hora impuesta, la visita es VENTANA: el motor la ubica, pero
+      // nunca antes de que la tienda abra ni de modo que cierre encima.
+      const w = ventanaTienda(p.loc, diaId);
+      if(w) meta.ventana = [w[0], w[1] - 15];   // 15 min de colchón al cierre
+    }
+    let nota = p.detalle || (r ? r.t[2] : "");
+    const w2 = ventanaTienda(p.loc, diaId);
+    if(w2) nota += (nota?" · ":"")+"Abre "+fmt(w2[0])+", cierra "+fmt(w2[1])+".";
+    push(p.dm, nom, "trabajo", nota, meta);
     aqui = p.loc;
     // El almuerzo se reserva antes de repartir lo que queda, no después.
     if(!almPuesto && i < paradas.length-1){
@@ -1269,94 +1419,6 @@ function bloquesProgramacion(diaId, almuerzo){
   return out;
 }
 
-function componerDia(d){
-  const crudo = (typeof d.b === "function" ? d.b(CFG) : d.b).map(function(b){
-    const c = b.slice();
-    if(c[6] && c[6].fijo) c[6] = Object.assign({}, c[6], {ancla: toMin(c[0])});
-    return c;
-  });
-  const base = reencadenar(crudo.map(function(b){ return b.slice(); }), d).horasSueno;
-  let bs = crudo.map(function(b){ return b.slice(); });
-
-  // 2 · la programación real reemplaza el tramo de trabajo genérico
-  const seg = segmentoTrabajo(bs);
-  if(seg){
-    const alm = bs.slice(seg.ini,seg.fin+1).find(function(b){ return /Almuerzo/.test(b[2]); });
-    const nuevos = bloquesProgramacion(d.id, alm?dur(alm[0],alm[1]):0);
-    if(nuevos){
-      const dm = nuevos.map(function(b){ return b.dm; });
-      bs = bs.slice(0,seg.ini).concat(nuevos).concat(bs.slice(seg.fin+1));
-      nuevos.forEach(function(b,i){ b.dm = dm[i]; });
-    }
-  }
-
-  // 3 · las tareas colocadas entran donde corresponde
-  (CFG.tareas||[]).filter(function(t){ return t.dia===d.id; }).forEach(function(t){
-    const blk = ["","",t.txt,"trabajo","Tarea que agregaste","",{prio:2,tarea:t.id}];
-    blk.dm = Math.max(5, t.min||30);
-    let at = bs.findIndex(function(b){ return t.tras && b[2]===t.tras; });
-    if(at<0){
-      at = bs.findIndex(function(b){ return /flexible|Pendientes|Margen/.test(b[2]); });
-      if(at<0) at = bs.findIndex(function(b){ return b[3]==="mente" && /Descompresión/.test(b[2]); }) - 1;
-    }
-    if(at<0) at = bs.length-2;
-    bs.splice(at+1, 0, blk);
-  });
-
-  return reencadenar(bs, d, base);
-}
-
-/* Recalcula todas las horas en cadena desde el arranque del día,
-   respetando las anclas fijas. Marca el día si desborda el sueño. */
-function reencadenar(bs, d, base){
-  // Cada bloque lleva su propia duración antes de mover nada: así insertar
-  // un margen no desalinea al resto.
-  bs.forEach(function(b){
-    if(typeof b.dm !== "number") b.dm = (b[0] && b[1]) ? dur(b[0],b[1]) : 0;
-  });
-  const arranque = toMin(bs[0][0]);
-  let t = arranque, i = 0;
-  while(i < bs.length){
-    const b = bs[i], m = b[6] || {};
-    if(b[3] === "sueno") break;
-    if(m.fijo && m.ancla != null){
-      let ini = m.ancla; if(ini < arranque) ini += 1440;
-      if(t < ini - 9){
-        // El hueco va lo más temprano posible —en casa, después del
-        // trabajo— y no pegado al ancla: nadie quiere esperar dos horas
-        // sentado en la puerta del aula.
-        let at = i;
-        while(at > 0 && !/trabajo/.test(bs[at-1][3]) && !/a casa/i.test(bs[at-1][2])) at--;
-        // Si la caminata hacia atrás llega al arranque del día, no hay un
-        // "en casa después del trabajo" donde poner el hueco: se espera en
-        // el sitio, justo antes del ancla. (Ponerlo en 0 reiniciaba el reloj
-        // y corría el día entero.)
-        if(at === 0) at = i;
-        const hueco = ["","","Margen libre","mente",
-          "Se abrió al reacomodar el día. Úsalo, adelanta algo o descansa.","",{prio:3}];
-        hueco.dm = ini - t;
-        bs.splice(at, 0, hueco);
-        // recalcular desde el hueco: los bloques posteriores se corren
-        i = at; t = toMin(bs[at][0] || fmt(t));
-        if(at > 0) t = toMin(bs[at-1][1]);
-        continue;
-      }
-      if(t < ini) t = ini;
-    }
-    b[0] = fmt(t); b[1] = fmt(t + b.dm); t += b.dm; i++;
-  }
-  const dm = bs[bs.length-1];
-  if(dm && dm[3] === "sueno"){
-    let h = toMin(dm[1]) - t; if(h <= 0) h += 1440;
-    dm[0] = fmt(t);
-    bs.horasSueno = h;
-    // Solo cuenta como desborde lo que la carga de ESTA semana te quita
-    // frente al plan base: las 5 h 15 del lunes son estructurales.
-    const ref = (typeof base === "number") ? base : h;
-    bs.desborde = h < ref ? ref - h : 0;
-  }
-  return bs;
-}
 
 let db = null;             // capacidad db, si está disponible
 const LS_H = "sb.hechos."+WEEK, LS_P = "sb.pend", LS_C = "sb.cfg."+WEEK;
@@ -1378,7 +1440,7 @@ function pushCfg(){
   invalidar(); saveLocal();
   if(db){ db.doc("semanas/"+WEEK).update({cfg:CFG, actualizado:new Date().toISOString()})
     .catch(function(){ db.doc("semanas/"+WEEK).set({hechos:hechos, cfg:CFG}).catch(function(){}); }); }
-  renderDay(); renderMeters(); renderFutbol(); renderAhora();
+  renderDay(); renderMeters(); renderFutbol(); renderAhora(); renderCheckin();
 }
 function pushHechos(){
   saveLocal();
@@ -1389,217 +1451,50 @@ function pushPend(){
   if(db){ db.doc("listas/pendientes").set({items:pendientes, actualizado:new Date().toISOString()}).catch(function(){}); }
 }
 
-/* ---------------- render: medidores ---------------- */
-function renderMeters(){
-  const el=document.getElementById("meters");
-  let out="";
-  METAS.forEach(function(m){
-    let plan=0, hecho=0, sesPlan=0, sesHecho=0;
-    DIAS.forEach(function(d){
-      bloquesDe(d).forEach(function(b,i){
-        if(b[5]!==m.tag) return;
-        const mins=dur(b[0],b[1]);
-        plan+=mins; sesPlan++;
-        if(hechos[d.id+"-"+i]){ hecho+=mins; sesHecho++; }
-      });
-    });
-    const pct = plan ? Math.round(hecho/plan*100) : 0;
-    const val = m.sesiones
-      ? sesHecho+" <small>de "+sesPlan+" sesiones</small>"
-      : hm(hecho)+" <small>de "+hm(plan)+"</small>";
-    out+='<div class="meter '+m.cls+'"><div class="lab">'+m.nom+'</div>'+
-         '<div class="val">'+val+'</div>'+
-         '<div class="bar"><i style="width:'+pct+'%"></i></div></div>';
-  });
-
-  // traslado + sueño: informativos, no metas
-  let tras=0, noches=[];
-  DIAS.forEach(function(d){
-    bloquesDe(d).forEach(function(b){
-      if(b[3]==="traslado") tras+=dur(b[0],b[1]);
-      if(b[3]==="sueno") noches.push(dur(b[0],b[1]));
-    });
-  });
-  const prom = Math.round(noches.reduce(function(a,b){return a+b;},0)/noches.length);
-  out+='<div class="meter"><div class="lab">Traslados</div><div class="val">'+hm(tras)+' <small>por semana</small></div>'+
-       '<div class="bar"><i style="width:100%;background:var(--c-traslado)"></i></div></div>';
-  out+='<div class="meter"><div class="lab">Sueño promedio</div><div class="val">'+hm(prom)+' <small>por noche</small></div>'+
-       '<div class="bar"><i style="width:'+Math.min(100,Math.round(prom/420*100))+'%;background:var(--c-sueno)"></i></div></div>';
-  el.innerHTML=out;
-
-  document.getElementById("metersNote").textContent =
-    "Los traslados son "+hm(tras)+" a la semana. No es tiempo que puedas recuperar organizándote mejor: es tiempo que hay que planificar como cualquier otro bloque.";
-}
-
-/* ---------------- render: día ---------------- */
-let activo = 0;
-
-function renderTabs(){
-  const el=document.getElementById("tabs");
-  el.innerHTML = DIAS.map(function(d,i){
-    return '<button class="tab" role="tab" id="tab-'+d.id+'" aria-selected="'+(i===activo)+'" data-i="'+i+'">'+
-           d.corto+'<span>'+bloquesDe(d)[0][0]+'</span></button>';
-  }).join("");
-  el.querySelectorAll(".tab").forEach(function(t){
-    t.addEventListener("click", function(){ activo=+t.dataset.i; verPasado=false; renderTabs(); renderDay(); renderAhora(); });
-  });
-}
-
-function renderDay(){
-  const d=DIAS[activo];
-  let despierto=0, trab=0, tras=0, suenoMin=0;
-  bloquesDe(d).forEach(function(b){
-    const m=dur(b[0],b[1]);
-    if(b[3]==="sueno"){ suenoMin=m; return; }
-    despierto+=m;
-    if(b[3]==="trabajo") trab+=m;
-    if(b[3]==="traslado") tras+=m;
-  });
-
-  let html='<div class="dayhead"><h2>'+d.nom+' <span class="fecha">'+fechaDia(d.id)+'</span></h2>'+
-    '<div class="daystat">'+d.res+'</div>'+
-    '<div class="daystat" style="margin-left:auto">Despierto <b>'+hm(despierto)+'</b> · Trabajo <b>'+hm(trab)+'</b> · Traslado <b>'+hm(tras)+'</b> · Sueño <b>'+hm(suenoMin)+'</b></div></div>';
-
-  const dis = disciplina(d);
-  if(dis) html += '<div class="discip">Disciplina · <b>'+dis.puntual+'</b> de <b>'+dis.n+
-    '</b> cerrados a tiempo · desvío medio <b>'+(dis.medio>0?"+":"")+dis.medio+' min</b>'+
-    (dis.medio>25?' — el horario te está quedando corto, no es falta de ganas: avísame y recalculo las duraciones.':'')+'</div>';
-
-  if(d.nota) html+='<div class="daynote'+(d.nota.alert?" alert":"")+'">'+d.nota.txt+'</div>';
-
-  // El día compuesto no cabe: se ofrecen escenarios, no se recorta solo
-  const bsComp = bloquesDe(d);
-  if(bsComp.desborde){
-    html += '<div class="daynote alert">Con lo que tienes programado, este día te deja '+
-      hm(bsComp.horasSueno)+' de sueño. Faltan <b>'+hm(bsComp.desborde)+
-      '</b> para tus 7 h. <button class="lnk" id="verEsc">Ver opciones</button></div>';
-  }
-
-  // Ajuste activo: el día se re-dibuja desde la hora reportada
-  const aj = (CFG.ajuste && CFG.ajuste.dia===d.id) ? CFG.ajuste : null;
-  let ajPlan=null, ajCaidos=[];
-  if(aj){
-    const e = construirEscenarios(d, aj.idx||0, aj.desde).find(function(x){return x.id===aj.escenario;});
-    if(e){
-      ajPlan = {}; ajCaidos = e.caidos;
-      e.plan.forEach(function(p){ ajPlan[p.i] = p; });
-      html += '<div class="daynote alert">Plan ajustado desde las <b>'+fmt(aj.desde)+
-        '</b> · escenario «'+e.nom+'». Duermes '+fmt(e.acostar)+', '+hm(e.horas)+
-        '. Los bloques tachados se cayeron hoy.</div>';
-    }
-  }
-
-  // Plegado por hora: solo en el día de hoy, y solo si no pidió verlo
-  const bsAll = bloquesDe(d);
-  let corte = -1;
-  if(esHoy(d) && !verPasado){
-    const t = minutosAhora();
-    for(let i=0;i<bsAll.length;i++){
-      if(bsAll[i][3]==="sueno") break;
-      if(iniAbs(bsAll,i)+dur(bsAll[i][0],bsAll[i][1]) <= t) corte = i;
-    }
-  }
-  if(corte >= 0){
-    let hechosPas=0;
-    for(let i=0;i<=corte;i++) if(hechos[d.id+"-"+i]) hechosPas++;
-    html += '<button class="plegado" id="verPasado">'+
-      '<b>'+(corte+1)+'</b> bloques hasta las '+bsAll[corte][1]+
-      ' · <b>'+hechosPas+'</b> cumplidos<span>ver</span></button>';
-  } else if(esHoy(d) && verPasado){
-    html += '<button class="plegado abierto" id="ocultarPasado">Ocultar lo que ya pasó</button>';
-  }
-
-  html+='<ul class="tl">';
-  bloquesDe(d).forEach(function(b,i){
-    if(i<=corte) return;
-    const key=d.id+"-"+i, done=!!hechos[key];
-    let m=dur(b[0],b[1]);
-    let ini=b[0], fin=b[1], estado="";
-    if(ajPlan){
-      if(ajCaidos.indexOf(i)>=0){ estado="caido"; }
-      else if(ajPlan[i]){ ini=fmt(ajPlan[i].ini); fin=fmt(ajPlan[i].fin); m=ajPlan[i].d;
-        if(ajPlan[i].recortado) estado="recortado"; }
-      else if(b[3]!=="sueno"){ estado="pasado"; }
-    }
-    b = [ini, fin, b[2], b[3], b[4], b[5], b[6]];
-    const marcable = b[3]!=="sueno" && b[3]!=="traslado";
-    let chip="";
-    if(b[5]) chip='<span class="chip blindado">'+b[5]+'</span>';
-    if(b[3]==="sueno" && m<390) chip='<span class="chip corta">noche corta</span>';
-    if(estado==="recortado") chip+='<span class="chip rec">recortado</span>';
-    if(estado==="caido")     chip+='<span class="chip cai">se cae hoy</span>';
-    const reg = hechos[key];
-    if(done && reg && reg.t){
-      const dv = desvio(reg);
-      chip += '<span class="chip real">'+reg.t+(dv===null?"":(dv>0?" · +"+dv:(dv<0?" · "+dv:" · en punto")))+'</span>';
-    }
-    html+='<li class="blk'+(done?" checked":"")+(estado?" est-"+estado:"")+'" data-c="'+b[3]+'">'+
-      '<div class="time">'+b[0]+'<em>'+(b[3]==="sueno"?"→ "+b[1]:b[1])+'</em></div>'+
-      '<div class="rail"></div>'+
-      '<div class="cuerpo'+(b[4]?' conNota':'')+'"'+(b[4]?' data-nota="'+i+'" tabindex="0" role="button"':'')+'>'+
-        '<div class="name">'+b[2]+chip+'</div>'+
-        '<div class="dur">'+hm(m)+(b[4]?'<span class="pista">·  por qué</span>':'')+'</div>'+
-        (b[4]?'<div class="why" hidden>'+b[4]+'</div>':'')+
-      '</div>'+
-      (marcable?'<label class="done"><input type="checkbox" data-k="'+key+'" data-fin="'+b[1]+'"'+(done?" checked":"")+
-        '><span aria-hidden="true"></span><em>hecho</em></label>':'<span></span>')+
-      '</li>';
-  });
-  html+='</ul>';
-
-  const pane=document.getElementById("dayPane");
-  pane.innerHTML=html;
-  if(esHoy(d)){
-    const cur = bloqueActual(bloquesDe(d));
-    if(cur>=0){
-      const li = pane.querySelectorAll(".tl > .blk")[Math.max(0, cur-(corte+1))];
-      if(li) li.classList.add("encurso");
-    }
-  }
-  pane.querySelectorAll("[data-nota]").forEach(function(c){
-    const abrir=function(){ const w=c.querySelector(".why"); if(w) w.hidden=!w.hidden; c.classList.toggle("abierto"); };
-    c.addEventListener("click", function(e){ if(e.target.tagName!=="INPUT") abrir(); });
-    c.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); abrir(); } });
-  });
-  const ve=document.getElementById("verEsc");
-  if(ve) ve.addEventListener("click", function(){
-    const body=document.getElementById("rBody");
-    body.hidden=false;
-    document.getElementById("rToggle").textContent="Cerrar";
-    rModo="donde"; renderRetrasoInputs();
-    const seg=segmentoTrabajo(bloquesDe(DIAS[activo]));
-    const sel=document.getElementById("rBloque");
-    if(sel && seg) sel.value=String(seg.ini);
-    renderRetrasoOut();
-    body.scrollIntoView({behavior:"smooth", block:"start"});
-  });
-  const vp=document.getElementById("verPasado");
-  if(vp) vp.addEventListener("click", function(){ verPasado=true; renderDay(); });
-  const op=document.getElementById("ocultarPasado");
-  if(op) op.addEventListener("click", function(){ verPasado=false; renderDay(); });
-
-  pane.querySelectorAll('input[type="checkbox"][data-k]').forEach(function(c){
-    c.addEventListener("change", function(){
-      // Se guarda la hora REAL, no solo el hecho: es el dato que dice si el
-      // horario se cumple o si está mal calculado.
-      if(c.checked) hechos[c.dataset.k] = {t: fmt(minutosAhora()), plan: c.dataset.fin};
-      else delete hechos[c.dataset.k];
-      pushHechos(); renderDay(); renderMeters(); renderAhora();
-    });
-  });
-}
 
 /* ============================================================
-   CONCIENCIA DE LA HORA
-   El día de hoy se pliega solo: lo que ya pasó desaparece detrás de
-   una línea, y arriba queda lo único que importa en la calle — qué
-   estás haciendo, cuánto le queda y qué viene.
+   RENDER
+   La pantalla se lee a una mano, en la calle, en cinco segundos.
+   Arriba: qué estás haciendo y un solo botón. Abajo: el día, con
+   lo anclado dibujado sólido y lo movible punteado.
    ============================================================ */
-let verPasado = false;
+let activo = 0, verPasado = false;
+let _horasPrevias = {};        // para animar solo lo que cambió de hora
+
+/* Minuto absoluto de arranque de un bloque, contado desde el inicio del día.
+   Ya no se suman duraciones: con anclas y bloques diferidos las horas dejaron
+   de ser una cadena continua, así que se lee la hora que el motor le puso. */
+function iniAbs(bloques, i){
+  const base = toMin(bloques[0][0]);
+  let t = toMin(bloques[i][0]);
+  if(t < base) t += 1440;
+  return t;
+}
+/* El orden de lectura es el cronológico, no el del array: un bloque que se
+   difirió por un ancla ocurre después aunque en los datos venga antes. */
+function ordenCronologico(bs){
+  return bs.map(function(b,i){ return i; }).sort(function(a,b){
+    const da = iniAbs(bs,a), db = iniAbs(bs,b);
+    return da === db ? a - b : da - db;
+  });
+}
+function minutosAhora(){ const d=new Date(); return d.getHours()*60+d.getMinutes(); }
+function indiceHoy(){ const j=new Date().getDay(); return j===0?6:j-1; }
+function esHoy(d){ return DIAS[indiceHoy()].id === d.id; }
+
+function bloqueActual(bs){
+  const t = minutosAhora();
+  for(let i=0;i<bs.length;i++){
+    if(bs[i][3]==="sueno") continue;
+    const ini=iniAbs(bs,i), fin=ini+dur(bs[i][0],bs[i][1]);
+    if(t>=ini && t<fin) return i;
+    if(t < ini) return -1;
+  }
+  return -2;
+}
 
 /* Desvío en minutos entre la hora real de cierre y la planificada.
-   Positivo = terminaste tarde. Null si el registro es de antes de que
-   la página empezara a guardar la hora. */
+   Positivo = terminaste tarde. */
 function desvio(reg){
   if(!reg || typeof reg !== "object" || !reg.t || !reg.plan) return null;
   let d = toMin(reg.t) - toMin(reg.plan);
@@ -1607,8 +1502,6 @@ function desvio(reg){
   if(d < -720) d += 1440;
   return d;
 }
-/* Resumen de disciplina de un día: cuántos bloques se cerraron a tiempo y
-   cuál fue el desvío medio. Solo cuenta los que tienen hora registrada. */
 function disciplina(d){
   const bs = bloquesDe(d), ds = [];
   bs.forEach(function(b,i){
@@ -1620,69 +1513,336 @@ function disciplina(d){
   const medio = Math.round(ds.reduce(function(a,b){ return a+b; },0)/ds.length);
   return {n:ds.length, puntual:puntual, medio:medio};
 }
-function minutosAhora(){ const d=new Date(); return d.getHours()*60+d.getMinutes(); }
-function indiceHoy(){ const j=new Date().getDay(); return j===0?6:j-1; }
-function esHoy(d){ return DIAS[indiceHoy()].id === d.id; }
 
-/* Índice del bloque en curso según el reloj, o -1 si el día no empezó
-   o ya terminó. */
-function bloqueActual(bs){
-  const t = minutosAhora();
-  for(let i=0;i<bs.length;i++){
-    if(bs[i][3]==="sueno") continue;
-    const ini=iniAbs(bs,i), fin=ini+dur(bs[i][0],bs[i][1]);
-    if(t>=ini && t<fin) return i;
-    if(t < ini) return -1;   // aún no arranca el día
-  }
-  return -2;                 // el día ya terminó
+function esc(s){ return String(s).replace(/[<>&"]/g,function(c){
+  return {"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]; }); }
+
+/* ---------------- pestañas de día ---------------- */
+function renderTabs(){
+  document.getElementById("tabs").innerHTML = DIAS.map(function(d,i){
+    const f = fechaDia(d.id).split(" ")[0];
+    return '<button class="tb'+(esHoy(d)?" hoy":"")+'" data-i="'+i+'" role="tab" '+
+      'aria-selected="'+(i===activo)+'"><b>'+f+'</b>'+d.corto+'</button>';
+  }).join("");
+  document.getElementById("tabs").querySelectorAll(".tb").forEach(function(b){
+    b.addEventListener("click", function(){
+      activo=+b.dataset.i; verPasado=false; renderTabs(); renderDay(); renderAhora();
+    });
+  });
 }
 
+/* ---------------- el día ---------------- */
+function renderDay(){
+  const d = DIAS[activo], bs = bloquesDe(d);
+  let trab=0, tras=0, sueno=0, despierto=0;
+  bs.forEach(function(b){
+    const m = dur(b[0],b[1]);
+    if(b[3]==="sueno") sueno+=m; else despierto+=m;
+    if(b[3]==="trabajo") trab+=m;
+    if(b[3]==="traslado") tras+=m;
+  });
+
+  let html = '<div class="dayhead"><div class="l1"><h2>'+d.nom+'</h2>'+
+    '<span class="fecha">'+fechaDia(d.id)+'</span>'+
+    '<span class="res">'+esc(d.res)+'</span></div>'+
+    '<div class="pills">'+
+      '<span class="pill'+(sueno<390?" corta":"")+'">Sueño <b>'+hm(sueno)+'</b></span>'+
+      '<span class="pill">Trabajo <b>'+hm(trab)+'</b></span>'+
+      '<span class="pill">Traslado <b>'+hm(tras)+'</b></span>'+
+      '<span class="pill">Despierto <b>'+hm(despierto)+'</b></span>'+
+    '</div></div>';
+
+  const dis = disciplina(d);
+  if(dis) html += '<div class="discip">Disciplina · <b>'+dis.puntual+'</b> de <b>'+dis.n+
+    '</b> cerrados a tiempo · desvío medio <b>'+(dis.medio>0?"+":"")+dis.medio+' min</b>'+
+    (dis.medio>25?' — el horario te está quedando corto, no es falta de ganas.':'')+'</div>';
+
+  if(d.nota) html += '<div class="aviso'+(d.nota.alert?" alerta":"")+'">'+d.nota.txt+'</div>';
+
+  if(bs.desborde) html += '<div class="aviso mal">Con lo programado, este día te deja <b>'+
+    hm(bs.horasSueno)+'</b> de sueño: <b>'+hm(bs.desborde)+'</b> menos de lo normal.</div>';
+
+  const real = CFG.real && CFG.real[d.id];
+  if(real) html += '<div class="aviso">Reprogramado desde las <b>'+real.hora+
+    '</b>, cuando cerraste <b>'+esc(real.nombre||"un bloque")+'</b>. '+
+    '<button class="lnk" id="undoReal">Volver al plan</button></div>';
+
+  // Plegado de lo que ya pasó, solo en el día de hoy
+  const orden = ordenCronologico(bs);
+  let corte = -1;
+  if(esHoy(d) && !verPasado){
+    const t = minutosAhora();
+    for(let k=0;k<orden.length;k++){
+      const i = orden[k];
+      if(bs[i][3]==="sueno") break;
+      if(iniAbs(bs,i)+dur(bs[i][0],bs[i][1]) <= t) corte = k;
+    }
+  }
+  if(corte >= 0){
+    let hp=0; for(let k=0;k<=corte;k++) if(hechos[d.id+"-"+orden[k]]) hp++;
+    html += '<button class="plegado" id="verPasado"><b>'+(corte+1)+
+      '</b> bloques hasta las '+bs[orden[corte]][1]+' · <b>'+hp+'</b> cumplidos<span>ver</span></button>';
+  } else if(esHoy(d) && verPasado){
+    html += '<button class="plegado" id="ocultarPasado">Ocultar lo que ya pasó<span>ocultar</span></button>';
+  }
+
+  // Índice de huecos y conflictos por bloque, para intercalarlos en su sitio
+  const huecoAntes = {}, confEn = {};
+  (bs.huecos||[]).forEach(function(h){ huecoAntes[h.antes] = h; });
+  (bs.conflictos||[]).forEach(function(c){ confEn[c.idx] = c; });
+
+  html += '<ul class="tl">';
+  ordenCronologico(bs).forEach(function(i){
+    const b = bs[i];
+    if(orden.indexOf(i) <= corte) return;
+
+    if(huecoAntes[i]) html += pintarHueco(huecoAntes[i], d);
+    if(confEn[i])     html += pintarConflicto(confEn[i], d);
+
+    const key = d.id+"-"+i, reg = hechos[key], done = !!reg;
+    const m = dur(b[0],b[1]), meta = metaDe(b);
+    const fijo = esAncla(b) ? 1 : 0;
+    const marcable = b[3]!=="sueno" && b[3]!=="traslado";
+    let chip = "";
+    if(b[5]) chip += '<span class="chip blindado">'+b[5]+'</span>';
+    if(fijo) chip += '<span class="chip fija">fija</span>';
+    else if(esVentana(b)) chip += '<span class="chip fija">'+fmt(meta.ventana[0])+'–'+fmt(meta.ventana[1])+'</span>';
+    if(b[3]==="sueno" && m<390) chip += '<span class="chip corta">noche corta</span>';
+    if(done && reg.t){
+      const dv = desvio(reg);
+      chip += '<span class="chip real">'+reg.t+(dv===null?"":(dv>0?" · +"+dv:(dv<0?" · "+dv:" · en punto")))+'</span>';
+    }
+    const cambio = _horasPrevias[key] && _horasPrevias[key] !== b[0];
+
+    if(b.pisa) chip += '<span class="chip corta">se corrió</span>';
+    if(b.recortado) chip += '<span class="chip corta">−'+b.recortado+' min</span>';
+    html += '<li class="blk'+(done?" hecho":"")+(cambio?" entra":"")+(b.pisa?" corrido":"")+'" data-c="'+b[3]+
+      '" data-fijo="'+fijo+'" data-i="'+i+'">'+
+      '<div class="time">'+b[0]+'<em>'+(b[3]==="sueno"?"→ "+b[1]:b[1])+'</em></div>'+
+      '<div class="rail"></div>'+
+      '<div class="cuerpo"'+(b[4]?' data-nota="'+i+'" tabindex="0" role="button"':'')+'>'+
+        '<div class="name">'+esc(b[2])+chip+'</div>'+
+        '<div class="dur">'+hm(m)+(b[4]?'<span class="pista">por qué</span>':'')+'</div>'+
+        (b[4]?'<div class="why" hidden>'+esc(b[4])+'</div>':'')+
+      '</div>'+
+      (marcable
+        ? '<label class="done"><input type="checkbox" data-k="'+key+'" data-fin="'+b[1]+
+          '" data-i="'+i+'"'+(done?" checked":"")+'><span aria-hidden="true"></span><em>hecho</em></label>'
+        : '<span></span>')+
+      '</li>';
+    _horasPrevias[key] = b[0];
+  });
+  html += '</ul>';
+
+  const pane = document.getElementById("dayPane");
+  pane.innerHTML = html;
+
+  if(esHoy(d)){
+    const cur = bloqueActual(bs);
+    if(cur>=0){
+      const li = pane.querySelector('.blk[data-i="'+cur+'"]');
+      if(li) li.classList.add("encurso");
+    }
+  }
+  enlazarDia(pane, d, bs);
+}
+
+function pintarHueco(h, d){
+  const cands = candidatosParaHueco(h.min, d.id);
+  return '<li class="hueco" data-desde="'+h.desde+'">'+
+    '<h4>Se abrieron '+hm(h.min)+'</h4>'+
+    '<p class="why">Entre las '+fmt(h.desde)+' y las '+fmt(h.hasta)+
+      ', esperando '+esc(h.nombre)+'. Elige qué meter ahí.</p>'+
+    '<div class="cands">'+cands.map(function(c){
+      return '<button class="cand" data-cand="'+c.id+'" data-min="'+c.min+
+        '" data-antes="'+h.antes+'" data-dia="'+d.id+'" data-txt="'+esc(c.txt)+
+        '" data-cat="'+(c.cat||"trabajo")+'" data-tag="'+(c.tag||"")+'">'+
+        '<span><b>'+esc(c.txt)+'</b><span class="p">'+esc(c.por)+'</span></span>'+
+        '<span class="m">'+hm(c.min)+'</span></button>';
+    }).join("")+'</div></li>';
+}
+
+function pintarConflicto(c, d){
+  if(c.tipo === "cierre"){
+    return '<li class="conf"><h4>La tienda cierra antes</h4>'+
+      '<p class="why">'+esc(c.nombre)+' terminaría '+hm(c.excede)+
+      ' después de que cierre ('+fmt(c.cierra+15)+'). Adelanta el día o pásala a otro.</p></li>';
+  }
+  const v = versionesDeConflicto(d, c);
+  return '<li class="conf"><h4>Vas '+c.tarde+' min tarde para '+esc(c.nombre)+'</h4>'+
+    '<p class="why">'+esc(c.nombre)+' es a las '+c.hora+' y no se mueve. Tienes dos salidas.</p>'+
+    '<div class="dos">'+
+      '<button class="ver" data-ver="tarde"><b>'+v.tarde.nom+'</b><span>'+v.tarde.detalle+'</span></button>'+
+      (v.soltar
+        ? '<button class="ver" data-ver="soltar" data-dia="'+d.id+'" data-bloques="'+
+            esc(v.soltar.bloques.join("|"))+'"><b>'+v.soltar.nom+'</b><span>'+
+            esc(v.soltar.detalle)+'</span></button>'
+        : '<button class="ver" disabled><b>Soltar no alcanza</b><span>Ni soltando lo barato llegas. Vas tarde igual.</span></button>')+
+    '</div></li>';
+}
+
+function enlazarDia(pane, d, bs){
+  pane.querySelectorAll("[data-nota]").forEach(function(c){
+    const abrir=function(){ const w=c.querySelector(".why"); if(w) w.hidden=!w.hidden; };
+    c.addEventListener("click", function(e){ if(e.target.tagName!=="INPUT") abrir(); });
+    c.addEventListener("keydown", function(e){
+      if(e.key==="Enter"||e.key===" "){ e.preventDefault(); abrir(); } });
+  });
+  const vp=pane.querySelector("#verPasado");
+  if(vp) vp.addEventListener("click", function(){ verPasado=true; renderDay(); });
+  const op=pane.querySelector("#ocultarPasado");
+  if(op) op.addEventListener("click", function(){ verPasado=false; renderDay(); });
+  const ur=pane.querySelector("#undoReal");
+  if(ur) ur.addEventListener("click", function(){
+    if(CFG.real) delete CFG.real[d.id]; pushCfg(); });
+
+  pane.querySelectorAll('input[type="checkbox"][data-k]').forEach(function(c){
+    c.addEventListener("change", function(){
+      if(c.checked) hechos[c.dataset.k] = {t: fmt(minutosAhora()), plan: c.dataset.fin};
+      else delete hechos[c.dataset.k];
+      pushHechos(); renderDay(); renderMeters(); renderAhora();
+    });
+  });
+
+  pane.querySelectorAll(".cand").forEach(function(b){
+    b.addEventListener("click", function(){ usarHueco(b.dataset); });
+  });
+  pane.querySelectorAll('.ver[data-ver="soltar"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      CFG.soltados = CFG.soltados || {};
+      CFG.soltados[b.dataset.dia] = (CFG.soltados[b.dataset.dia]||[])
+        .concat(b.dataset.bloques.split("|"));
+      pushCfg();
+    });
+  });
+  pane.querySelectorAll('.ver[data-ver="tarde"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      b.closest(".conf").innerHTML = '<h4>Vas tarde y está asumido</h4>'+
+        '<p class="why">Nada se cae. Avisa que llegas tarde y sigue.</p>';
+    });
+  });
+}
+
+/* Meter algo en un hueco. Nada se aplica sin que Carlos toque el botón,
+   y todo se puede deshacer. */
+function usarHueco(ds){
+  if(ds.cand === "libre"){
+    CFG.tareas = (CFG.tareas||[]).concat([{
+      id:"lib"+Date.now(), txt:"Rato libre", min:+ds.min, dia:ds.dia,
+      antesDe:+ds.antes, cat:"mente"
+    }]);
+    pushCfg(); return;
+  }
+  const id = "h"+Date.now();
+  CFG.tareas = (CFG.tareas||[]).concat([{
+    id:id, txt:ds.txt, min:+ds.min, dia:ds.dia,
+    antesDe:+ds.antes, cat:ds.cat, tag:ds.tag||null
+  }]);
+  if(/^p-/.test(ds.cand)){
+    const pid = ds.cand.slice(2);
+    pendientes = pendientes.filter(function(p){ return String(p.id)!==pid; });
+    pushPend();
+  }
+  if(/^t-/.test(ds.cand)){
+    const tid = ds.cand.slice(2);
+    CFG.tareas = CFG.tareas.map(function(t){
+      return String(t.id)===tid ? Object.assign({}, t, {quitada:true}) : t; });
+  }
+  pushCfg();
+}
+
+/* ---------------- tarjeta AHORA ---------------- */
 function renderAhora(){
-  const el=document.getElementById("ahora");
-  const d=DIAS[activo];
+  const el = document.getElementById("ahora"), d = DIAS[activo];
   if(!esHoy(d)){
-    el.innerHTML='<div class="ahora otro">Estás viendo <b>'+d.nom+'</b>. '+
-      '<button class="lnk" id="irHoy">Ir a hoy</button></div>';
+    el.innerHTML = '<div class="ahora"><div class="top"><span class="lbl">Otro día</span></div>'+
+      '<div class="nom">'+d.nom+'</div>'+
+      '<div class="meta">Estás viendo un día que no es hoy. '+
+      '<button class="lnk" id="irHoy">Ir a hoy</button></div></div>';
     const b=document.getElementById("irHoy");
-    if(b) b.addEventListener("click", function(){ activo=indiceHoy(); renderTabs(); renderDay(); renderAhora(); });
+    if(b) b.addEventListener("click", function(){
+      activo=indiceHoy(); verPasado=false; renderTabs(); renderDay(); renderAhora(); });
     return;
   }
-  const bs=bloquesDe(d), i=bloqueActual(bs), t=minutosAhora();
-  const hechosHoy = bs.filter(function(b,j){ return hechos[d.id+"-"+j]; }).length;
+  const bs = bloquesDe(d), i = bloqueActual(bs), t = minutosAhora();
   const marcables = bs.filter(function(b){ return b[3]!=="sueno" && b[3]!=="traslado"; }).length;
+  const hechosHoy = bs.filter(function(b,j){ return hechos[d.id+"-"+j]; }).length;
   const pct = marcables ? Math.round(hechosHoy/marcables*100) : 0;
 
-  let cuerpo;
-  if(i===-1){
-    cuerpo = '<div class="anom">El día todavía no arranca</div>'+
-      '<div class="asub">Empieza a las '+bs[0][0]+' con '+bs[0][2]+'</div>';
-  } else if(i===-2){
-    cuerpo = '<div class="anom">Día cerrado</div><div class="asub">A dormir.</div>';
+  let cuerpo, boton = "";
+  if(i === -1){
+    cuerpo = '<div class="nom">El día no ha arrancado</div>'+
+      '<div class="meta">Empieza <b>'+bs[0][0]+'</b> con '+esc(bs[0][2])+'</div>';
+  } else if(i === -2){
+    cuerpo = '<div class="nom">Día cerrado</div><div class="meta">A dormir.</div>';
   } else {
-    const ini=iniAbs(bs,i), fin=ini+dur(bs[i][0],bs[i][1]);
-    const quedan=fin-t, avance=Math.round((t-ini)/(fin-ini)*100);
-    let sig=null;
-    for(let j=i+1;j<bs.length;j++){ if(bs[j][3]!=="sueno"){ sig=bs[j]; break; } }
-    cuerpo = '<div class="aeti">Ahora · '+bs[i][0]+'–'+bs[i][1]+'</div>'+
-      '<div class="anom">'+bs[i][2]+'</div>'+
-      '<div class="abar"><i style="width:'+Math.max(2,Math.min(100,avance))+'%"></i></div>'+
-      '<div class="asub"><b>'+hm(quedan)+'</b> por delante'+
-        (sig?' · luego <b>'+sig[2]+'</b> a las '+sig[0]:'')+'</div>';
+    const ini = iniAbs(bs,i), fin = ini + dur(bs[i][0],bs[i][1]);
+    const quedan = fin - t, avance = Math.round((t-ini)/(fin-ini)*100);
+    let sig = null, sigI = -1;
+    for(let j=i+1;j<bs.length;j++){ if(bs[j][3]!=="sueno"){ sig=bs[j]; sigI=j; break; } }
+    cuerpo = '<div class="nom">'+esc(bs[i][2])+'</div>'+
+      '<div class="meta"><b>'+hm(quedan)+'</b> por delante · terminaba '+bs[i][1]+'</div>'+
+      '<div class="barra"><i style="width:'+Math.max(3,Math.min(100,avance))+'%"></i></div>'+
+      (sig ? '<div class="luego">luego <b>'+esc(sig[2])+'</b><span class="h">'+sig[0]+'</span></div>' : '');
+    boton = '<button class="cerrar" id="cerrarAhora" data-i="'+i+'">Terminé esto — son las '+
+      fmt(t)+'</button>';
   }
-  el.innerHTML='<div class="ahora" data-c="'+(i>=0?bs[i][3]:"mente")+'">'+
-    '<div class="aring" style="--p:'+pct+'"><span>'+pct+'<em>%</em></span></div>'+
-    '<div class="acuerpo">'+cuerpo+'</div></div>';
+  el.innerHTML = '<div class="ahora">'+
+    '<div class="top"><span class="lbl">'+(i>=0?"Ahora · "+bs[i][0]+"–"+bs[i][1]:"Hoy")+'</span>'+
+    '<span class="reloj">'+pct+' % del día</span></div>'+
+    cuerpo + boton + '</div>';
+
+  const cb = document.getElementById("cerrarAhora");
+  if(cb) cb.addEventListener("click", function(){ cerrarBloque(d, +cb.dataset.i, minutosAhora()); });
 }
 
-function renderLegend(){
-  const lg=document.getElementById("legend"); if(!lg) return;
-  lg.innerHTML = Object.keys(CATS).map(function(k){
-    const bg = k==="traslado"
-      ? "repeating-linear-gradient(90deg,var(--c-traslado) 0 3px,transparent 3px 6px)"
-      : "var(--c-"+k+")";
-    return '<span class="lg"><i style="background:'+bg+'"></i>'+CATS[k]+'</span>';
-  }).join("");
+/* El botón que alimenta todo el motor: "esto terminó a esta hora".
+   A partir de ahí el día se recompone sin tocar ni una sola ancla. */
+function cerrarBloque(d, idx, t){
+  const bs = bloquesDe(d);
+  hechos[d.id+"-"+idx] = {t: fmt(t), plan: bs[idx][1]};
+  CFG.real = CFG.real || {};
+  CFG.real[d.id] = {idx: idx, hora: fmt(t), nombre: bs[idx][2]};
+  pushHechos(); pushCfg();
 }
+
+/* ---------------- medidores ---------------- */
+function renderMeters(){
+  let out = "";
+  METAS.forEach(function(m){
+    let plan=0, hecho=0, sesPlan=0, sesHecho=0;
+    DIAS.forEach(function(d){
+      bloquesDe(d).forEach(function(b,i){
+        if(b[5]!==m.tag) return;
+        const mins = dur(b[0],b[1]);
+        plan += mins; sesPlan++;
+        if(hechos[d.id+"-"+i]){ hecho += mins; sesHecho++; }
+      });
+    });
+    const objetivo = m.sesiones ? m.sesiones : m.meta;
+    const puesto   = m.sesiones ? sesPlan : plan;
+    const pct = objetivo ? Math.min(100, Math.round(puesto/objetivo*100)) : 0;
+    const val = m.sesiones ? sesPlan+" de "+m.sesiones : hm(plan)+" de "+hm(m.meta);
+    out += '<div class="meter'+(pct<100?" corto":"")+'"><div class="mt">'+m.nom+
+      '<b>'+val+'</b></div><div class="bar"><i style="width:'+pct+'%"></i></div></div>';
+  });
+  let tras=0, noches=[];
+  DIAS.forEach(function(d){ bloquesDe(d).forEach(function(b){
+    if(b[3]==="traslado") tras += dur(b[0],b[1]);
+    if(b[3]==="sueno")    noches.push(dur(b[0],b[1]));
+  }); });
+  const prom = Math.round(noches.reduce(function(a,b){return a+b;},0)/noches.length);
+  out += '<div class="meter"><div class="mt">Traslados<b>'+hm(tras)+'</b></div>'+
+    '<div class="bar"><i style="width:100%;background:var(--c-traslado)"></i></div></div>';
+  out += '<div class="meter'+(prom<420?" corto":"")+'"><div class="mt">Sueño promedio<b>'+
+    hm(prom)+'</b></div><div class="bar"><i style="width:'+
+    Math.min(100,Math.round(prom/420*100))+'%;background:var(--c-sueno)"></i></div></div>';
+  document.getElementById("meters").innerHTML = out;
+  document.getElementById("metersNote").textContent =
+    "Los traslados son "+hm(tras)+" a la semana. No es tiempo que puedas recuperar "+
+    "organizándote mejor: es tiempo que hay que planificar como cualquier otro bloque.";
+}
+
 
 /* ============================================================
    PANEL DE FÚTBOL — hora del partido y destino del bloque flexible
@@ -1739,193 +1899,7 @@ function renderFutbol(){
    (1 primero). Sin `prio`, el bloque nunca se ofrece para eliminar:
    tesis, pareja, descompresión, areneros y sueño quedan fuera.
    ============================================================ */
-let rModo = "donde";
 
-function metaDe(b){ return b[6] || {}; }
-
-/* Hora original de inicio de un bloque, en minutos desde el arranque
-   del día (los bloques después de medianoche suman 1440). */
-function iniAbs(bloques, i){
-  let v = toMin(bloques[i][0]);
-  if(v < toMin(bloques[0][0])) v += 1440;
-  return v;
-}
-
-/* Índice del bloque que, según el plan original, debería estar
-   corriendo a la hora `t`. */
-function bloqueEn(bloques, t){
-  for(let i=0;i<bloques.length;i++){
-    if(bloques[i][3]==="sueno") break;
-    const ini=iniAbs(bloques,i), fin=ini+dur(bloques[i][0],bloques[i][1]);
-    if(t < fin) return i;
-  }
-  return bloques.length-2;
-}
-
-/* Reprograma los bloques desde `idx` en adelante, arrancando a la hora
-   `desde`. Todo lo anterior se da por terminado; nada se descarta por
-   el reloj — lo que no cabe hay que comprimirlo o soltarlo a propósito. */
-function simular(bloques, idx, desde, comprimir, caidos){
-  const out=[]; let t=desde; let tardeA=[];
-  for(let i=idx;i<bloques.length;i++){
-    const b=bloques[i], m=metaDe(b);
-    if(b[3]==="sueno") continue;
-    if(caidos.indexOf(i)>=0) continue;
-    let full = dur(b[0],b[1]);
-    let d = full;
-    if(comprimir && typeof m.min==="number") d = Math.max(m.min, 0);
-    if(m.fijo){
-      const ini = iniAbs(bloques,i);
-      if(t < ini) t = ini;                         // ancla: esperas hasta la hora
-      else if(t > ini) tardeA.push(b[2]);          // llegas tarde a algo fijo
-    }
-    out.push({i:i, ini:t, fin:t+d, b:b, d:d, recortado: d<full});
-    t += d;
-  }
-  return {plan:out, fin:t, tardeA:tardeA};
-}
-
-function construirEscenarios(dia, idx, desde){
-  const bloques = bloquesDe(dia);
-  const dormirB = bloques[bloques.length-1];
-  let acostar = toMin(dormirB[0]); if(acostar < toMin(bloques[0][0])) acostar += 1440;
-  const despierta = toMin(dormirB[1]);
-  let horasBase = despierta - acostar; if(horasBase<=0) horasBase += 1440;
-
-  const esc=[];
-
-  // A · comprimir sin eliminar nada
-  const a = simular(bloques, idx, desde, true, []);
-  esc.push({id:"comprimir", nom:"Comprimir", sub:"No pierdes nada",
-    factible: a.fin <= acostar, plan:a.plan, fin:a.fin, caidos:[], comprimir:true,
-    tardeA:a.tardeA,
-    detalle: a.plan.filter(function(p){return p.recortado;}).map(function(p){
-      return p.b[2]+": "+hm(dur(p.b[0],p.b[1]))+" → "+hm(p.d); })});
-
-  // B · comprimir y soltar siguiendo el orden de sacrificio
-  const candidatos = bloques.map(function(b,i){ return {i:i, p:metaDe(b).prio}; })
-    .filter(function(x){ return x.p && x.i>=idx; })
-    .sort(function(x,y){ return x.p-y.p; });
-  const caidos=[]; let bsim = a;
-  for(let k=0; k<candidatos.length && bsim.fin>acostar; k++){
-    caidos.push(candidatos[k].i);
-    bsim = simular(bloques, idx, desde, true, caidos);
-  }
-  if(caidos.length){
-    esc.push({id:"soltar", nom:"Soltar lo barato", sub:"Cae "+caidos.length+" bloque"+(caidos.length>1?"s":""),
-      factible: bsim.fin <= acostar, plan:bsim.plan, fin:bsim.fin, caidos:caidos.slice(), comprimir:true,
-      tardeA:bsim.tardeA,
-      detalle: caidos.map(function(i){ return "Se cae: "+bloques[i][2]+" ("+hm(dur(bloques[i][0],bloques[i][1]))+")"; })});
-  }
-
-  // C · mantener todo y dormir menos. Solo tiene sentido si de verdad
-  // empuja la hora de dormir; si no, es idéntico a comprimir.
-  const c = simular(bloques, idx, desde, false, []);
-  if(c.fin > acostar){
-    let horasC = despierta - c.fin; if(horasC<=0) horasC += 1440;
-    esc.push({id:"dormir", nom:"Dormir menos", sub:"Mantienes todo",
-      factible:true, plan:c.plan, fin:c.fin, caidos:[], comprimir:false, tardeA:c.tardeA,
-      aviso: horasC < 360 ? "Bajo 6 h. Si mañana tienes clase temprano o fútbol, esta no es la opción." : "",
-      detalle:["Te acuestas "+hm(c.fin-acostar)+" más tarde de lo previsto",
-               "Pierdes "+hm(horasBase-horasC)+" de sueño"]});
-  }
-
-  esc.forEach(function(e){
-    let h = despierta - Math.max(e.fin, acostar===e.fin?acostar:e.fin);
-    let ac = Math.max(e.fin, e.id==="dormir" ? e.fin : Math.min(e.fin, acostar));
-    if(e.id!=="dormir") ac = e.fin <= acostar ? acostar : e.fin;
-    h = despierta - ac; if(h<=0) h += 1440;
-    e.acostar = ac; e.horas = h; e.horasBase = horasBase;
-  });
-  // Se muestran todas: cuando ya pasaste la hora de dormir ninguna
-  // "alcanza", pero sigue habiendo una que te hace perder menos.
-  esc.forEach(function(e){ e.alcanza = e.fin <= acostar; });
-  return esc.sort(function(x,y){ return y.horas - x.horas; });
-}
-
-function renderRetrasoInputs(){
-  const dia = DIAS[activo];
-  const bs = bloquesDe(dia);
-  const ahora = new Date();
-  const hhmm = String(ahora.getHours()).padStart(2,"0")+":"+String(ahora.getMinutes()).padStart(2,"0");
-  let html="";
-  if(rModo==="donde"){
-    html = '<div class="field" style="grid-column:1/-1"><label for="rBloque">Recién estoy terminando</label>'+
-      '<select id="rBloque">'+bs.map(function(b,i){
-        return b[3]==="sueno" ? "" : '<option value="'+i+'">'+b[0]+' · '+b[2]+'</option>';
-      }).join("")+'</select></div>'+
-      '<div class="field"><label for="rAhora">Y son las</label><input id="rAhora" type="time" value="'+hhmm+'"></div>';
-  } else if(rModo==="tarde"){
-    html = '<div class="field"><label for="rMin">Minutos tarde</label><input id="rMin" type="number" min="5" max="480" step="5" value="40"></div>'+
-      '<div class="field"><label for="rAhora">Son las</label><input id="rAhora" type="time" value="'+hhmm+'"></div>';
-  } else {
-    html = '<div class="field"><label for="rFin">Quedo libre a las</label><input id="rFin" type="time" value="'+hhmm+'"></div>';
-  }
-  document.getElementById("rInputs").innerHTML = html + '<div class="field" style="align-self:end">'+
-    '<button class="btn" id="rGo">Ver opciones</button></div>';
-  document.getElementById("rGo").addEventListener("click", renderRetrasoOut);
-}
-
-/* Devuelve {idx, desde}: el primer bloque que queda pendiente y la hora
-   a la que realmente arranca. En los tres modos, el bloque en curso se
-   da por terminado a la hora indicada. */
-function puntoDePartida(){
-  const bs = bloquesDe(DIAS[activo]);
-  const g=function(id){const e=document.getElementById(id); return e?e.value:null;};
-  let actual, desde;
-  if(rModo==="donde"){
-    actual = +g("rBloque"); desde = toMin(g("rAhora"));
-  } else if(rModo==="tarde"){
-    desde = toMin(g("rAhora")) + (+g("rMin")||0);
-    actual = bloqueEn(bs, toMin(g("rAhora")));
-  } else {
-    desde = toMin(g("rFin"));
-    actual = bloqueEn(bs, desde);
-  }
-  let idx = Math.min(actual+1, bs.length-1);
-  while(idx < bs.length && bs[idx][3]==="sueno") idx++;
-  return {idx:idx, desde:desde, actual:actual};
-}
-
-function renderRetrasoOut(){
-  const dia = DIAS[activo];
-  const pp = puntoDePartida();
-  const desde = pp.desde;
-  const esc = construirEscenarios(dia, pp.idx, desde);
-  const el = document.getElementById("rOut");
-  if(!esc.length){ el.innerHTML='<p class="why">No pude armar ninguna opción con esa hora. Revisa el dato.</p>'; return; }
-
-  const bsD = bloquesDe(dia);
-  el.innerHTML = '<p class="why" style="margin-bottom:10px">Retomas en <b>'+bsD[pp.idx][2]+
-      '</b> a las <b>'+fmt(desde)+'</b>. Todo lo anterior queda cerrado.</p>'+
-    '<div class="eyebrow" style="margin-bottom:8px">Elige cómo cerrar el día</div>'+
-    esc.map(function(e){
-      const corto = e.horas < 420;
-      return '<button type="button" class="escen'+(CFG.ajuste && CFG.ajuste.dia===dia.id && CFG.ajuste.escenario===e.id?" sel":"")+
-        '" data-esc="'+e.id+'" data-desde="'+desde+'" data-idx="'+pp.idx+'">'+
-        '<div class="etop"><b>'+e.nom+'</b><span>'+e.sub+'</span>'+
-          (e.alcanza?'':'<span class="tras">no llega a tu hora</span>')+'</div>'+
-        '<div class="edorm'+(corto?" corto":"")+'">Duermes '+fmt(e.acostar)+' · <b>'+hm(e.horas)+'</b>'+
-          (corto?' <em>bajo tus 7 h</em>':'')+'</div>'+
-        '<ul class="edet">'+e.detalle.slice(0,4).map(function(d){return '<li>'+d+'</li>';}).join("")+'</ul>'+
-        (e.tardeA && e.tardeA.length?'<div class="eaviso">Llegas tarde a: '+e.tardeA.join(", ")+'</div>':'')+
-        (e.aviso?'<div class="eaviso">'+e.aviso+'</div>':'')+
-        '</button>';
-    }).join("");
-
-  el.querySelectorAll(".escen").forEach(function(b){
-    b.addEventListener("click", function(){
-      CFG.ajuste = {dia:dia.id, desde:+b.dataset.desde, idx:+b.dataset.idx, escenario:b.dataset.esc};
-      pushCfg(); renderRetrasoOut();
-    });
-  });
-  if(CFG.ajuste && CFG.ajuste.dia===dia.id){
-    el.innerHTML += '<button class="btn ghost" id="rClear" style="margin-top:10px">Volver al plan original</button>';
-    document.getElementById("rClear").addEventListener("click", function(){
-      CFG.ajuste=null; pushCfg(); renderRetrasoOut();
-    });
-  }
-}
 
 /* ---------------- cartera ---------------- */
 let elegidas = [];   // códigos SP seleccionados para el día
@@ -2090,6 +2064,7 @@ function renderCalc(){
 
   document.getElementById("calcOut").innerHTML = out;
 }
+
 
 /* ============================================================
    ASISTENTE — la página le pregunta a Claude directamente.
@@ -2402,8 +2377,7 @@ async function iniciarAsistente(){
   try{ sampleFn = await window.claude.use("sample"); }catch(e){ sampleFn=null; }
   if(sampleFn){
     document.getElementById("asistente").hidden=false;
-    document.getElementById("nvAsis").hidden=false;
-    try{
+        try{
       sampleCaps = await sampleFn.limits();
       if(sampleCaps && sampleCaps.images){
         const c=document.getElementById("acFoto"); c.hidden=false;
@@ -2422,8 +2396,7 @@ async function iniciarAsistente(){
   try{ mcpNs = await window.claude.use("mcp"); }catch(e){ mcpNs=null; }
   if(mcpNs){
     document.getElementById("asistente").hidden=false;
-    document.getElementById("nvAsis").hidden=false;
-    document.getElementById("acCal").hidden=false;
+        document.getElementById("acCal").hidden=false;
     document.getElementById("calSemana").innerHTML = "Se sincronizará la semana del <b>"+etiquetaSemana()+"</b>.";
     document.getElementById("calGo").addEventListener("click", sincronizarCalendario);
   }
@@ -2468,59 +2441,311 @@ function addPend(){
   pushPend(); renderPend();
 }
 
+
+/* ============================================================
+   CHECK-IN — las cinco entradas que definen la semana
+
+   Carlos las nombró él mismo: la programación de tiendas, las
+   capacitaciones de esa semana, los horarios de fútbol, los
+   compromisos sociales y las tareas de la universidad. El asistente
+   pregunta por esas cinco y por nada más, y nunca vuelve a preguntar
+   lo que ya sabe.
+   ============================================================ */
+const PASOS = [
+  {id:"tiendas", q:"¿Qué tiendas te tocan esta semana?",
+   ay:"Sube la foto del plan de banca o marca las tiendas y el día."},
+  {id:"capa",    q:"¿Qué días tienes capacitación?",
+   ay:"Por defecto 14:00–16:30. Cambia la hora si esta semana es otra."},
+  {id:"futbol",  q:"¿A qué hora son los partidos?",
+   ay:"Martes y jueves. Sin hora confirmada uso las 22:00, nunca la optimista."},
+  {id:"social",  q:"¿Algún compromiso social esta semana?",
+   ay:"Cine, cumpleaños, una reunión. Va con hora fija: la app no lo mueve."},
+  {id:"u",       q:"¿Qué tareas tienes de la universidad?",
+   ay:"Qué es y cuántos minutos crees que toma. Yo le sumo el margen."}
+];
+let pasoActual = 0;
+
+function pendienteDeSemana(){
+  // Qué falta por responder de las cinco entradas
+  const f = [];
+  if(!(CFG.programacion||[]).length) f.push("tiendas");
+  if(!CFG.checkin || !CFG.checkin.capa)   f.push("capa");
+  if(!CFG.partidos || !Object.keys(CFG.partidos).length) f.push("futbol");
+  if(!CFG.checkin || !CFG.checkin.social) f.push("social");
+  if(!CFG.checkin || !CFG.checkin.u)      f.push("u");
+  return f;
+}
+
+function renderCheckin(){
+  const el = document.getElementById("checkin");
+  if(!el) return;
+  const falta = pendienteDeSemana();
+  const p = PASOS[pasoActual];
+  el.innerHTML =
+    '<h3>Cómo viene tu semana</h3>'+
+    '<p class="why">'+(falta.length
+      ? 'Me faltan <b>'+falta.length+'</b> de las cinco cosas que definen tu semana. '+
+        'Respóndelas y rearmo el horario solo.'
+      : 'Ya tengo las cinco. Puedes volver a cualquiera para corregirla.')+'</p>'+
+    '<div class="progreso">'+PASOS.map(function(x,i){
+        return '<i class="'+(falta.indexOf(x.id)<0?"on":"")+'" title="'+x.q+'"></i>';
+      }).join("")+'</div>'+
+    '<div class="paso"><div class="q">'+p.q+'</div>'+
+      '<p class="why" style="margin-bottom:9px">'+p.ay+'</p>'+
+      cuerpoPaso(p.id)+'</div>'+
+    '<div class="addrow" style="margin-top:13px">'+
+      '<button class="btn ghost chico" id="ckPrev"'+(pasoActual===0?" disabled":"")+'>Atrás</button>'+
+      '<button class="btn chico" id="ckNext">'+
+        (pasoActual===PASOS.length-1?"Listo":"Siguiente")+'</button>'+
+      '<span style="margin-left:auto;font-size:11.5px;color:var(--ink-3);align-self:center">'+
+        (pasoActual+1)+' de '+PASOS.length+'</span>'+
+    '</div>';
+  enlazarPaso(p.id);
+  document.getElementById("ckPrev").addEventListener("click", function(){
+    if(pasoActual>0){ pasoActual--; renderCheckin(); } });
+  document.getElementById("ckNext").addEventListener("click", function(){
+    pasoActual = (pasoActual+1) % PASOS.length; renderCheckin(); });
+}
+
+function cuerpoPaso(id){
+  if(id === "tiendas"){
+    const prog = CFG.programacion || [];
+    return (prog.length
+      ? '<ul class="pend">'+prog.map(function(r,i){
+          return '<li><span class="t">'+DIA_NOM[r.dia]+' · '+
+            (r.tiendas&&r.tiendas.length ? r.tiendas.join(", ") : r.tipo)+'</span>'+
+            '<span class="m">'+(r.tipo==="visita"?"visita":r.tipo)+'</span>'+
+            '<button class="x" data-quitar="'+i+'" aria-label="Quitar">×</button></li>';
+        }).join("")+'</ul>'
+      : '<p class="why">Todavía no hay nada cargado.</p>')+
+      '<div class="addrow" style="margin-top:9px">'+
+        '<select id="ckDia" aria-label="Día">'+DIAS.slice(0,6).map(function(d){
+          return '<option value="'+d.id+'">'+d.nom+'</option>'; }).join("")+'</select>'+
+        '<select id="ckTipo" aria-label="Tipo">'+
+          '<option value="visita">Visita</option>'+
+          '<option value="turno-completo">Turno completo</option>'+
+          '<option value="tienda-escuela">Tienda escuela</option>'+
+          '<option value="oficina">Oficina</option></select>'+
+        '<input id="ckTienda" type="text" placeholder="SP33" maxlength="12" style="flex:0 0 78px">'+
+        '<button class="btn chico" id="ckAddProg">Agregar</button>'+
+      '</div>';
+  }
+  if(id === "capa"){
+    const c = (CFG.checkin && CFG.checkin.capaDias) || [];
+    return '<div class="picker">'+DIAS.slice(0,6).map(function(d){
+        return '<button type="button" class="pk'+(c.indexOf(d.id)>=0?" on":"")+
+          '" data-capa="'+d.id+'" style="--pkc:var(--c-trabajo)">'+d.corto+'</button>';
+      }).join("")+'</div>'+
+      '<div class="frow" style="margin-top:9px">'+
+        '<div class="field"><label for="ckCapaIni">Empieza</label>'+
+        '<input id="ckCapaIni" type="time" value="'+
+          ((CFG.checkin&&CFG.checkin.capaIni)||"14:00")+'"></div>'+
+        '<div class="field"><label for="ckCapaMin">Dura (min)</label>'+
+        '<input id="ckCapaMin" type="number" min="30" max="480" step="15" value="'+
+          ((CFG.checkin&&CFG.checkin.capaMin)||150)+'"></div>'+
+      '</div>';
+  }
+  if(id === "futbol"){
+    return '<div class="frow">'+["mar","jue"].map(function(k){
+      return '<div class="field"><label for="ckF-'+k+'">'+DIA_NOM[k]+'</label>'+
+        '<input id="ckF-'+k+'" type="time" data-fut="'+k+'" value="'+
+        ((CFG.partidos&&CFG.partidos[k])||"")+'"></div>';
+    }).join("")+'</div>'+
+    '<p class="why" style="margin-top:8px">Vacío = uso las 22:00, el escenario tardío.</p>';
+  }
+  if(id === "social"){
+    const s = (CFG.checkin && CFG.checkin.socialList) || [];
+    return (s.length
+      ? '<ul class="pend">'+s.map(function(x,i){
+          return '<li><span class="t">'+esc(x.txt)+'</span><span class="m">'+
+            DIA_NOM[x.dia]+' '+x.hora+'</span>'+
+            '<button class="x" data-quitarSoc="'+i+'" aria-label="Quitar">×</button></li>';
+        }).join("")+'</ul>'
+      : '<p class="why">Nada esta semana.</p>')+
+      '<div class="addrow" style="margin-top:9px">'+
+        '<input id="ckSocTxt" type="text" placeholder="Cine con mis amigos" maxlength="80">'+
+        '<select id="ckSocDia" aria-label="Día">'+DIAS.map(function(d){
+          return '<option value="'+d.id+'">'+d.corto+'</option>'; }).join("")+'</select>'+
+        '<input id="ckSocHora" type="time" value="20:00" style="flex:0 0 106px">'+
+        '<input id="ckSocMin" type="number" value="120" min="15" max="480" step="15" aria-label="Minutos">'+
+        '<button class="btn chico" id="ckAddSoc">Agregar</button>'+
+      '</div>';
+  }
+  // tareas de la U
+  const t = (CFG.tareas||[]).filter(function(x){ return x.cat==="u" && !x.quitada; });
+  return (t.length
+    ? '<ul class="pend">'+t.map(function(x){
+        return '<li><span class="t">'+esc(x.txt)+'</span><span class="m">'+hm(x.min)+
+          (x.dia?' · '+DIA_NOM[x.dia]:' · sin día')+'</span>'+
+          '<button class="x" data-quitarU="'+x.id+'" aria-label="Quitar">×</button></li>';
+      }).join("")+'</ul>'
+    : '<p class="why">Nada cargado. Lo que no tiene minutos no es una tarea, es una preocupación.</p>')+
+    '<div class="addrow" style="margin-top:9px">'+
+      '<input id="ckUTxt" type="text" placeholder="Avance de tesis · capítulo 3" maxlength="90">'+
+      '<input id="ckUMin" type="number" value="60" min="15" max="480" step="15" aria-label="Minutos">'+
+      '<button class="btn chico" id="ckAddU">Agregar</button>'+
+    '</div>';
+}
+
+const DIA_NOM = {lun:"Lunes",mar:"Martes",mie:"Miércoles",jue:"Jueves",
+                 vie:"Viernes",sab:"Sábado",dom:"Domingo"};
+
+function marcaCheckin(k, v){
+  CFG.checkin = CFG.checkin || {};
+  CFG.checkin[k] = v;
+}
+
+function enlazarPaso(id){
+  const $ = function(x){ return document.getElementById(x); };
+
+  if(id === "tiendas"){
+    document.querySelectorAll("[data-quitar]").forEach(function(b){
+      b.addEventListener("click", function(){
+        CFG.programacion.splice(+b.dataset.quitar,1); pushCfg(); renderCheckin(); });
+    });
+    $("ckAddProg").addEventListener("click", function(){
+      const tipo = $("ckTipo").value, cod = $("ckTienda").value.trim().toUpperCase();
+      const fila = {dia:$("ckDia").value, tipo:tipo};
+      if(tipo==="visita" || tipo==="turno-completo"){
+        if(!/^SP\d{2}$/.test(cod)) return;
+        fila.tiendas = [cod];
+      } else { fila.lugar = "OFICINA"; }
+      CFG.programacion = (CFG.programacion||[]).concat([fila]);
+      pushCfg(); renderCheckin();
+    });
+  }
+
+  if(id === "capa"){
+    document.querySelectorAll("[data-capa]").forEach(function(b){
+      b.addEventListener("click", function(){
+        CFG.checkin = CFG.checkin || {};
+        const l = (CFG.checkin.capaDias||[]).slice();
+        const i = l.indexOf(b.dataset.capa);
+        if(i>=0) l.splice(i,1); else l.push(b.dataset.capa);
+        CFG.checkin.capaDias = l; CFG.checkin.capa = true;
+        aplicarCapacitaciones(); pushCfg(); renderCheckin();
+      });
+    });
+    ["ckCapaIni","ckCapaMin"].forEach(function(k){
+      $(k).addEventListener("change", function(){
+        CFG.checkin = CFG.checkin || {};
+        CFG.checkin.capaIni = $("ckCapaIni").value;
+        CFG.checkin.capaMin = +$("ckCapaMin").value;
+        aplicarCapacitaciones(); pushCfg();
+      });
+    });
+  }
+
+  if(id === "futbol"){
+    document.querySelectorAll("[data-fut]").forEach(function(inp){
+      inp.addEventListener("change", function(){
+        CFG.partidos = CFG.partidos || {};
+        if(inp.value) CFG.partidos[inp.dataset.fut] = inp.value;
+        else delete CFG.partidos[inp.dataset.fut];
+        pushCfg();
+      });
+    });
+  }
+
+  if(id === "social"){
+    document.querySelectorAll("[data-quitarSoc]").forEach(function(b){
+      b.addEventListener("click", function(){
+        CFG.checkin.socialList.splice(+b.dataset.quitarsoc,1);
+        aplicarSociales(); pushCfg(); renderCheckin();
+      });
+    });
+    $("ckAddSoc").addEventListener("click", function(){
+      const txt = $("ckSocTxt").value.trim(); if(!txt) return;
+      CFG.checkin = CFG.checkin || {};
+      CFG.checkin.socialList = (CFG.checkin.socialList||[]).concat([{
+        txt:txt, dia:$("ckSocDia").value, hora:$("ckSocHora").value, min:+$("ckSocMin").value
+      }]);
+      CFG.checkin.social = true;
+      aplicarSociales(); pushCfg(); renderCheckin();
+    });
+  }
+
+  if(id === "u"){
+    document.querySelectorAll("[data-quitarU]").forEach(function(b){
+      b.addEventListener("click", function(){
+        CFG.tareas = CFG.tareas.filter(function(t){ return String(t.id)!==b.dataset.quitaru; });
+        pushCfg(); renderCheckin();
+      });
+    });
+    $("ckAddU").addEventListener("click", function(){
+      const txt = $("ckUTxt").value.trim(); if(!txt) return;
+      CFG.tareas = (CFG.tareas||[]).concat([{
+        id:"u"+Date.now(), txt:txt, min:+$("ckUMin").value, cat:"u", tag:"tesis", dia:null
+      }]);
+      marcaCheckin("u", true);
+      pushCfg(); renderCheckin();
+    });
+  }
+}
+
+/* Las capacitaciones son filas de programación con hora fija: se regeneran
+   enteras desde el check-in para que quitar un día no deje basura. */
+function aplicarCapacitaciones(){
+  const c = CFG.checkin || {};
+  CFG.programacion = (CFG.programacion||[]).filter(function(r){ return r.tipo!=="capacitacion"; });
+  (c.capaDias||[]).forEach(function(dia){
+    CFG.programacion.push({dia:dia, tipo:"capacitacion", lugar:"OFICINA",
+      horaFija:c.capaIni||"14:00", min:c.capaMin||150,
+      detalle:(c.capaIni||"14:00")+" · "+hm(c.capaMin||150)});
+  });
+}
+
+/* Un compromiso social es un ANCLA: hora acordada con otra gente, la app
+   nunca la mueve. Entra como tarea con hora fija. */
+function aplicarSociales(){
+  const c = CFG.checkin || {};
+  CFG.tareas = (CFG.tareas||[]).filter(function(t){ return !t.social; });
+  (c.socialList||[]).forEach(function(s,i){
+    CFG.tareas.push({id:"soc"+i, txt:s.txt, min:s.min, dia:s.dia, cat:"vinculo",
+      social:true, horaFija:s.hora});
+  });
+}
+
+
 /* ---------------- arranque ---------------- */
 loadLocal();
-document.getElementById("weekLabel").textContent = "Semana "+WEEK;
-renderMeters(); renderTabs(); renderDay(); renderLegend();
+document.getElementById("weekLabel").textContent = etiquetaSemana();
+
+activo = indiceHoy();
+renderMeters(); renderTabs(); renderDay(); renderAhora();
 renderFutbol(); renderCartera(); renderPicker(); renderCalc(); renderPend();
+renderCheckin();
 iniciarAsistente();
 
-// navegación entre vistas
 function irA(v){
   ["hoy","semana","ruta","asis","mas"].forEach(function(k){
-    const el=document.getElementById("v-"+k); if(el) el.hidden = (k!==v);
+    const el = document.getElementById("v-"+k); if(el) el.hidden = (k!==v);
   });
   document.querySelectorAll(".nv").forEach(function(b){
     b.setAttribute("aria-selected", String(b.dataset.v===v));
   });
+  const vis = document.getElementById("v-"+v);
+  if(vis){ vis.style.animation = "none"; void vis.offsetWidth; vis.style.animation = ""; }
   window.scrollTo({top:0, behavior:"instant"});
 }
 document.querySelectorAll(".nv").forEach(function(b){
   b.addEventListener("click", function(){ irA(b.dataset.v); });
 });
 
-// el reloj reordena la vista sin recargar
+// El reloj reordena la vista sin recargar: el bloque en curso, lo que ya pasó
+// y los minutos que quedan se recalculan cada minuto.
 setInterval(function(){
   if(!document.getElementById("v-hoy").hidden){ renderAhora(); renderDay(); }
 }, 60000);
 
-// re-planificador
-document.getElementById("rToggle").addEventListener("click", function(){
-  const body=document.getElementById("rBody"), abierto=!body.hidden;
-  body.hidden = abierto;
-  this.setAttribute("aria-expanded", String(!abierto));
-  this.textContent = abierto ? "Recalcular el día" : "Cerrar";
-  if(!abierto){ renderRetrasoInputs(); document.getElementById("rOut").innerHTML=""; }
-});
-document.querySelectorAll(".rm").forEach(function(b){
-  b.addEventListener("click", function(){
-    rModo=b.dataset.m;
-    document.querySelectorAll(".rm").forEach(function(x){ x.setAttribute("aria-selected", String(x===b)); });
-    renderRetrasoInputs(); document.getElementById("rOut").innerHTML="";
-  });
-});
-
-// abrir en el día de hoy antes de dibujar la tarjeta Ahora
-activo = indiceHoy();
-renderTabs(); renderDay(); renderAhora();
-
 calcIds.forEach(function(id){
-  const el=document.getElementById(id);
+  const el = document.getElementById(id);
   el.addEventListener("input", renderCalc);
   el.addEventListener("change", renderCalc);
 });
 document.getElementById("pAdd").addEventListener("click", addPend);
-document.getElementById("pTxt").addEventListener("keydown", function(e){ if(e.key==="Enter") addPend(); });
+document.getElementById("pTxt").addEventListener("keydown", function(e){
+  if(e.key==="Enter") addPend(); });
 
 // persistencia compartida, si el visor la concede
 (async function(){
@@ -2528,21 +2753,22 @@ document.getElementById("pTxt").addEventListener("keydown", function(e){ if(e.ke
     const cap = await window.claude.use("db");
     if(!cap) return;
     db = cap;
-    const st=document.getElementById("saveState");
-    st.textContent="guardado en la nube"; st.classList.add("on");
+    const st = document.getElementById("saveState");
+    st.textContent = "guardado"; st.classList.add("on");
 
     db.doc("semanas/"+WEEK).onSnapshot(function(snap){
       if(!snap.exists) return;
-      const d=snap.data()||{};
-      if(d.hechos && typeof d.hechos==="object"){ hechos=Object.assign({},d.hechos); }
-      if(d.cfg && typeof d.cfg==="object"){ CFG=Object.assign(CFG,d.cfg); }
-      saveLocal(); renderDay(); renderMeters(); renderFutbol();
-    }, function(){ st.textContent="estado local"; st.classList.remove("on"); });
+      const d = snap.data() || {};
+      if(d.hechos && typeof d.hechos==="object") hechos = Object.assign({}, d.hechos);
+      if(d.cfg && typeof d.cfg==="object") CFG = Object.assign(CFG, d.cfg);
+      saveLocal(); invalidar();
+      renderDay(); renderMeters(); renderFutbol(); renderAhora(); renderCheckin();
+    }, function(){ st.textContent="local"; st.classList.remove("on"); });
 
     db.doc("listas/pendientes").onSnapshot(function(snap){
       if(!snap.exists) return;
-      const d=snap.data()||{};
-      if(Array.isArray(d.items)){ pendientes=d.items.slice(); saveLocal(); renderPend(); }
+      const d = snap.data() || {};
+      if(Array.isArray(d.items)){ pendientes = d.items.slice(); saveLocal(); renderPend(); }
     }, function(){});
   }catch(e){ /* sin db: el horario funciona igual con estado local */ }
 })();
