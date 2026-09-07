@@ -1,0 +1,141 @@
+<title>Semana Blindada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter+Tight:wght@400;500;600&display=swap">
+
+<div class="wrap">
+
+<header>
+  <div class="hbar">
+    <h1>Semana Blindada</h1>
+    <span class="stamp"><b id="semLabel">—</b><span id="saveState" class="savestate">local</span></span>
+  </div>
+  <nav class="nav" id="nav" role="tablist">
+    <button class="nv" data-v="hoy" aria-selected="true">Hoy</button>
+    <button class="nv" data-v="semana" aria-selected="false">Semana</button>
+    <button class="nv" data-v="ritual" aria-selected="false">Ritual</button>
+    <button class="nv" data-v="mas" aria-selected="false">Cómo funciona</button>
+  </nav>
+</header>
+
+<div class="vista" id="v-hoy">
+  <div id="ahora"></div>
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <div id="tira"></div>
+  <div id="cab"></div>
+  <button class="plegado" id="plegado" hidden></button>
+  <ul class="tl" id="lista"></ul>
+</div>
+
+<div class="vista" id="v-semana" hidden>
+  <div class="eyebrow" style="margin-bottom:9px">Innegociables de la semana</div>
+  <div class="meters" id="metros"></div>
+  <section id="avance" style="margin-top:24px"></section>
+  <section id="cartera" style="margin-top:24px"></section>
+</div>
+
+<div class="vista" id="v-ritual" hidden>
+  <div class="checkin" id="ritDia"></div>
+  <div class="checkin" id="ritSem"></div>
+</div>
+
+<div class="vista" id="v-mas" hidden>
+  <section>
+    <div class="shead"><h2>Cómo decide la app</h2><span class="eyebrow">Tres tipos de bloque</span></div>
+    <div class="cards">
+      <div class="card">
+        <h3>Anclado</h3>
+        <p>Clase, partido, capacitación, cine, compromiso social. <b>Hora impuesta por otra gente: la app nunca la mueve.</b> Barra sólida y etiqueta «fija». Si llegas tarde te lo dice — no corre la clase.</p>
+      </div>
+      <div class="card">
+        <h3>Con ventana</h3>
+        <p>Las visitas a tienda. La hora la elige la app, pero dentro del horario real de esa tienda, leído de su ficha en superpet.pe. Punteado, con su rango al lado.</p>
+      </div>
+      <div class="card">
+        <h3>Movible</h3>
+        <p>Todo lo demás. Contra un ancla se recorta hasta donde haya sitio antes de correrse. Un traslado no se recorta: si no cabe, llegas tarde y el ancla lo dice.</p>
+      </div>
+      <div class="card alert">
+        <h3>Cuando sobra o falta tiempo</h3>
+        <p>Si se abre un hueco, la app te lo muestra con candidatos concretos. Si algo pisaría un ancla, te muestra las dos versiones —llegar tarde o soltar lo de antes— con la consecuencia de cada una. <b>Nunca decide por ti.</b></p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><h2>Por qué los hábitos no tienen hora</h2><span class="eyebrow">La evidencia</span></div>
+    <div class="cards">
+      <div class="card">
+        <h3>La señal, no el horario</h3>
+        <p>Lally (2010) siguió a personas formando hábitos reales: la automatización llegó en <b>66 días de media, con un rango de 18 a 254</b>, y creció con la repetición <b>en un contexto constante</b>. Por eso cada hábito declara su señal — «al terminar cada visita» — y no una hora.</p>
+      </div>
+      <div class="card">
+        <h3>Un día perdido no importa. Dos, sí</h3>
+        <p>El mismo estudio midió que <b>un día saltado no tuvo efecto</b> sobre la curva. Lo que la rompe son los fallos consecutivos. De ahí el <b>piso</b>: la versión mínima que cuenta para la racha y no para los minutos. La app te avisa al segundo fallo, no al primero ni al décimo.</p>
+      </div>
+      <div class="card">
+        <h3>La rigidez mata el hábito</h3>
+        <p>Milkman encontró que duran más los hábitos <b>flexibles sobre cuándo hacerlos</b>: sobreviven al día en que todo se rompe. Por eso los flotantes reservan minutos pero no hora.</p>
+      </div>
+      <div class="card">
+        <h3>El aburrimiento es neurología</h3>
+        <p>La habituación hace que el mismo estímulo dé cada vez menos dopamina, y es la causa documentada de abandono de las rutinas. El bloque se queda; <b>el contenido rota</b>.</p>
+      </div>
+      <div class="card">
+        <h3>El progreso solo motiva si se nota</h3>
+        <p>Amabile, con 12 000 diarios: avanzar en algo que importa es el factor número uno de un buen día. Por eso <b>«Esto avanzó»</b> cuenta minutos reales y no porcentaje de cumplimiento.</p>
+      </div>
+      <div class="card alert">
+        <h3>Tu sueño no paga los hábitos</h3>
+        <p>Si un día cierra bajo 6 h, el bloque de hábitos baja solo a su piso y te lo dice. Nunca al revés. Y solo los hábitos <b>encendidos</b> ocupan tiempo: el resto espera en cola sin costarte nada.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><h2>Protocolo de cabeza</h2><span class="eyebrow">Antes de que se rompa</span></div>
+    <div class="cards">
+      <div class="card">
+        <h3>Regla del 80 %</h3>
+        <p>Si el miércoles vas por debajo del 80 % de los bloques marcados, <b>recortas alcance, nunca sueño</b>. El sueño es lo que hace que la semana siguiente exista.</p>
+      </div>
+      <div class="card alert">
+        <h3>Señales de alerta</h3>
+        <ul class="plain">
+          <li>Dos noches seguidas bajo 6 h → cancela el fútbol de esa semana.</li>
+          <li>Te saltas la descompresión 3 días → recorta un bloque de trabajo, no la lectura.</li>
+          <li>Irritabilidad con tu enamorada o con los gatos → es fatiga, no es la relación.</li>
+          <li>El desvío medio pasa de 25 min varios días → las duraciones están mal calculadas. Dímelo y las corrijo.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Día de aterrizaje</h3>
+        <p>Un domingo al mes: sin correos, sin tesis, sin planificación. No es premio por rendimiento — va en el calendario aunque la semana haya salido mal. Sobre todo si salió mal.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><h2>Orden de sacrificio</h2><span class="eyebrow">Cuando no alcanza</span></div>
+    <p class="sub" style="margin:0 0 11px">Escrito ahora, con la cabeza descansada, para no decidirlo a las once de la noche. Es el mismo orden que usa la app cuando te ofrece «soltar y llegar».</p>
+    <ol class="order">
+      <li><div><b>Lectura del día</b><div class="why">Se recupera el fin de semana sin costo.</div></div></li>
+      <li><div><b>Un bloque de trabajo adelantado</b><div class="why">Lo que ibas a adelantar, no lo que vence.</div></div></li>
+      <li><div><b>El fútbol de esa noche</b><div class="why">Recuperas 2 h 35 completas incluyendo traslados.</div></div></li>
+      <li><div><b>Una sesión de gym</b><div class="why">Solo si ya sacrificaste el fútbol. Nunca las tres.</div></div></li>
+      <li><div><b>Nada más</b><div class="why">Tesis, pareja, sueño y descompresión no entran en esta lista. Si llegaste hasta aquí, el problema es la carga: hay que sacar algo de la semana, no comprimirlo.</div></div></li>
+    </ol>
+  </section>
+
+  <footer>
+    <b>De dónde salen los números.</b> Las 20 tiendas son tu Matriz de Indicadores 2026. Los traslados se calcularon ruteando cada dirección real con OSRM desde Las Gladiolas 125, Independencia, con un factor de hora punta de Lima (×2.2) más 10 min de margen. Los horarios de apertura se leyeron de las 20 fichas de superpet.pe.
+    <ul>
+      <li>El punto de casa es el centroide de Independencia: la calle exacta no está en OpenStreetMap, así que añade unos minutos de incertidumbre propia.</li>
+      <li>El ×2.2 es un factor de tráfico, no una medición. Se recalibra con los tiempos que vayas midiendo: casa→sede dio 60 real contra 58 del modelo.</li>
+      <li>De la oficina a una tienda no hay matriz medida: se usa el salto entre conglomerados, 57 min, que es el lado pesimista.</li>
+      <li>La noche del lunes al martes son 5 h y no se arregla moviendo bloques: sales de clase 22:40 y entras a las 7:30.</li>
+    </ul>
+  </footer>
+</div>
+
+</div>
