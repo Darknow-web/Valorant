@@ -58,6 +58,50 @@ su hora, lo posterior se recalcula, las anclas siguen donde estaban.
 Verificado con un retraso de 5 h 30 un lunes: la clase sigue dibujada **19:30–22:40** y sale
 un conflicto de 60 min. Antes, la clase se habría dibujado a la 1 de la mañana.
 
+## Hábitos — el modelo y la evidencia
+
+Los hábitos ya no son bloques con hora. Cada uno declara **su señal**, no su horario:
+
+| Clase | Qué es | Ejemplos |
+|---|---|---|
+| **Enganchado** | Se dibuja tras su señal real | Takary al terminar cada visita · parada con libro en el traslado más largo |
+| **Flotante** | Reserva minutos, no hora. Van a un solo bloque «Tus hábitos de hoy» | Juego, tesis, comodín |
+| **Semanal / mensual** | Un día fijo | Ropa (domingo) · cuarto (viernes) · orden profundo (1er domingo) |
+
+Por qué está así:
+
+- **Lally (2010)**: la automatización llega en 66 días de media, con un rango de 18 a 254, y
+  crece con la repetición **en un contexto constante**. La señal es lo que la construye.
+- **Gollwitzer**: un plan «si pasa X, entonces Y» transfiere el control a la señal. Eso es
+  el campo `senal`.
+- **Milkman**: la rigidez mata el hábito. Los flotantes no tienen hora.
+- **Lally otra vez**: un día perdido **no** afecta la curva; los fallos consecutivos sí. De
+  ahí el **piso** y el aviso al **segundo** fallo, no al primero ni al décimo.
+- **Habituación**: el mismo estímulo da cada vez menos dopamina. El bloque se queda, el
+  contenido rota (`variantes`).
+- **Amabile**: avanzar en algo que importa es el factor número uno de un buen día, pero solo
+  si se nota. De ahí la sección **«Esto avanzó»**, en minutos reales y no en porcentaje.
+
+### Dos reglas que hacen que el sistema no mienta
+
+**Olas.** Solo los hábitos **encendidos** consumen tiempo. La ola 1 son cuatro: Takary,
+juego, ropa y cuarto. El resto queda en cola, visible, costando cero. En el ritual semanal
+cada hábito muestra **lo que cuesta por semana** antes de encenderlo.
+
+**El sueño no paga los hábitos.** Si un día cierra bajo 6 h, el bloque de hábitos baja solo
+a su piso y lo dice. Nunca al revés. Con la ola 1 encendida el promedio queda en **6 h 40**
+contra 6 h 56 sin hábitos: trece minutos por noche, no hora y media.
+
+## Los dos rituales
+
+**Domingo por la noche · 8 pasos.** Arranca con el balance real de la semana que cierra
+(cuántos hábitos de cuántos, desvío medio de cierre, qué bloque se cayó más veces) y sigue
+con las cinco entradas, los días de tesis y juego, y qué hábitos quedan encendidos.
+
+**La noche anterior · 5 min, 4 pasos.** Cierra hoy, anota lo que se cruzó, mira los hábitos
+de mañana y decide —o no— el comodín. Ver mañana antes de dormir es lo que evita repasarlo
+en la cama.
+
 ## Editar a mano
 
 Toca cualquier bloque y se abre su panel. Cuatro cosas, y el resto del día se recompone
@@ -72,9 +116,10 @@ al instante alrededor de las anclas:
 Un bloque con hora impuesta por otro solo deja cambiar la duración o soltarlo; mover y
 clavar no aparecen, porque moverlo sería mentira.
 
-Los ajustes se guardan en `CFG.ajustes[dia][nombreDelBloque]`, **por nombre y no por
-índice**: el índice cambia cada vez que el día se recompone y dejaría el ajuste pegado al
-bloque de al lado. La cabecera del día lista lo ajustado y lo soltado, cada uno con su
+Los ajustes se guardan en `CFG.ajustes[dia][clave]`. La clave **no puede ser el índice**
+—cambia en cada recomposición— **ni el nombre a secas**: el viernes tiene tres bloques
+llamados «Traslado a casa» y un ajuste por nombre los movía los tres a la vez.
+`ponerClaves()` numera los repetidos (`Traslado a casa#2`). La cabecera del día lista lo ajustado y lo soltado, cada uno con su
 deshacer.
 
 ## Horarios de tienda — leídos, no supuestos

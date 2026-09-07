@@ -178,6 +178,19 @@ header{position:sticky; top:0; z-index:40; background:var(--bg);
 .blk .name{font-size:14px; font-weight:500; line-height:1.3; color:var(--ink)}
 .blk .dur{font-size:11.5px; color:var(--ink-3); margin-top:1px}
 .blk .pista{color:var(--accent); margin-left:6px; font-weight:500}
+.hchips{display:flex; flex-direction:column; gap:6px; margin-bottom:13px}
+.hchip{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent);
+  border-radius:var(--r-s); padding:9px 11px; animation:pop .28s var(--t) both}
+.hchip.ok{border-left-color:var(--good); background:var(--accent-soft)}
+.hchip.mal{border-left-color:var(--bad)}
+.hchip .hn{font-size:13.5px; font-weight:600}
+.hchip .hp{margin-left:6px; font-size:10px; font-weight:600; letter-spacing:.05em;
+  text-transform:uppercase; color:var(--good)}
+.hchip .hm{font-size:11.5px; color:var(--ink-2); margin-top:1px}
+.hchip .hw{font-size:11.5px; color:var(--bad); margin-top:5px; line-height:1.45}
+.hchip .hbtns{display:flex; gap:5px; flex-wrap:wrap; margin-top:8px}
+.hchip .edb{padding:5px 10px; font-size:12px}
+.hchip .edb[disabled]{opacity:.45; cursor:default}
 .ed[hidden]{display:none}
 .ed{margin-top:8px; display:flex; flex-direction:column; gap:7px;
   background:var(--surface-2); border-radius:10px; padding:10px 11px;
@@ -255,6 +268,8 @@ header{position:sticky; top:0; z-index:40; background:var(--bg);
   transition:transform .14s var(--t), border-color .18s var(--t), box-shadow .18s var(--t)}
 .cand:hover,.cand:focus-visible{border-color:var(--accent); box-shadow:var(--sh); outline:none}
 .cand:active{transform:scale(.99)}
+.cand.on{border-color:var(--accent); background:var(--accent-soft)}
+.cand .m{text-align:right; line-height:1.3}
 .cand b{font-weight:600; font-size:13.5px}
 .cand .m{margin-left:auto; font-size:11.5px; color:var(--ink-3);
   font-variant-numeric:tabular-nums; white-space:nowrap}
@@ -440,6 +455,7 @@ footer ul{margin:8px 0 0; padding-left:16px}
 <div class="vista" id="v-hoy">
   <div id="ahora"></div>
   <div class="tabs" id="tabs" role="tablist"></div>
+  <div id="tira"></div>
   <div id="dayPane"></div>
 </div>
 
@@ -447,6 +463,8 @@ footer ul{margin:8px 0 0; padding-left:16px}
   <div class="eyebrow" style="margin-bottom:9px">Innegociables de la semana</div>
   <div class="meters" id="meters"></div>
   <p class="metersNote" id="metersNote"></p>
+
+  <section id="avance" style="margin-top:24px"></section>
 
   <section style="margin-top:24px">
     <div class="shead"><h2>Noches de fútbol</h2><span class="eyebrow">Hora variable</span></div>
@@ -456,7 +474,12 @@ footer ul{margin:8px 0 0; padding-left:16px}
 </div>
 
 <div class="vista" id="v-asis" hidden>
-  <div class="checkin" id="checkin"></div>
+  <div class="checkin" id="ritDia"></div>
+  <div class="checkin" id="ritSem"></div>
+  <details class="acard" style="margin-bottom:11px">
+    <summary style="cursor:pointer;font-weight:600;font-size:14px">Cargar datos sueltos</summary>
+    <div class="checkin" id="checkin" style="box-shadow:none;border:0;padding:11px 0 0"></div>
+  </details>
 
   <div id="asistente" hidden>
     <div class="shead" style="margin-top:22px"><h2>Preguntarle a Claude</h2><span class="eyebrow">Sin pasar por el chat</span></div>
@@ -975,6 +998,9 @@ let CFG = {                // configuración de la semana en curso
   flex: {},                // {mar:"tesis", jue:"dormir"} — destino del bloque flexible
   real: {},                // {lun:{idx,hora,nombre}} lo que de verdad pasó hoy
   soltados: {},            // {lun:["Lectura"]} lo que soltaste a propósito
+  olaHabitos: null,        // hábitos encendidos; null = la ola 1
+  diasHabito: {},          // {tesis:["mar","jue","dom"]} los días que él eligió
+  comodin: {},             // {mar:"llamar a mi mamá"} el comodín ya decidido
   ajustes: {},             // {lun:{"Tesis":{dm,mover,fijar}}} ediciones a mano
   checkin: {},             // respuestas de las cinco entradas de la semana
 
@@ -1011,13 +1037,9 @@ let CFG = {                // configuración de la semana en curso
 
   /* Lo que no es visita pero también ocupa la semana. */
   tareas: [
-    {id:"tk-lun", txt:"Takary · SP20",          min:30, dia:"lun", tras:"Turno completo SP20 · Dos de Mayo"},
-    {id:"tk-mie", txt:"Takary · SP16",          min:30, dia:"mie", tras:"Visita SP16 · La Planicie"},
-    {id:"tk-mar", txt:"Takary · SP33",          min:30, dia:"mie", tras:"Traslado a casa"},
-    {id:"tk-jue", txt:"Takary · SP54",          min:30, dia:"jue", tras:"Visita SP54 · Mall Aventura SJL"},
     // El jueves abre un margen de más de una hora esperando la capacitación
     // de las 14:00: el seguimiento entra ahí y no cuesta nada.
-    {id:"seg-jue",txt:"Seguimiento de tiendas", min:40, dia:"jue", tras:"Takary · SP54"},
+    {id:"seg-jue",txt:"Seguimiento de tiendas", min:40, dia:"jue", tras:"Takary · SP54"},   // el Takary lo genera el motor de hábitos
     {id:"rep-dom",txt:"Reportería y correos",   min:60, dia:"dom", tras:"Correos de las visitas de la semana"}
   ]
 };
@@ -1224,6 +1246,29 @@ function resolverDia(bs, d, base, desde){
   return bs;
 }
 
+/* Clave estable de cada bloque dentro de su día: el nombre, y si ese nombre se
+   repite, el nombre más el número de aparición. Es lo que ata un ajuste manual
+   a UN bloque y no a todos los que se llaman igual. */
+function ponerClaves(bs){
+  const visto = {};
+  bs.forEach(function(b){
+    const n = b[2];
+    visto[n] = (visto[n]||0) + 1;
+    b.clave = visto[n] > 1 ? n+"#"+visto[n] : n;
+  });
+  // Segunda vuelta: si un nombre apareció más de una vez, hasta el primero
+  // necesita su número, o "Almuerzo" y "Almuerzo#2" quedarían desparejos.
+  const total = {};
+  bs.forEach(function(b){ total[b[2]] = (total[b[2]]||0) + 1; });
+  const n2 = {};
+  bs.forEach(function(b){
+    if(total[b[2]] < 2) return;
+    n2[b[2]] = (n2[b[2]]||0) + 1;
+    b.clave = b[2]+"#"+n2[b[2]];
+  });
+  return bs;
+}
+
 /* Compone el día en capas: base → programación real → tareas → resolución. */
 function componerDia(d){
   const crudo = (typeof d.b === "function" ? d.b(CFG) : d.b).map(function(b){
@@ -1246,6 +1291,8 @@ function componerDia(d){
     }
   }
 
+  ponerClaves(bs);
+
   // 3 · las tareas colocadas entran donde corresponde
   (CFG.tareas||[]).filter(function(t){ return t.dia===d.id && !t.quitada; }).forEach(function(t){
     const mt = {prio:2, tarea:t.id};
@@ -1256,7 +1303,7 @@ function componerDia(d){
                             : "Tarea que agregaste", t.tag||"", mt];
     blk.dm = Math.max(5, t.min||30);
     let at = -1;
-    if(t.tras) at = bs.findIndex(function(b){ return b[2]===t.tras; });
+    if(t.tras) at = bs.findIndex(function(b){ return b.clave===t.tras || b[2]===t.tras; });
     if(at<0 && t.antesDe != null) at = t.antesDe - 1;
     if(at<0){
       at = bs.findIndex(function(b){ return /flexible|Pendientes|Margen/.test(b[2]); });
@@ -1266,31 +1313,59 @@ function componerDia(d){
     bs.splice(at+1, 0, blk);
   });
 
-  // 4 · los ajustes que Carlos hizo a mano: duración, orden y hora fija.
-  // Se guardan por NOMBRE de bloque, no por índice: el índice cambia cada vez
-  // que se recompone el día y dejaría los ajustes pegados al bloque de al lado.
+  // 4 · cada bloque recibe una clave estable. NO basta el nombre: dentro de un
+  // mismo día se repiten "Traslado a casa", "Almuerzo" y "Llegada y saludo", y
+  // un ajuste guardado solo por nombre se aplicaba a todos a la vez.
+  ponerClaves(bs);
+
+  // 5 · los ajustes que Carlos hizo a mano: duración, orden y hora fija
   const aj = (CFG.ajustes && CFG.ajustes[d.id]) || {};
   bs.forEach(function(b){
-    const a = aj[b[2]]; if(!a) return;
+    const a = aj[b.clave]; if(!a) return;
     if(a.dm)    b.dm = Math.max(5, a.dm);
     if(a.fijar) b[6] = Object.assign({}, b[6]||{}, {fijo:true, ancla:toMin(a.fijar), manual:true});
   });
-  Object.keys(aj).forEach(function(n){
-    const mv = aj[n].mover; if(!mv) return;
-    const i = bs.findIndex(function(b){ return b[2]===n; });
+  Object.keys(aj).forEach(function(k){
+    const mv = aj[k].mover; if(!mv) return;
+    const i = bs.findIndex(function(b){ return b.clave===k; });
     if(i < 0) return;
-    const j = Math.max(0, Math.min(bs.length-2, i + mv));
+    // Mínimo 1: bs[0] define el arranque del día. Un bloque de programación en
+    // esa posición trae horas vacías y dejaba el día entero en "NaN:NaN".
+    const j = Math.max(1, Math.min(bs.length-2, i + mv));
     bs.splice(j, 0, bs.splice(i,1)[0]);
   });
 
-  // 5 · lo que Carlos soltó a propósito hoy
+  // 6 · los hábitos: enganchados a su señal, flotantes como bloque agrupado
+  bloquesHabitos(bs, d.id);
+  ponerClaves(bs);
+
+  // 7 · lo que Carlos soltó a propósito hoy
   const soltados = (CFG.soltados && CFG.soltados[d.id]) || [];
-  if(soltados.length) bs = bs.filter(function(b){ return soltados.indexOf(b[2]) < 0; });
+  if(soltados.length) bs = bs.filter(function(b){ return soltados.indexOf(b.clave) < 0; });
 
   const real = CFG.real && CFG.real[d.id];
-  resolverDia(bs, d, base);                 // pasada limpia: todo tiene hora
-  if(!real) return bs;
-  return resolverDia(bs, d, base, {idx:real.idx, t:toMin(real.hora)});
+  const paso = function(){
+    resolverDia(bs, d, base);               // pasada limpia: todo tiene hora
+    if(real) resolverDia(bs, d, base, {idx:real.idx, t:toMin(real.hora)});
+    return bs;
+  };
+  paso();
+
+  // El sueño no paga los hábitos. Si el día cierra bajo 6 h, el bloque de
+  // hábitos baja a su piso — que es justo lo que el piso existe para hacer:
+  // mantener viva la racha el día que no hay tiempo. Nunca al revés.
+  const hb = bs.find(function(x){ return (x[6]||{}).habitos; });
+  if(hb && bs.horasSueno < 360){
+    const piso = (hb[6].min != null) ? hb[6].min : 0;
+    if(hb.dm > piso){
+      hb.dm = piso;
+      hb[4] = "Hoy solo el piso: el día no daba para el objetivo completo y tu "+
+              "sueño no paga los hábitos. Marca el piso y la racha sigue viva.";
+      hb.aPiso = true;
+      paso();
+    }
+  }
+  return bs;
 }
 
 /* ---------------- huecos: qué se puede meter ahí ----------------
@@ -1477,6 +1552,7 @@ function pushCfg(){
   if(db){ db.doc("semanas/"+WEEK).update({cfg:CFG, actualizado:new Date().toISOString()})
     .catch(function(){ db.doc("semanas/"+WEEK).set({hechos:hechos, cfg:CFG}).catch(function(){}); }); }
   renderDay(); renderMeters(); renderFutbol(); renderAhora(); renderCheckin();
+  renderTira(); renderAvance();
 }
 function pushHechos(){
   saveLocal();
@@ -1495,6 +1571,7 @@ function pushPend(){
    lo anclado dibujado sólido y lo movible punteado.
    ============================================================ */
 let activo = 0, verPasado = false;
+let _editorAbierto = null;   // clave del bloque cuyo panel está desplegado
 let _horasPrevias = {};        // para animar solo lo que cambió de hora
 
 /* Minuto absoluto de arranque de un bloque, contado desde el inicio del día.
@@ -1595,16 +1672,21 @@ function renderDay(){
 
   if(d.nota) html += '<div class="aviso'+(d.nota.alert?" alerta":"")+'">'+d.nota.txt+'</div>';
 
+  const hbb = bs.find(function(x){ return (x[6]||{}).habitos && x.aPiso; });
+  if(hbb) html += '<div class="aviso alerta">Hoy tus hábitos van al <b>piso</b>: el día no '+
+    'daba para el objetivo completo. Marcar el piso mantiene la racha — un día flojo no '+
+    'rompe nada, dos seguidos sí.</div>';
+
   if(bs.desborde) html += '<div class="aviso mal">Con lo programado, este día te deja <b>'+
     hm(bs.horasSueno)+'</b> de sueño: <b>'+hm(bs.desborde)+'</b> menos de lo normal.</div>';
 
   const sol = (CFG.soltados && CFG.soltados[d.id]) || [];
-  if(sol.length) html += '<div class="aviso">Hoy soltaste <b>'+sol.map(esc).join("</b>, <b>")+
+  if(sol.length) html += '<div class="aviso">Hoy soltaste <b>'+sol.map(function(k){ return esc(k.split("#")[0]); }).join("</b>, <b>")+
     '</b>. <button class="lnk" id="volverSol">Devolverlos al día</button></div>';
 
   const ajs = Object.keys((CFG.ajustes && CFG.ajustes[d.id]) || {});
   if(ajs.length) html += '<div class="aviso">Ajustaste a mano <b>'+ajs.length+
-    '</b> bloque'+(ajs.length>1?"s":"")+': '+ajs.map(esc).join(", ")+
+    '</b> bloque'+(ajs.length>1?"s":"")+': '+ajs.map(function(k){ return esc(k.split("#")[0]); }).join(", ")+
     '. <button class="lnk" id="volverAj">Volver al plan original</button></div>';
 
   const real = CFG.real && CFG.real[d.id];
@@ -1666,7 +1748,7 @@ function renderDay(){
       '<div class="time">'+b[0]+'<em>'+(b[3]==="sueno"?"→ "+b[1]:b[1])+'</em></div>'+
       '<div class="rail"></div>'+
       '<div class="cuerpo" data-abre="'+i+'" tabindex="0" role="button" '+
-        'aria-expanded="false" aria-label="Ajustar '+esc(b[2])+'">'+
+        'aria-expanded="'+(_editorAbierto===b.clave)+'" aria-label="Ajustar '+esc(b[2])+'">'+
         '<div class="name">'+esc(b[2])+chip+'</div>'+
         '<div class="dur">'+hm(m)+'<span class="pista">ajustar</span></div>'+
         editorDe(d, b, i, m)+
@@ -1696,31 +1778,39 @@ function renderDay(){
 /* Panel de ajuste manual de un bloque. Carlos preguntó cómo mover algo o
    recortarlo para que cuadre el resto: aquí está, sin salir del día. */
 function editorDe(d, b, i, m){
-  const aj = ((CFG.ajustes||{})[d.id]||{})[b[2]] || {};
+  // El sueño se deriva de lo que sobra al final del día: darle un editor de
+  // duración sería un botón que no hace nada.
+  if(b[3] === "sueno") return '<div class="ed" hidden><p class="why">'+
+    'Tu hora de dormir sale de lo que sobra al final del día. Para dormir más, '+
+    'recorta o suelta algo de más arriba.</p></div>';
+  const aj = ((CFG.ajustes||{})[d.id]||{})[b.clave] || {};
   const tocado = !!(aj.dm || aj.fijar || aj.mover);
-  const anclaFija = esAncla(b) && !aj.fijar;
-  return '<div class="ed" hidden>'+
+  // Un ancla no se mueve — y un bloque que TÚ clavaste tampoco, aunque lo
+  // hayas clavado tú: mientras tenga hora, ↑/↓ no harían nada visible.
+  const anclaFija = esAncla(b);
+  const abierto = _editorAbierto === b.clave;
+  return '<div class="ed"'+(abierto?"":" hidden")+'>'+
     (b[4] ? '<p class="why">'+esc(b[4])+'</p>' : '')+
     (anclaFija
       ? '<p class="why">Tiene hora impuesta por alguien más, así que no se mueve. '+
         'Puedes cambiar cuánto dura o soltarlo hoy.</p>'
       : '')+
     '<div class="edrow"><span class="edl">Dura</span>'+
-      '<button class="edb" data-dm="-15" data-b="'+esc(b[2])+'">−15</button>'+
-      '<b class="edv">'+hm(m)+'</b>'+
-      '<button class="edb" data-dm="15" data-b="'+esc(b[2])+'">+15</button>'+
+      '<button class="edb" data-dm="-15" data-b="'+esc(b.clave)+'">−15</button>'+
+      '<b class="edv">'+hm(b.dm||m)+'</b>'+
+      '<button class="edb" data-dm="15" data-b="'+esc(b.clave)+'">+15</button>'+
     '</div>'+
     (anclaFija ? '' :
       '<div class="edrow"><span class="edl">Mover</span>'+
-        '<button class="edb" data-mv="-1" data-b="'+esc(b[2])+'">↑ antes</button>'+
-        '<button class="edb" data-mv="1" data-b="'+esc(b[2])+'">↓ después</button>'+
+        '<button class="edb" data-mv="-1" data-b="'+esc(b.clave)+'">↑ antes</button>'+
+        '<button class="edb" data-mv="1" data-b="'+esc(b.clave)+'">↓ después</button>'+
       '</div>'+
       '<div class="edrow"><span class="edl">Clavar a las</span>'+
-        '<input type="time" class="edt" data-fijar="'+esc(b[2])+'" value="'+b[0]+'">'+
+        '<input type="time" class="edt" data-fijar="'+esc(b.clave)+'" value="'+b[0]+'">'+
       '</div>')+
     '<div class="edrow">'+
-      '<button class="edb x" data-soltar="'+esc(b[2])+'">Hoy no lo hago</button>'+
-      (tocado ? '<button class="edb" data-reset="'+esc(b[2])+'">Deshacer ajustes</button>' : '')+
+      '<button class="edb x" data-soltar="'+esc(b.clave)+'">Hoy no lo hago</button>'+
+      (tocado ? '<button class="edb" data-reset="'+esc(b.clave)+'">Deshacer ajustes</button>' : '')+
     '</div></div>';
 }
 
@@ -1772,9 +1862,11 @@ function pintarConflicto(c, d){
 function enlazarDia(pane, d, bs){
   pane.querySelectorAll("[data-abre]").forEach(function(c){
     const ed = c.querySelector(".ed");
+    const clave = bs[+c.dataset.abre] && bs[+c.dataset.abre].clave;
     const abrir = function(){
       if(!ed) return;
       ed.hidden = !ed.hidden;
+      _editorAbierto = ed.hidden ? null : clave;
       c.setAttribute("aria-expanded", String(!ed.hidden));
       c.classList.toggle("abierto", !ed.hidden);
     };
@@ -1787,19 +1879,26 @@ function enlazarDia(pane, d, bs){
       if(e.key==="Enter"||e.key===" "){ e.preventDefault(); abrir(); } });
   });
 
-  const bloquePorNombre = function(n){ return bs.find(function(x){ return x[2]===n; }); };
+  const porClave = function(k){ return bs.find(function(x){ return x.clave===k; }); };
   pane.querySelectorAll("[data-dm]").forEach(function(btn){
     btn.addEventListener("click", function(){
-      const b = bloquePorNombre(btn.dataset.b); if(!b) return;
-      const actual = ((CFG.ajustes||{})[d.id]||{})[b[2]] || {};
-      const base = actual.dm || dur(b[0], b[1]);
-      ajusta(d.id, b[2], {dm: Math.max(5, base + (+btn.dataset.dm))});
+      const b = porClave(btn.dataset.b); if(!b) return;
+      // b.dm es la duración que el bloque QUIERE durar; b[1]-b[0] puede venir
+      // ya recortado contra un ancla, y sumarle 15 lo encogería.
+      const base = b.dm || dur(b[0], b[1]);
+      ajusta(d.id, b.clave, {dm: Math.max(5, base + (+btn.dataset.dm))});
     });
   });
   pane.querySelectorAll("[data-mv]").forEach(function(btn){
     btn.addEventListener("click", function(){
-      const actual = ((CFG.ajustes||{})[d.id]||{})[btn.dataset.b] || {};
-      ajusta(d.id, btn.dataset.b, {mover: (actual.mover||0) + (+btn.dataset.mv)});
+      const b = porClave(btn.dataset.b); if(!b) return;
+      const i = bs.indexOf(b), mv = +btn.dataset.mv;
+      // El tope se calcula ANTES de guardar: si no, cada toque contra el borde
+      // seguía sumando y había que dar cinco toques de vuelta para ver algo.
+      const destino = Math.max(1, Math.min(bs.length-2, i + mv));
+      if(destino === i) return;
+      const actual = ((CFG.ajustes||{})[d.id]||{})[b.clave] || {};
+      ajusta(d.id, b.clave, {mover: (actual.mover||0) + (destino - i)});
     });
   });
   pane.querySelectorAll("[data-fijar]").forEach(function(inp){
@@ -2844,6 +2943,538 @@ function aplicarSociales(){
 }
 
 
+/* ============================================================
+   HÁBITOS
+
+   Lo que la investigación dice y cómo está aplicado aquí:
+
+   · Lally (2010): la automatización llega en 66 días de media, con un
+     rango de 18 a 254, y crece cuando la conducta se repite EN UN
+     CONTEXTO CONSTANTE. Por eso cada hábito declara su SEÑAL, no su hora.
+   · Gollwitzer: un plan "si pasa X, entonces hago Y" transfiere el
+     control a la señal. `senal` es exactamente eso.
+   · Milkman: la rigidez mata el hábito. Los flotantes NO tienen hora:
+     ocupan minutos en el día, pero Carlos los hace cuando quiera.
+   · Lally otra vez: un día perdido no afecta la curva; los fallos
+     CONSECUTIVOS sí. De ahí el piso mínimo y el aviso al segundo fallo.
+   · Habituación: el mismo estímulo da cada vez menos dopamina. El bloque
+     se queda, el contenido rota — `variantes`.
+
+   tipo:
+     enganchado  se dibuja tras su señal, sin hora propia
+     flotante    reserva minutos, no hora; va al bloque agrupado
+     semanal     un día fijo de la semana
+     mensual     una vez al mes
+   ============================================================ */
+const HABITOS = [
+  {id:"takary", nom:"Takary de la visita", tipo:"enganchado", cat:"trabajo",
+   senal:"visita", piso:5, obj:30,
+   por:"Es la reportería, y sale en la tienda con todo fresco. Si no sale aquí, se acumula.",
+   variantes:[]},
+
+  {id:"parada", nom:"Parada con libro", tipo:"enganchado", cat:"mente", tag:"lectura",
+   senal:"traslado-largo", piso:5, obj:20,
+   por:"En scooter no puedes escuchar nada. Una parada en el tramo largo es lectura y descanso a la vez — las dos cosas tienen respaldo por separado.",
+   variantes:["Novela","No ficción","Algo para el juego","Lo que tengas a mano"]},
+
+  {id:"juego", nom:"Juego para celular", tipo:"flotante", cat:"u", tag:"juego",
+   piso:10, obj:45, dias:["lun","mar","mie","jue","vie","sab","dom"],
+   por:"Tu proyecto. Si la tienda está tranquila, adelanta ahí y aquí solo cierras.",
+   variantes:["Programar","Arte y diseño","Probar y anotar bugs","Monetización","Ver qué hace la competencia"]},
+
+  {id:"tesis", nom:"Tesis", tipo:"flotante", cat:"u", tag:"tesis",
+   piso:10, obj:60, dias:null,        // los elige él en el ritual semanal
+   por:"Tres días a la semana, no todos. Los que tú elijas el domingo.",
+   variantes:["Escribir","Leer fuentes","Ordenar referencias","Revisar lo escrito"]},
+
+  {id:"comodin", nom:"Comodín · tú decides", tipo:"flotante", cat:"mente",
+   piso:0, obj:30, dias:["lun","mar","mie","jue","vie","sab","dom"],
+   por:"Sin una franja que elijas tú en el momento, el horario deja de ser tuyo y se vuelve una jaula. No es tiempo perdido: es lo que hace que el resto se sostenga.",
+   variantes:[]},
+
+  {id:"ropa", nom:"Alistar la ropa de la semana", tipo:"semanal", cat:"cuerpo",
+   dia:"dom", piso:5, obj:25,
+   por:"Cinco mudas listas el domingo son cinco decisiones que no tomas medio dormido.",
+   variantes:[]},
+
+  {id:"cuarto", nom:"Ordenar el cuarto", tipo:"semanal", cat:"cuerpo",
+   dia:"vie", piso:10, obj:45,
+   por:"Superficie: lo que está fuera de sitio vuelve a su sitio.",
+   variantes:[]},
+
+  {id:"profundo", nom:"Orden profundo del cuarto", tipo:"mensual", cat:"cuerpo",
+   dia:"dom", piso:20, obj:90,
+   por:"Una vez al mes, el primer domingo: cajones, debajo de la cama, lo que llevas meses posponiendo.",
+   variantes:[]}
+];
+
+function habitoPorId(id){ return HABITOS.find(function(h){ return h.id===id; }); }
+
+/* OLAS. La evidencia es clara y va contra la tentación de encenderlo todo:
+   arrancar con dos hábitos y subir después funciona; arrancar con ocho no.
+   Solo los activos consumen tiempo del día; el resto queda en cola, visible,
+   sin costar minutos. */
+const OLA_1 = ["takary","juego","ropa","cuarto"];
+function activos(){
+  const l = CFG.olaHabitos;
+  return (Array.isArray(l) && l.length) ? l : OLA_1;
+}
+function estaActivo(h){ return activos().indexOf(h.id) >= 0; }
+
+/* Lo que cuesta encender un hábito, en minutos por semana. Es el número que
+   Carlos necesita ver ANTES de activarlo, no después. */
+function costoSemanal(h){
+  if(h.tipo === "mensual") return Math.round(h.obj/4);
+  return diasDe(h).length * h.obj;
+}
+
+/* Qué días le tocan a un hábito, resolviendo lo que Carlos eligió el domingo. */
+function diasDe(h){
+  if(h.tipo === "semanal" || h.tipo === "mensual") return [h.dia];
+  if(h.dias) return h.dias;
+  const el = (CFG.diasHabito || {})[h.id];
+  return el && el.length ? el : [];
+}
+function tocaHoy(h, diaId){
+  if(h.tipo === "mensual" && !esPrimerDomingo()) return false;
+  return diasDe(h).indexOf(diaId) >= 0;
+}
+function esPrimerDomingo(){
+  const d = lunesObjetivo(); d.setDate(d.getDate()+6);
+  return d.getDate() <= 7;
+}
+
+/* La variante que no tocó la última vez. Contra la habituación: el bloque se
+   queda igual, el contenido cambia. */
+function varianteDe(h){
+  if(!h.variantes || !h.variantes.length) return null;
+  const ult = (CFG.variantes || {})[h.id];
+  const i = h.variantes.indexOf(ult);
+  return h.variantes[(i + 1) % h.variantes.length];
+}
+
+/* ---------------- registro y rachas ----------------
+   hechos["hab:<id>:<AAAA-MM-DD>"] = "pleno" | "piso"
+   El piso cuenta para la racha y no para los minutos: es lo que mantiene viva
+   la curva de automatización en la semana que se rompe. */
+function claveHabito(h, diaId){ return "hab:"+h.id+":"+fechaISOdia(diaId); }
+function fechaISOdia(diaId){
+  const d = lunesObjetivo();
+  d.setDate(d.getDate() + (DIA_OFFSET[diaId]||0));
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+
+         String(d.getDate()).padStart(2,"0");
+}
+function estadoHabito(h, diaId){ return hechos[claveHabito(h, diaId)] || null; }
+function marcarHabito(h, diaId, estado){
+  const k = claveHabito(h, diaId);
+  if(estado) hechos[k] = estado; else delete hechos[k];
+  pushHechos(); invalidar();
+  renderTira(); renderDay(); renderMeters(); renderAhora();
+}
+
+/* Fallos consecutivos hasta hoy, contando solo los días que le tocaban.
+   Lally midió que un día perdido no mueve la aguja; dos seguidos sí. */
+function fallosSeguidos(h){
+  const orden = ["lun","mar","mie","jue","vie","sab","dom"];
+  const hoy = indiceHoy();
+  let n = 0;
+  for(let i = hoy - 1; i >= 0; i--){
+    const dia = orden[i];
+    if(!tocaHoy(h, dia)) continue;
+    if(estadoHabito(h, dia)) break;
+    n++;
+  }
+  return n;
+}
+function rachaDe(h){
+  const orden = ["lun","mar","mie","jue","vie","sab","dom"];
+  let n = 0;
+  for(let i = 0; i <= indiceHoy(); i++){
+    const dia = orden[i];
+    if(!tocaHoy(h, dia)) continue;
+    if(estadoHabito(h, dia)) n++;
+  }
+  return n;
+}
+
+/* ---------------- la capa en el día ---------------- */
+
+/* Enganchados: se insertan tras su señal real, no a una hora.
+   Flotantes: se suman en un solo bloque agrupado. El tiempo se reserva —si no,
+   la cuenta del sueño mentiría— pero la hora no se impone. */
+function bloquesHabitos(bs, diaId){
+  // 1 · Takary, después de cada visita a tienda
+  const tak = habitoPorId("takary");
+  if(estaActivo(tak)){
+    for(let i = bs.length-1; i >= 0; i--){
+      if(!/^(Visita|Turno completo) /.test(bs[i][2])) continue;
+      const tienda = bs[i][2].replace(/^(Visita|Turno completo) /, "").split(" ·")[0];
+      const b = ["","","Takary · "+tienda, "trabajo",
+        tak.por, "", {prio:2, habito:"takary"}];
+      b.dm = tak.obj;
+      bs.splice(i+1, 0, b);
+    }
+  }
+
+  // 2 · parada con libro en el traslado más largo del día, si pasa de 45 min
+  const par = habitoPorId("parada");
+  let peor = -1, peorM = 55;
+  const yaLee = bs.some(function(x){ return x[5]==="lectura"; });
+  bs.forEach(function(x,i){
+    if(x[3] !== "traslado") return;
+    const m = x.dm || dur(x[0],x[1]);
+    if(m > peorM){ peorM = m; peor = i; }
+  });
+  if(peor >= 0 && !yaLee && estaActivo(par)){
+    const v = varianteDe(par);
+    const b = ["","","Parada con libro","mente",
+      par.por + (v ? " Esta semana: "+v+"." : ""), "lectura", {min:5, prio:3, habito:"parada"}];
+    b.dm = par.obj;
+    bs.splice(peor+1, 0, b);
+  }
+
+  // 3 · flotantes: un solo bloque, sin hora impuesta
+  const yaHay = {};
+  bs.forEach(function(x){ if(x[5]) yaHay[x[5]] = true; });
+  const flot = HABITOS.filter(function(h){
+    return h.tipo === "flotante" && estaActivo(h) && tocaHoy(h, diaId)
+        && !estadoHabito(h, diaId)
+        && !(h.tag && yaHay[h.tag]);      // ya está en el día, no lo dupliques
+  });
+  const sem = HABITOS.filter(function(h){
+    return (h.tipo === "semanal" || h.tipo === "mensual") && estaActivo(h)
+        && tocaHoy(h, diaId) && !estadoHabito(h, diaId);
+  });
+  const juntos = flot.concat(sem);
+  if(juntos.length){
+    const total = juntos.reduce(function(a,h){ return a + h.obj; }, 0);
+    const b = ["","","Tus hábitos de hoy","mente",
+      juntos.map(function(h){ return h.nom+" "+hm(h.obj); }).join(" · ")+
+      ". No tienen hora: hazlos en el orden que quieras dentro del día. "+
+      "El tiempo está reservado para que la cuenta del sueño no te mienta.",
+      "", {min:juntos.reduce(function(a,h){ return a + h.piso; },0), prio:3, habitos:true}];
+    b.dm = total;
+    // Al llegar a casa y descomprimir es donde de verdad rinden.
+    let at = bs.findIndex(function(x){ return /Descompresión/.test(x[2]); });
+    if(at < 0) at = bs.findIndex(function(x){ return /^Cena/.test(x[2]); }) - 1;
+    if(at < 0) at = bs.length - 3;
+    bs.splice(at+1, 0, b);
+  }
+  return bs;
+}
+
+/* ---------------- la franja «Hoy toca» ---------------- */
+function renderTira(){
+  const el = document.getElementById("tira");
+  if(!el) return;
+  const d = DIAS[activo];
+  const hoy = HABITOS.filter(function(h){ return estaActivo(h) && tocaHoy(h, d.id); });
+  if(!hoy.length){ el.innerHTML = ""; return; }
+
+  el.innerHTML = '<div class="eyebrow" style="margin-bottom:7px">Hoy toca</div>'+
+    '<div class="hchips">'+hoy.map(function(h){
+      const st = estadoHabito(h, d.id);
+      const fs = fallosSeguidos(h), r = rachaDe(h);
+      const v = varianteDe(h);
+      return '<div class="hchip'+(st?" ok":"")+(fs>=2?" mal":"")+'" data-h="'+h.id+'">'+
+        '<div class="hn">'+esc(h.nom)+
+          (st==="piso"?'<span class="hp">piso</span>':'')+'</div>'+
+        '<div class="hm">'+hm(h.obj)+(v?' · '+esc(v):'')+
+          (r?' · racha '+r:'')+'</div>'+
+        (fs>=2?'<div class="hw">'+fs+' veces seguidas sin hacerlo. Hoy hazlo aunque sea el piso — es lo que sostiene la curva.</div>':'')+
+        '<div class="hbtns">'+
+          '<button class="edb" data-hab="'+h.id+'" data-e="pleno"'+(st==="pleno"?' disabled':'')+'>Hecho</button>'+
+          (h.piso ? '<button class="edb" data-hab="'+h.id+'" data-e="piso"'+(st==="piso"?' disabled':'')+'>Hice el piso · '+h.piso+' min</button>' : '')+
+          (st ? '<button class="edb" data-hab="'+h.id+'" data-e="">Deshacer</button>' : '')+
+        '</div></div>';
+    }).join("")+'</div>';
+
+  el.querySelectorAll("[data-hab]").forEach(function(b){
+    b.addEventListener("click", function(){
+      marcarHabito(habitoPorId(b.dataset.hab), d.id, b.dataset.e || null);
+    });
+  });
+}
+
+/* ---------------- «esto avanzó» ----------------
+   Amabile: avanzar en algo que importa es el factor número uno de un buen día,
+   pero SOLO si lo notas. Esto es lo que lo hace notorio. */
+function renderAvance(){
+  const el = document.getElementById("avance");
+  if(!el) return;
+  const orden = ["lun","mar","mie","jue","vie","sab","dom"];
+  const filas = HABITOS.filter(function(h){ return h.tipo !== "mensual"; }).map(function(h){
+    let plenos = 0, pisos = 0, tocaba = 0;
+    orden.forEach(function(dia){
+      if(!tocaHoy(h, dia)) return;
+      tocaba++;
+      const st = estadoHabito(h, dia);
+      if(st === "pleno") plenos++; else if(st === "piso") pisos++;
+    });
+    return {h:h, min: plenos*h.obj + pisos*h.piso, plenos:plenos, pisos:pisos, tocaba:tocaba};
+  }).filter(function(f){ return f.tocaba; });
+
+  const total = filas.reduce(function(a,f){ return a + f.min; }, 0);
+  el.innerHTML = '<div class="shead"><h2>Esto avanzó</h2><span class="eyebrow">Minutos reales</span></div>'+
+    '<p class="sub" style="margin:0 0 11px">No es porcentaje de cumplimiento: son minutos que de verdad le metiste. '+
+    (total ? 'Van <b>'+hm(total)+'</b> esta semana.' : 'Todavía nada esta semana — marca lo que hagas y aparece aquí.')+'</p>'+
+    '<ul class="pend">'+filas.map(function(f){
+      return '<li'+(f.min?' class="ok"':'')+'><span class="t">'+esc(f.h.nom)+'</span>'+
+        '<span class="m">'+(f.min?hm(f.min):"—")+' · '+f.plenos+'/'+f.tocaba+
+        (f.pisos?' (+'+f.pisos+' piso)':'')+'</span></li>';
+    }).join("")+'</ul>';
+}
+
+/* ============================================================
+   LOS DOS RITUALES
+
+   Semanal · domingo por la noche. Cierra la semana con los datos reales y
+   abre la siguiente. El lunes arranca limpio — efecto de nuevo comienzo:
+   una semana mala no se arrastra.
+
+   Diario · la noche anterior, 5 min, enganchado a la captura de pendientes
+   que ya existe. Ver mañana antes de dormir reduce la rumia nocturna.
+   ============================================================ */
+
+let pasoSem = 0, pasoDia = 0;
+
+const PASOS_SEM = [
+  {id:"balance", q:"¿Cómo salió la semana?"},
+  {id:"tiendas", q:"¿Qué tiendas te tocan?"},
+  {id:"capa",    q:"¿Qué días hay capacitación?"},
+  {id:"futbol",  q:"¿A qué hora los partidos?"},
+  {id:"social",  q:"¿Algún compromiso social?"},
+  {id:"tareas",  q:"¿Tareas de la U y del juego?"},
+  {id:"habitos", q:"¿Qué días caen tesis y el juego?"},
+  {id:"ola",     q:"¿Qué hábitos tienes encendidos?"}
+];
+
+function renderRitualSemanal(){
+  const el = document.getElementById("ritSem"); if(!el) return;
+  const p = PASOS_SEM[pasoSem];
+  el.innerHTML =
+    '<h3>Ritual del domingo</h3>'+
+    '<p class="why">Quince minutos que deciden la semana. El lunes arranca en cero: '+
+    'lo que salió mal esta semana no se arrastra a la siguiente.</p>'+
+    '<div class="progreso">'+PASOS_SEM.map(function(x,i){
+      return '<i class="'+(i<=pasoSem?"on":"")+'"></i>'; }).join("")+'</div>'+
+    '<div class="paso"><div class="q">'+p.q+'</div>'+cuerpoSem(p.id)+'</div>'+
+    '<div class="addrow" style="margin-top:13px">'+
+      '<button class="btn ghost chico" id="rsPrev"'+(pasoSem===0?" disabled":"")+'>Atrás</button>'+
+      '<button class="btn chico" id="rsNext">'+
+        (pasoSem===PASOS_SEM.length-1?"Cerrar la semana":"Siguiente")+'</button>'+
+      '<span style="margin-left:auto;font-size:11.5px;color:var(--ink-3);align-self:center">'+
+        (pasoSem+1)+' de '+PASOS_SEM.length+'</span></div>';
+  enlazarSem(p.id);
+  document.getElementById("rsPrev").addEventListener("click", function(){
+    if(pasoSem>0){ pasoSem--; renderRitualSemanal(); } });
+  document.getElementById("rsNext").addEventListener("click", function(){
+    if(pasoSem < PASOS_SEM.length-1){ pasoSem++; renderRitualSemanal(); return; }
+    CFG.cerradaEl = new Date().toISOString();
+    pushCfg(); pasoSem = 0; renderRitualSemanal();
+  });
+}
+
+function cuerpoSem(id){
+  if(id === "balance"){
+    const orden = ["lun","mar","mie","jue","vie","sab","dom"];
+    const filas = HABITOS.filter(function(h){ return h.tipo!=="mensual"; }).map(function(h){
+      let ok=0, tot=0;
+      orden.forEach(function(dia){ if(!tocaHoy(h,dia)) return;
+        tot++; if(estadoHabito(h,dia)) ok++; });
+      return tot ? {nom:h.nom, ok:ok, tot:tot} : null;
+    }).filter(Boolean);
+    let dv = [], caidos = [];
+    DIAS.forEach(function(d){
+      const x = disciplina(d); if(x) dv.push(x.medio);
+      bloquesDe(d).forEach(function(b,i){
+        if(b[3]==="sueno"||b[3]==="traslado") return;
+        if(!hechos[d.id+"-"+i] && b[5]) caidos.push(b[2]);
+      });
+    });
+    const medio = dv.length ? Math.round(dv.reduce(function(a,b){return a+b;},0)/dv.length) : null;
+    const repetido = {};
+    caidos.forEach(function(n){ repetido[n] = (repetido[n]||0)+1; });
+    const peor = Object.keys(repetido).sort(function(a,b){ return repetido[b]-repetido[a]; })[0];
+    return '<ul class="pend">'+filas.map(function(f){
+        return '<li'+(f.ok===f.tot?' class="ok"':'')+'><span class="t">'+esc(f.nom)+
+          '</span><span class="m">'+f.ok+' de '+f.tot+'</span></li>'; }).join("")+'</ul>'+
+      '<p class="why" style="margin-top:9px">'+
+        (medio===null ? 'Todavía no marcaste horas reales esta semana, así que no puedo medir el desvío.'
+          : 'Desvío medio de cierre: <b>'+(medio>0?"+":"")+medio+' min</b>.'+
+            (medio>25 ? ' Eso ya no es falta de ganas: las duraciones están mal calculadas y hay que corregirlas.' : ''))+
+        (peor ? ' Lo que más se te cayó: <b>'+esc(peor)+'</b>.' : '')+'</p>';
+  }
+  if(id === "ola"){
+    const act = activos();
+    let extra = 0;
+    act.forEach(function(id2){ const h = habitoPorId(id2); if(h) extra += costoSemanal(h); });
+    return '<p class="why" style="margin-bottom:10px">La investigación es incómoda pero clara: '+
+      '<b>arrancar con dos hábitos funciona, arrancar con ocho no.</b> Solo los encendidos '+
+      'ocupan tiempo en tu semana; los apagados quedan aquí esperando, sin costarte nada.</p>'+
+      '<div class="cands">'+HABITOS.map(function(h){
+        const on = estaActivo(h);
+        return '<button class="cand'+(on?" on":"")+'" data-ola="'+h.id+'">'+
+          '<span><b>'+(on?"● ":"○ ")+esc(h.nom)+'</b><span class="p">'+esc(h.por)+'</span></span>'+
+          '<span class="m">'+hm(costoSemanal(h))+'<br>por semana</span></button>';
+      }).join("")+'</div>'+
+      '<p class="why" style="margin-top:10px">Encendidos ahora: <b>'+hm(extra)+
+      '</b> a la semana. Cada minuto de aquí sale de algún lado — casi siempre del sueño.</p>';
+  }
+  if(id === "habitos"){
+    return HABITOS.filter(function(h){ return h.tipo==="flotante" && !h.dias; })
+      .map(function(h){
+        const sel = diasDe(h);
+        return '<div style="margin-bottom:11px"><div class="edl" style="margin-bottom:5px">'+
+          esc(h.nom)+' · '+hm(h.obj)+'</div><div class="picker">'+
+          DIAS.map(function(d){
+            return '<button type="button" class="pk'+(sel.indexOf(d.id)>=0?" on":"")+
+              '" data-hd="'+h.id+'" data-d="'+d.id+'" style="--pkc:var(--c-'+h.cat+')">'+
+              d.corto+'</button>'; }).join("")+'</div></div>';
+      }).join("")+
+      '<p class="why">Gym y tesis: tres días cada uno. Si eliges menos, la app no te va a regañar — te va a decir cuánto te falta.</p>';
+  }
+  // los cuatro pasos que ya existen en el check-in se reutilizan tal cual
+  return cuerpoPaso(id === "tareas" ? "u" : id);
+}
+
+function enlazarSem(id){
+  if(id === "ola"){
+    document.querySelectorAll("[data-ola]").forEach(function(b){
+      b.addEventListener("click", function(){
+        const l = activos().slice(), i = l.indexOf(b.dataset.ola);
+        if(i>=0) l.splice(i,1); else l.push(b.dataset.ola);
+        CFG.olaHabitos = l;
+        pushCfg(); renderRitualSemanal();
+      });
+    });
+    return;
+  }
+  if(id === "habitos"){
+    document.querySelectorAll("[data-hd]").forEach(function(b){
+      b.addEventListener("click", function(){
+        CFG.diasHabito = CFG.diasHabito || {};
+        const l = (CFG.diasHabito[b.dataset.hd] || []).slice();
+        const i = l.indexOf(b.dataset.d);
+        if(i>=0) l.splice(i,1); else l.push(b.dataset.d);
+        CFG.diasHabito[b.dataset.hd] = l;
+        pushCfg(); renderRitualSemanal();
+      });
+    });
+    return;
+  }
+  if(id === "balance") return;
+  enlazarPaso(id === "tareas" ? "u" : id);
+}
+
+/* ---------------- ritual diario ---------------- */
+const PASOS_DIA = [
+  {id:"cierra",  q:"Cierra hoy"},
+  {id:"nuevo",   q:"¿Algo nuevo para mañana?"},
+  {id:"manana",  q:"Mañana toca esto"},
+  {id:"comodin", q:"El comodín de mañana"}
+];
+
+function diaSiguiente(){ return DIAS[(indiceHoy()+1) % 7]; }
+
+function renderRitualDiario(){
+  const el = document.getElementById("ritDia"); if(!el) return;
+  const p = PASOS_DIA[pasoDia], man = diaSiguiente();
+  el.innerHTML =
+    '<h3>Cinco minutos antes de dormir</h3>'+
+    '<p class="why">Cierra hoy y mira mañana. Dejar los pendientes escritos antes de '+
+    'acostarte es lo que evita repasarlos en la cama.</p>'+
+    '<div class="progreso">'+PASOS_DIA.map(function(x,i){
+      return '<i class="'+(i<=pasoDia?"on":"")+'"></i>'; }).join("")+'</div>'+
+    '<div class="paso"><div class="q">'+p.q+'</div>'+cuerpoDia(p.id, man)+'</div>'+
+    '<div class="addrow" style="margin-top:13px">'+
+      '<button class="btn ghost chico" id="rdPrev"'+(pasoDia===0?" disabled":"")+'>Atrás</button>'+
+      '<button class="btn chico" id="rdNext">'+
+        (pasoDia===PASOS_DIA.length-1?"Listo, a dormir":"Siguiente")+'</button>'+
+      '<span style="margin-left:auto;font-size:11.5px;color:var(--ink-3);align-self:center">'+
+        (pasoDia+1)+' de '+PASOS_DIA.length+'</span></div>';
+  enlazarDiario(p.id, man);
+  document.getElementById("rdPrev").addEventListener("click", function(){
+    if(pasoDia>0){ pasoDia--; renderRitualDiario(); } });
+  document.getElementById("rdNext").addEventListener("click", function(){
+    pasoDia = (pasoDia+1) % PASOS_DIA.length; renderRitualDiario(); });
+}
+
+function cuerpoDia(id, man){
+  const hoyD = DIAS[indiceHoy()];
+  if(id === "cierra"){
+    const hoy = HABITOS.filter(function(h){ return tocaHoy(h, hoyD.id); });
+    if(!hoy.length) return '<p class="why">Hoy no te tocaba ningún hábito. Descansa.</p>';
+    return '<div class="cands">'+hoy.map(function(h){
+      const st = estadoHabito(h, hoyD.id);
+      return '<button class="cand" data-cd="'+h.id+'">'+
+        '<span><b>'+esc(h.nom)+'</b><span class="p">'+
+        (st==="pleno"?"Hecho":(st==="piso"?"Hiciste el piso":"Toca marcarlo o dejarlo"))+
+        '</span></span><span class="m">'+(st?"✓":hm(h.obj))+'</span></button>';
+    }).join("")+'</div>'+
+    '<p class="why" style="margin-top:9px">Un día perdido no rompe nada. Dos seguidos sí — por eso vale la pena marcar hasta el piso.</p>';
+  }
+  if(id === "nuevo"){
+    return '<div class="addrow">'+
+      '<input id="rdTxt" type="text" placeholder="Lo que se te cruzó hoy" maxlength="120">'+
+      '<input id="rdMin" type="number" value="30" min="5" max="480" step="5" aria-label="Minutos">'+
+      '<button class="btn chico" id="rdAdd">Anotar</button></div>'+
+      '<ul class="pend" id="rdLista">'+pendientes.filter(function(x){ return !x.hecho; })
+        .map(function(x){ return '<li><span class="t">'+esc(x.txt)+'</span><span class="m">'+
+          hm(x.min||30)+'</span></li>'; }).join("")+'</ul>';
+  }
+  if(id === "manana"){
+    const hs = HABITOS.filter(function(h){ return tocaHoy(h, man.id); });
+    const bs = bloquesDe(man);
+    return '<p class="why" style="margin-bottom:9px"><b>'+man.nom+'</b> arranca '+bs[0][0]+
+      ' y duermes '+hm(bs.horasSueno||0)+'.</p>'+
+      (hs.length
+        ? '<ul class="pend">'+hs.map(function(h){
+            const v = varianteDe(h);
+            return '<li><span class="t">'+esc(h.nom)+(v?' · '+esc(v):'')+'</span>'+
+              '<span class="m">'+hm(h.obj)+'</span></li>'; }).join("")+'</ul>'
+        : '<p class="why">Mañana no toca ningún hábito.</p>')+
+      ((bs.conflictos||[]).length
+        ? '<p class="eaviso">Mañana ya viene apretado: '+esc(bs.conflictos[0].nombre)+
+          '. Míralo hoy, no mañana a las siete.</p>' : '');
+  }
+  const el = (CFG.comodin || {})[man.id] || "";
+  return '<div class="addrow">'+
+    '<input id="rdCom" type="text" maxlength="80" value="'+esc(el)+'" '+
+    'placeholder="Déjalo vacío y decides mañana"></div>'+
+    '<p class="why" style="margin-top:9px">Treinta minutos que eliges tú. Dejarlo en blanco '+
+    'es una respuesta válida: la libertad de elegir en el momento es justamente el punto.</p>';
+}
+
+function enlazarDiario(id, man){
+  const hoyD = DIAS[indiceHoy()];
+  if(id === "cierra"){
+    document.querySelectorAll("[data-cd]").forEach(function(b){
+      b.addEventListener("click", function(){
+        const h = habitoPorId(b.dataset.cd);
+        const st = estadoHabito(h, hoyD.id);
+        marcarHabito(h, hoyD.id, st === "pleno" ? "piso" : (st === "piso" ? null : "pleno"));
+        renderRitualDiario();
+      });
+    });
+  }
+  if(id === "nuevo"){
+    document.getElementById("rdAdd").addEventListener("click", function(){
+      const t = document.getElementById("rdTxt"), m = document.getElementById("rdMin");
+      if(!t.value.trim()) return;
+      pendientes.push({id:Date.now(), txt:t.value.trim(), min:+m.value||30, hecho:false});
+      pushPend(); t.value=""; renderRitualDiario();
+    });
+  }
+  if(id === "comodin"){
+    document.getElementById("rdCom").addEventListener("change", function(){
+      CFG.comodin = CFG.comodin || {};
+      CFG.comodin[man.id] = this.value.trim();
+      pushCfg();
+    });
+  }
+}
+
 /* ---------------- arranque ---------------- */
 loadLocal();
 document.getElementById("weekLabel").textContent = etiquetaSemana();
@@ -2851,7 +3482,8 @@ document.getElementById("weekLabel").textContent = etiquetaSemana();
 activo = indiceHoy();
 renderMeters(); renderTabs(); renderDay(); renderAhora();
 renderFutbol(); renderCartera(); renderPicker(); renderCalc(); renderPend();
-renderCheckin();
+renderCheckin(); renderTira(); renderAvance();
+renderRitualSemanal(); renderRitualDiario();
 iniciarAsistente();
 
 function irA(v){
@@ -2872,7 +3504,11 @@ document.querySelectorAll(".nv").forEach(function(b){
 // El reloj reordena la vista sin recargar: el bloque en curso, lo que ya pasó
 // y los minutos que quedan se recalculan cada minuto.
 setInterval(function(){
-  if(!document.getElementById("v-hoy").hidden){ renderAhora(); renderDay(); }
+  if(document.getElementById("v-hoy").hidden) return;
+  renderAhora();
+  // Si hay un panel de ajuste abierto, no se redibuja: el tic del reloj no
+  // tiene derecho a cerrarle el editor en la cara.
+  if(!_editorAbierto) renderDay();
 }, 60000);
 
 calcIds.forEach(function(id){
